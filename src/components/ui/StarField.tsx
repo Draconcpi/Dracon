@@ -12,7 +12,7 @@ interface Star {
   twinkleOffset: number;
 }
 
-export default function StarField({ count = 200 }: { count?: number }) {
+export default function StarField({ count = 120 }: { count?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -23,6 +23,8 @@ export default function StarField({ count = 200 }: { count?: number }) {
 
     let animationId: number;
     let stars: Star[] = [];
+    let lastTime = 0;
+    const FPS_INTERVAL = 1000 / 30; // Cap at 30fps
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -33,66 +35,54 @@ export default function StarField({ count = 200 }: { count?: number }) {
       stars = Array.from({ length: count }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        size: Math.random() * 2 + 0.5,
-        opacity: Math.random() * 0.8 + 0.2,
-        speed: Math.random() * 0.02 + 0.005,
-        twinkleSpeed: Math.random() * 0.02 + 0.01,
+        size: Math.random() * 1.8 + 0.3,
+        opacity: Math.random() * 0.7 + 0.2,
+        speed: Math.random() * 0.015 + 0.003,
+        twinkleSpeed: Math.random() * 0.015 + 0.008,
         twinkleOffset: Math.random() * Math.PI * 2,
       }));
     };
 
-    const drawStar = (star: Star, time: number) => {
-      const twinkle = Math.sin(time * star.twinkleSpeed + star.twinkleOffset) * 0.5 + 0.5;
-      const currentOpacity = star.opacity * twinkle;
-
-      ctx.beginPath();
-      ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-      
-      const gradient = ctx.createRadialGradient(
-        star.x, star.y, 0,
-        star.x, star.y, star.size * 3
-      );
-      gradient.addColorStop(0, `rgba(200, 180, 255, ${currentOpacity})`);
-      gradient.addColorStop(0.5, `rgba(168, 85, 244, ${currentOpacity * 0.3})`);
-      gradient.addColorStop(1, 'transparent');
-      
-      ctx.fillStyle = gradient;
-      ctx.fill();
-
-      // Core
-      ctx.beginPath();
-      ctx.arc(star.x, star.y, star.size * 0.5, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 255, 255, ${currentOpacity})`;
-      ctx.fill();
-    };
-
     const animate = (time: number) => {
+      animationId = requestAnimationFrame(animate);
+
+      const delta = time - lastTime;
+      if (delta < FPS_INTERVAL) return;
+      lastTime = time - (delta % FPS_INTERVAL);
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      stars.forEach((star) => {
-        drawStar(star, time);
+      for (let i = 0; i < stars.length; i++) {
+        const star = stars[i];
+        const twinkle = Math.sin(time * star.twinkleSpeed + star.twinkleOffset) * 0.5 + 0.5;
+        const alpha = star.opacity * twinkle;
+
+        // Simple filled circle — no gradient creation
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = 'rgb(200, 180, 255)';
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+
         star.y -= star.speed;
         if (star.y < -5) {
           star.y = canvas.height + 5;
           star.x = Math.random() * canvas.width;
         }
-      });
-
-      animationId = requestAnimationFrame(animate);
+      }
+      ctx.globalAlpha = 1;
     };
 
     resize();
     createStars();
     animationId = requestAnimationFrame(animate);
 
-    window.addEventListener('resize', () => {
-      resize();
-      createStars();
-    });
+    const handleResize = () => { resize(); createStars(); };
+    window.addEventListener('resize', handleResize);
 
     return () => {
       cancelAnimationFrame(animationId);
-      window.removeEventListener('resize', resize);
+      window.removeEventListener('resize', handleResize);
     };
   }, [count]);
 

@@ -68,12 +68,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="scroll-smooth">
+    <html lang="pt-BR" className="scroll-smooth overflow-x-hidden">
       <body
-        className={`${inter.variable} ${cinzel.variable} ${cinzelDecorative.variable} antialiased cosmic-bg min-h-screen`}
+        className={`${inter.variable} ${cinzel.variable} ${cinzelDecorative.variable} antialiased cosmic-bg min-h-screen overflow-x-hidden`}
       >
-        <StarField count={180} />
-        <CosmicDust count={40} />
+        <StarField count={80} />
+        <CosmicDust count={20} />
         <Navbar />
         <main className="relative z-10">
           {children}

@@ -2,38 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NAV_LINKS } from '@/lib/constants';
-
-// Dracon logo SVG component
-function DraconLogo() {
-  return (
-    <svg width="40" height="40" viewBox="0 0 100 100" className="text-dracon-purple-400">
-      <defs>
-        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{ stopColor: '#a855f4' }} />
-          <stop offset="100%" style={{ stopColor: '#f97316' }} />
-        </linearGradient>
-      </defs>
-      <path
-        d="M50 10 L75 30 L85 55 L70 75 L50 90 L30 75 L15 55 L25 30 Z"
-        fill="none"
-        stroke="url(#logoGrad)"
-        strokeWidth="2"
-      />
-      <path
-        d="M50 20 L65 35 L72 52 L62 66 L50 76 L38 66 L28 52 L35 35 Z"
-        fill="none"
-        stroke="url(#logoGrad)"
-        strokeWidth="1.5"
-        opacity="0.6"
-      />
-      <circle cx="50" cy="48" r="8" fill="url(#logoGrad)" opacity="0.8" />
-      <circle cx="50" cy="48" r="3" fill="white" opacity="0.9" />
-    </svg>
-  );
-}
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -62,16 +34,15 @@ export default function Navbar() {
     >
       <nav className="section-container flex items-center justify-between h-20">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <motion.div
-            whileHover={{ rotate: 360 }}
-            transition={{ duration: 0.8 }}
-          >
-            <DraconLogo />
-          </motion.div>
-          <span className="text-2xl font-display font-bold glow-text text-dracon-purple-300 tracking-wider">
-            DRACON
-          </span>
+        <Link href="/" className="flex items-center group">
+          <Image
+            src="/images/logo.png"
+            alt="Dracon Logo"
+            width={140}
+            height={44}
+            className="rounded-sm"
+            priority
+          />
         </Link>
 
         {/* Desktop Nav */}

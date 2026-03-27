@@ -48,8 +48,9 @@ Dracon é um portfólio completo (frontend + backend + banco de dados) com:
 
 | Página | Rota | Descrição |
 |--------|------|-----------|
-| **Home** | `/` | Hero animado, obras em destaque, CTA |
+| **Home** | `/` | Hero animado, carrossel de artes, obras em destaque, CTA |
 | **Portfólio** | `/portfolio` | Galeria com filtros por categoria e modal de detalhes |
+| **Dragon Eyes** | `/dragon-eyes` | Projeto pessoal com constelação interativa de personagens |
 | **Sobre** | `/about` | História, habilidades, linha do tempo animada |
 | **Serviços** | `/services` | Lista de serviços, preços, processo de encomenda |
 | **Contato** | `/contact` | Formulário de contato, redes sociais |
@@ -158,6 +159,39 @@ npm run dev
 ```
 
 Acesse: **http://localhost:3000**
+
+---
+
+## 🖼️ Hospedando Imagens e Vídeos com Google Drive
+
+Você pode usar o Google Drive para hospedar as imagens e vídeos do portfólio.
+
+### Imagens
+
+1. Suba a imagem no Google Drive
+2. Clique com botão direito → **Compartilhar** → **"Qualquer pessoa com o link"**
+3. Copie o link. Ele será algo como:
+   ```
+   https://drive.google.com/file/d/SEU_ID_AQUI/view?usp=sharing
+   ```
+4. Extraia o **ID** (a parte entre `/d/` e `/view`)
+5. Use esta URL no campo de imagem:
+   ```
+   https://drive.google.com/uc?export=view&id=SEU_ID_AQUI
+   ```
+
+**Exemplo:**
+- Link original: `https://drive.google.com/file/d/1aBcDeFgHiJkLmNoPqRsT/view?usp=sharing`
+- URL da imagem: `https://drive.google.com/uc?export=view&id=1aBcDeFgHiJkLmNoPqRsT`
+
+### Vídeos
+
+Para vídeos do Google Drive, use a URL de embed:
+```
+https://drive.google.com/file/d/SEU_ID_AQUI/preview
+```
+
+> **Nota:** Os domínios `drive.google.com` e `lh3.googleusercontent.com` já estão autorizados no `next.config.mjs`.
 
 ### 5. Acessar o Admin
 

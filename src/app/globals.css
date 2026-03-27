@@ -107,6 +107,10 @@
 }
 
 @layer base {
+  html, body {
+    @apply overflow-x-hidden;
+  }
+
   body {
     @apply bg-dracon-void text-gray-200 antialiased;
     font-family: var(--font-inter), sans-serif;

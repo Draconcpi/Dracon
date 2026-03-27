@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { NAV_LINKS, SOCIAL_LINKS } from '@/lib/constants';
@@ -22,9 +23,13 @@ export default function Footer() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-2xl font-display font-bold glow-text text-dracon-purple-300 mb-4">
-              DRACON
-            </h3>
+            <Image
+              src="/images/logo.png"
+              alt="Dracon Logo"
+              width={140}
+              height={44}
+              className="rounded-sm mb-4"
+            />
             <p className="text-gray-400 text-sm leading-relaxed">
               Arte mística, fantasia e mundos arcanos. Criando universos visuais
               onde magia e imaginação se encontram entre estrelas e constelações.

@@ -5,6 +5,7 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://dracon.art'
 export const NAV_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/portfolio', label: 'Portfólio' },
+  { href: '/dragon-eyes', label: 'Dragon Eyes' },
   { href: '/about', label: 'Sobre' },
   { href: '/services', label: 'Serviços' },
   { href: '/contact', label: 'Contato' },
