@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
+import { useI18n } from '@/i18n';
 
 // ─── Characters (stars in the constellation) ──────────────────────
 // Each star has a position on the constellation map, a color, and character info.
@@ -125,6 +126,7 @@ const loreSections = [
 
 // ─── Constellation Component ─────────────────────────────────────
 function InteractiveConstellation() {
+  const { t } = useI18n();
   const [hoveredChar, setHoveredChar] = useState<string | null>(null);
   const [selectedChar, setSelectedChar] = useState<string | null>(null);
 
@@ -226,7 +228,7 @@ function InteractiveConstellation() {
                   fontWeight={isActive ? 700 : 400}
                   style={{ transition: 'all 0.3s ease' }}
                 >
-                  {char.name}
+                  {t(`dragonEyes.characters.${char.id}.name`)}
                 </text>
               </g>
             );
@@ -285,14 +287,14 @@ function InteractiveConstellation() {
                     className="text-xs tracking-[0.2em] uppercase font-medium"
                     style={{ color: activeChar.color }}
                   >
-                    {activeChar.role}
+                    {t(`dragonEyes.characters.${activeChar.id}.role`)}
                   </span>
                 </div>
                 <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-3">
-                  {activeChar.name}
+                  {t(`dragonEyes.characters.${activeChar.id}.name`)}
                 </h3>
                 <p className="text-gray-400 leading-relaxed text-sm md:text-base">
-                  {activeChar.description}
+                  {t(`dragonEyes.characters.${activeChar.id}.description`)}
                 </p>
               </div>
             </div>
@@ -307,7 +309,7 @@ function InteractiveConstellation() {
           animate={{ opacity: 1 }}
           className="text-center text-gray-500 text-sm mt-8"
         >
-          ✦ Passe o mouse sobre uma estrela para conhecer o personagem ✦
+          {t('dragonEyes.constellation.hint')}
         </motion.p>
       )}
     </div>
@@ -316,6 +318,8 @@ function InteractiveConstellation() {
 
 // ─── Main Page ────────────────────────────────────────────────────
 export default function DragonEyesPage() {
+  const { t } = useI18n();
+
   return (
     <>
       {/* HERO */}
@@ -332,7 +336,7 @@ export default function DragonEyesPage() {
               transition={{ delay: 0.3 }}
               className="text-dracon-orange-400 text-sm tracking-[0.3em] uppercase font-medium mb-4"
             >
-              ✦ Projeto Pessoal ✦
+              {t('dragonEyes.hero.tag')}
             </motion.p>
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
@@ -340,7 +344,7 @@ export default function DragonEyesPage() {
               transition={{ delay: 0.5, duration: 1 }}
               className="text-5xl md:text-7xl lg:text-8xl font-display font-bold glow-text text-dracon-purple-200 mb-4 tracking-wider"
             >
-              DRAGON EYES
+              {t('dragonEyes.hero.title')}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -348,8 +352,7 @@ export default function DragonEyesPage() {
               transition={{ delay: 0.8 }}
               className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed"
             >
-              Sete estrelas. Sete guardiões. Uma constelação que guarda os segredos
-              do poder mais antigo do cosmos.
+              {t('dragonEyes.hero.subtitle')}
             </motion.p>
           </motion.div>
         </div>
@@ -361,10 +364,10 @@ export default function DragonEyesPage() {
         <div className="section-container">
           <div className="text-center mb-12">
             <GlowText as="h2" className="text-3xl md:text-4xl font-bold mb-4">
-              A Constelação do Dragão
+              {t('dragonEyes.constellation.title')}
             </GlowText>
             <p className="text-gray-400 max-w-lg mx-auto">
-              Cada estrela representa um guardião cósmico. Explore seus segredos.
+              {t('dragonEyes.constellation.subtitle')}
             </p>
           </div>
 
@@ -383,10 +386,10 @@ export default function DragonEyesPage() {
               viewport={{ once: true }}
               className="text-dracon-orange-400 text-sm tracking-[0.2em] uppercase font-medium"
             >
-              ✦ Lore
+              {t('dragonEyes.lore.tag')}
             </motion.span>
             <GlowText as="h2" className="text-3xl md:text-4xl font-bold mt-3 mb-4" color="orange">
-              A História
+              {t('dragonEyes.lore.title')}
             </GlowText>
           </div>
 
@@ -402,7 +405,7 @@ export default function DragonEyesPage() {
               >
                 <div className="absolute left-0 top-0 w-3 h-3 rounded-full bg-dracon-purple-500 -translate-x-[7px]" />
                 <span className="text-dracon-purple-400 text-xs tracking-[0.15em] uppercase font-medium">
-                  Capítulo {i + 1}
+                  {t('dragonEyes.lore.chapterLabel')} {i + 1}
                 </span>
                 <h3 className="text-xl md:text-2xl font-display font-bold text-white mt-1 mb-3">
                   {section.title}
@@ -420,10 +423,10 @@ export default function DragonEyesPage() {
         <div className="section-container">
           <div className="text-center mb-12">
             <GlowText as="h2" className="text-3xl md:text-4xl font-bold mb-4">
-              Galeria do Projeto
+              {t('dragonEyes.gallery.title')}
             </GlowText>
             <p className="text-gray-400 max-w-lg mx-auto">
-              Artes conceituais, estudos de personagens e cenas do universo Dragon Eyes.
+              {t('dragonEyes.gallery.subtitle')}
             </p>
           </div>
 
@@ -477,18 +480,17 @@ export default function DragonEyesPage() {
             viewport={{ once: true }}
           >
             <GlowText as="h2" className="text-3xl md:text-4xl font-bold mb-4">
-              Este é apenas o começo
+              {t('dragonEyes.cta.title')}
             </GlowText>
             <p className="text-gray-400 max-w-xl mx-auto mb-8">
-              Dragon Eyes é um projeto em constante evolução. Novos personagens,
-              capítulos e artes serão adicionados conforme o universo se expande.
+              {t('dragonEyes.cta.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="/portfolio">
-                <MagicButton variant="primary">Ver Portfólio Completo</MagicButton>
+                <MagicButton variant="primary">{t('dragonEyes.cta.ctaPortfolio')}</MagicButton>
               </a>
               <a href="/contact">
-                <MagicButton variant="secondary">Acompanhe o Projeto</MagicButton>
+                <MagicButton variant="secondary">{t('dragonEyes.cta.ctaFollow')}</MagicButton>
               </a>
             </div>
           </motion.div>

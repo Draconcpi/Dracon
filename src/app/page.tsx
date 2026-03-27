@@ -5,8 +5,8 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
-import ConstellationLines from '@/components/ui/ConstellationLines';
 import AnimatedCard from '@/components/ui/AnimatedCard';
+import { useI18n } from '@/i18n';
 
 function ArcaneSymbol() {
   return (
@@ -264,11 +264,19 @@ function ArtCarousel() {
 }
 
 export default function HomePage() {
+  const { t } = useI18n();
+
+  const translatedWorks = [
+    { ...featuredWorks[0], title: t('home.works.guardianStars.title'), category: t('home.works.guardianStars.category'), description: t('home.works.guardianStars.description') },
+    { ...featuredWorks[1], title: t('home.works.arcaneDragon.title'), category: t('home.works.arcaneDragon.category'), description: t('home.works.arcaneDragon.description') },
+    { ...featuredWorks[2], title: t('home.works.moonRitual.title'), category: t('home.works.moonRitual.category'), description: t('home.works.moonRitual.description') },
+    { ...featuredWorks[3], title: t('home.works.phoenixConstellation.title'), category: t('home.works.phoenixConstellation.category'), description: t('home.works.phoenixConstellation.description') },
+  ];
+
   return (
     <>
       {/* HERO SECTION */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <ConstellationLines />
         <ArcaneSymbol />
 
         <div className="section-container relative z-10 text-center">
@@ -283,7 +291,7 @@ export default function HomePage() {
               transition={{ delay: 0.3, duration: 0.8 }}
               className="text-dracon-orange-400 text-sm tracking-[0.3em] uppercase font-medium mb-6"
             >
-              ✦ Ilustração & Animação ✦
+              {t('home.hero.tagline')}
             </motion.p>
 
             <motion.h1
@@ -292,7 +300,7 @@ export default function HomePage() {
               transition={{ delay: 0.5, duration: 1 }}
               className="text-6xl md:text-8xl lg:text-9xl font-display font-bold glow-text text-dracon-purple-200 mb-6 tracking-wider"
             >
-              DRACON
+              {t('home.hero.title')}
             </motion.h1>
 
             <motion.p
@@ -301,8 +309,7 @@ export default function HomePage() {
               transition={{ delay: 0.8, duration: 0.8 }}
               className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
             >
-              Criando universos visuais onde magia e imaginação se encontram
-              entre estrelas e constelações. Arte mística, fantasia e mundos arcanos.
+              {t('home.hero.subtitle')}
             </motion.p>
 
             <motion.div
@@ -313,12 +320,12 @@ export default function HomePage() {
             >
               <Link href="/portfolio">
                 <MagicButton variant="primary" className="text-lg px-8 py-4">
-                  ✦ Ver Portfólio
+                  {t('home.hero.ctaPortfolio')}
                 </MagicButton>
               </Link>
               <Link href="/services">
                 <MagicButton variant="secondary" className="text-lg px-8 py-4">
-                  Encomendar Arte
+                  {t('home.hero.ctaServices')}
                 </MagicButton>
               </Link>
             </motion.div>
@@ -356,10 +363,10 @@ export default function HomePage() {
               viewport={{ once: true }}
               className="text-dracon-orange-400 text-sm tracking-[0.2em] uppercase font-medium"
             >
-              ✦ Galeria
+              {t('home.carousel.tag')}
             </motion.span>
             <GlowText as="h2" className="text-4xl md:text-5xl font-bold mt-3 mb-4">
-              Últimas Artes
+              {t('home.carousel.title')}
             </GlowText>
             <motion.p
               initial={{ opacity: 0 }}
@@ -367,7 +374,7 @@ export default function HomePage() {
               viewport={{ once: true }}
               className="text-gray-400 max-w-lg mx-auto"
             >
-              Navegue pelas criações mais recentes do universo Dracon.
+              {t('home.carousel.subtitle')}
             </motion.p>
           </div>
 
@@ -387,7 +394,7 @@ export default function HomePage() {
             className="text-center mt-12"
           >
             <Link href="/portfolio">
-              <MagicButton variant="secondary">Explorar portfólio completo →</MagicButton>
+              <MagicButton variant="secondary">{t('home.carousel.cta')}</MagicButton>
             </Link>
           </motion.div>
         </div>
@@ -399,7 +406,7 @@ export default function HomePage() {
         <div className="section-container">
           <div className="text-center mb-16">
             <GlowText as="h2" className="text-4xl md:text-5xl font-bold mb-4">
-              Obras em Destaque
+              {t('home.featured.title')}
             </GlowText>
             <motion.p
               initial={{ opacity: 0 }}
@@ -407,12 +414,12 @@ export default function HomePage() {
               viewport={{ once: true }}
               className="text-gray-400 max-w-lg mx-auto"
             >
-              Uma seleção das obras mais recentes e fascinantes do universo Dracon.
+              {t('home.featured.subtitle')}
             </motion.p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {featuredWorks.map((work, i) => (
+            {translatedWorks.map((work, i) => (
               <AnimatedCard key={work.title} delay={i * 0.15}>
                 <div className={`p-8 h-80 flex flex-col justify-end bg-gradient-to-br ${work.gradient} rounded-xl relative overflow-hidden group`}>
                   <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-30 transition-opacity duration-500">
@@ -446,7 +453,7 @@ export default function HomePage() {
             className="text-center mt-12"
           >
             <Link href="/portfolio">
-              <MagicButton variant="secondary">Ver todo o portfólio →</MagicButton>
+              <MagicButton variant="secondary">{t('home.featured.cta')}</MagicButton>
             </Link>
           </motion.div>
         </div>
@@ -464,22 +471,19 @@ export default function HomePage() {
               transition={{ duration: 0.8 }}
             >
               <span className="text-dracon-orange-400 text-sm tracking-[0.2em] uppercase font-medium">
-                Sobre o Artista
+                {t('home.aboutPreview.tag')}
               </span>
               <GlowText as="h2" className="text-4xl md:text-5xl font-bold mt-3 mb-6" animate={false}>
-                Arte Nascida das Estrelas
+                {t('home.aboutPreview.title')}
               </GlowText>
               <p className="text-gray-400 leading-relaxed mb-4">
-                Dracon é um estúdio de arte digital especializado em ilustração de fantasia,
-                concept art e animação. Cada obra é uma jornada por mundos arcanos onde a
-                magia flui entre constelações e símbolos ancestrais.
+                {t('home.aboutPreview.p1')}
               </p>
               <p className="text-gray-400 leading-relaxed mb-8">
-                Inspirado pela mitologia, astrologia e mistérios do cosmos, cada peça
-                carrega a essência de universos fantásticos esperando para ser descobertos.
+                {t('home.aboutPreview.p2')}
               </p>
               <Link href="/about">
-                <MagicButton variant="secondary">Conheça a história →</MagicButton>
+                <MagicButton variant="secondary">{t('home.aboutPreview.cta')}</MagicButton>
               </Link>
             </motion.div>
 
@@ -528,21 +532,20 @@ export default function HomePage() {
             transition={{ duration: 0.8 }}
           >
             <GlowText as="h2" className="text-4xl md:text-5xl font-bold mb-6" color="orange" animate={false}>
-              Transforme sua Visão em Arte
+              {t('home.cta.title')}
             </GlowText>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-10">
-              Encomende uma ilustração, concept art ou animação única.
-              Cada projeto é uma colaboração mágica entre sua visão e a arte Dracon.
+              {t('home.cta.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/services">
                 <MagicButton variant="fire" className="text-lg px-8 py-4">
-                  🔥 Ver Serviços
+                  {t('home.cta.ctaServices')}
                 </MagicButton>
               </Link>
               <Link href="/contact">
                 <MagicButton variant="secondary" className="text-lg px-8 py-4">
-                  Entrar em Contato
+                  {t('home.cta.ctaContact')}
                 </MagicButton>
               </Link>
             </div>

@@ -3,8 +3,10 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import MagicButton from '@/components/ui/MagicButton';
+import { useI18n } from '@/i18n';
 
 export default function NotFound() {
+  const { t, locale } = useI18n();
   return (
     <div className="min-h-screen flex items-center justify-center cosmic-bg relative overflow-hidden">
       {/* Background effects */}
@@ -40,11 +42,10 @@ export default function NotFound() {
           <div className="w-24 h-px bg-gradient-to-r from-transparent via-dracon-purple-500 to-transparent mx-auto mb-6" />
 
           <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-4">
-            Portal Não Encontrado
+            {t('notFound.heading')}
           </h2>
           <p className="text-gray-400 max-w-md mx-auto mb-8 leading-relaxed">
-            O caminho que você busca se perdeu entre as constelações.
-            Talvez o portal tenha se fechado, ou nunca tenha existido neste plano.
+            {t('notFound.message')}
           </p>
 
           {/* Floating rune */}
@@ -58,10 +59,10 @@ export default function NotFound() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/">
-              <MagicButton variant="primary">✦ Voltar ao Início</MagicButton>
+              <MagicButton variant="primary">{t('notFound.ctaHome')}</MagicButton>
             </Link>
             <Link href="/portfolio">
-              <MagicButton variant="secondary">Ver Portfólio</MagicButton>
+              <MagicButton variant="secondary">{t('notFound.ctaPortfolio')}</MagicButton>
             </Link>
           </div>
         </motion.div>

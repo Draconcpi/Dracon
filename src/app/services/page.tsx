@@ -5,60 +5,19 @@ import { motion } from 'framer-motion';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
 import AnimatedCard from '@/components/ui/AnimatedCard';
+import { useI18n } from '@/i18n';
 
-const services = [
-  {
-    id: '1',
-    title: 'Ilustração Personalizada',
-    icon: '🎨',
-    shortDescription: 'Ilustrações originais de fantasia e magia sob encomenda.',
-    description: 'Criação de ilustrações únicas e personalizadas com temática de fantasia, magia e elementos místicos. Cada peça é criada do zero, desde o esboço até a arte final em alta resolução.',
-    price: 'A partir de R$ 350',
-    priceNote: 'Preço varia conforme complexidade e tamanho',
-    features: ['Esboço + 2 revisões', 'Arte final em alta resolução', 'Arquivo PNG e PSD', 'Comercial ou pessoal', 'Prazo: 7-14 dias'],
-  },
-  {
-    id: '2',
-    title: 'Concept Art',
-    icon: '✏️',
-    shortDescription: 'Design visual de personagens, criaturas e ambientes.',
-    description: 'Desenvolvimento visual de conceitos para jogos, filmes, livros e projetos criativos. Inclui design de personagens, ambientes e criaturas com estética arcana.',
-    price: 'A partir de R$ 500',
-    priceNote: 'Pacotes disponíveis para projetos maiores',
-    features: ['Múltiplos conceitos iniciais', 'Turnaround sheet', 'Detalhes de design', 'Style guide', 'Prazo: 10-21 dias'],
-  },
-  {
-    id: '3',
-    title: 'Animação 2D',
-    icon: '🎬',
-    shortDescription: 'Animações curtas e loops com temática mística.',
-    description: 'Animações curtas, loops e motion graphics com estética mística e fantástica. Ideal para redes sociais, intros de vídeo e projetos artísticos.',
-    price: 'A partir de R$ 800',
-    priceNote: 'Consulte para projetos mais longos',
-    features: ['Storyboard incluído', 'Até 15 segundos', 'Formato MP4/GIF', 'Trilha sonora opcional', 'Prazo: 14-30 dias'],
-  },
-  {
-    id: '4',
-    title: 'Design de Personagem',
-    icon: '🐉',
-    shortDescription: 'Personagens originais com ficha completa de referência.',
-    description: 'Criação completa de personagens originais com ficha de referência, poses, expressões e detalhes de equipamento/vestimenta.',
-    price: 'A partir de R$ 600',
-    priceNote: 'Inclui ficha de referência completa',
-    features: ['Design original completo', 'Vista frontal e traseira', 'Expressões faciais', 'Detalhes de equipamento', 'Prazo: 10-18 dias'],
-  },
+const servicesMeta = [
+  { id: '1', icon: '🎨' },
+  { id: '2', icon: '✏️' },
+  { id: '3', icon: '🎬' },
+  { id: '4', icon: '🐉' },
 ];
 
-const processSteps = [
-  { step: 1, title: 'Contato Inicial', description: 'Descreva sua visão, referências e detalhes do projeto.', icon: '💬' },
-  { step: 2, title: 'Orçamento', description: 'Receba um orçamento detalhado e prazo de entrega.', icon: '📋' },
-  { step: 3, title: 'Esboço', description: 'Aprovação do esboço inicial antes da arte final.', icon: '✏️' },
-  { step: 4, title: 'Criação', description: 'Desenvolvimento da arte com atualizações de progresso.', icon: '🎨' },
-  { step: 5, title: 'Revisão', description: 'Ajustes finais para garantir sua satisfação.', icon: '🔍' },
-  { step: 6, title: 'Entrega', description: 'Arquivos finais em alta resolução prontos para uso.', icon: '✨' },
-];
+const processIcons = ['💬', '📋', '✏️', '🎨', '🔍', '✨'];
 
 export default function ServicesPage() {
+  const { t, locale } = useI18n();
   const [expandedService, setExpandedService] = useState<string | null>(null);
 
   return (
@@ -70,10 +29,10 @@ export default function ServicesPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-dracon-orange-400 text-sm tracking-[0.3em] uppercase font-medium mb-4"
         >
-          ✦ Comissões & Serviços ✦
+          {t('services.header.tag')}
         </motion.p>
         <GlowText as="h1" className="text-5xl md:text-6xl font-bold mb-4">
-          Serviços
+          {t('services.header.title')}
         </GlowText>
         <motion.p
           initial={{ opacity: 0 }}
@@ -81,15 +40,14 @@ export default function ServicesPage() {
           transition={{ delay: 0.3 }}
           className="text-gray-400 max-w-2xl mx-auto text-lg"
         >
-          Transforme sua visão em arte. Cada projeto é tratado com dedicação artesanal
-          e paixão pelo fantástico.
+          {t('services.header.subtitle')}
         </motion.p>
       </section>
 
       {/* Services Grid */}
       <section className="section-container mb-32">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {services.map((service, i) => (
+          {servicesMeta.map((service, i) => (
             <AnimatedCard
               key={service.id}
               delay={i * 0.1}
@@ -105,14 +63,14 @@ export default function ServicesPage() {
                     {service.icon}
                   </motion.span>
                   <span className="text-dracon-orange-400 font-bold text-lg">
-                    {service.price}
+                    {t(`services.items.${i}.price`)}
                   </span>
                 </div>
 
                 <h3 className="text-2xl font-display font-bold text-white mb-2">
-                  {service.title}
+                  {t(`services.items.${i}.title`)}
                 </h3>
-                <p className="text-gray-400 mb-4">{service.shortDescription}</p>
+                <p className="text-gray-400 mb-4">{t(`services.items.${i}.shortDescription`)}</p>
 
                 {/* Expanded content */}
                 <motion.div
@@ -124,13 +82,13 @@ export default function ServicesPage() {
                   className="overflow-hidden"
                 >
                   <div className="pt-4 border-t border-dracon-purple-800/20">
-                    <p className="text-gray-300 text-sm mb-4 leading-relaxed">{service.description}</p>
-                    <p className="text-dracon-purple-400 text-xs mb-4 italic">{service.priceNote}</p>
+                    <p className="text-gray-300 text-sm mb-4 leading-relaxed">{t(`services.items.${i}.description`)}</p>
+                    <p className="text-dracon-purple-400 text-xs mb-4 italic">{t(`services.items.${i}.priceNote`)}</p>
                     <ul className="space-y-2">
-                      {service.features.map((feature) => (
-                        <li key={feature} className="flex items-center gap-2 text-sm text-gray-300">
+                      {Array.from({ length: 5 }, (_, fi) => (
+                        <li key={fi} className="flex items-center gap-2 text-sm text-gray-300">
                           <span className="text-dracon-purple-400">✦</span>
-                          {feature}
+                          {t(`services.items.${i}.features.${fi}`)}
                         </li>
                       ))}
                     </ul>
@@ -138,7 +96,7 @@ export default function ServicesPage() {
                 </motion.div>
 
                 <button className="mt-4 text-dracon-purple-400 text-sm hover:text-dracon-purple-300 transition-colors">
-                  {expandedService === service.id ? '← Menos detalhes' : 'Ver detalhes →'}
+                  {expandedService === service.id ? t('services.toggleLess') : t('services.toggleMore')}
                 </button>
               </div>
             </AnimatedCard>
@@ -150,17 +108,17 @@ export default function ServicesPage() {
       <section className="section-container mb-32">
         <div className="text-center mb-16">
           <GlowText as="h2" className="text-3xl md:text-4xl font-bold mb-4">
-            Como Funciona
+            {t('services.process.title')}
           </GlowText>
           <p className="text-gray-400 max-w-lg mx-auto">
-            O processo de encomenda em 6 passos simples — do conceito à arte final.
+            {t('services.process.subtitle')}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {processSteps.map((step, i) => (
+          {processIcons.map((icon, i) => (
             <motion.div
-              key={step.step}
+              key={i}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -168,15 +126,15 @@ export default function ServicesPage() {
               className="card-arcane p-6 text-center"
             >
               <div className="w-12 h-12 rounded-full bg-dracon-purple-900/50 border border-dracon-purple-600/30 flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl">{step.icon}</span>
+                <span className="text-xl">{icon}</span>
               </div>
               <div className="text-dracon-orange-400 text-xs font-bold tracking-wider mb-2">
-                PASSO {step.step}
+                {t('services.process.stepLabel')} {i + 1}
               </div>
               <h3 className="text-lg font-display font-bold text-white mb-2">
-                {step.title}
+                {t(`services.process.steps.${i}.title`)}
               </h3>
-              <p className="text-gray-400 text-sm">{step.description}</p>
+              <p className="text-gray-400 text-sm">{t(`services.process.steps.${i}.description`)}</p>
             </motion.div>
           ))}
         </div>
@@ -187,10 +145,10 @@ export default function ServicesPage() {
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
             <GlowText as="h2" className="text-3xl md:text-4xl font-bold mb-4" color="orange">
-              Solicitar Orçamento
+              {t('services.form.title')}
             </GlowText>
             <p className="text-gray-400">
-              Preencha o formulário abaixo e retornarei em até 48 horas.
+              {t('services.form.subtitle')}
             </p>
           </div>
 
@@ -201,47 +159,47 @@ export default function ServicesPage() {
             className="card-arcane p-8 space-y-6"
             onSubmit={(e) => {
               e.preventDefault();
-              alert('Mensagem enviada! (Em produção, isto será enviado ao servidor)');
+              alert(t('services.form.alertSent'));
             }}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm text-gray-300 mb-2 font-medium">Nome</label>
-                <input type="text" className="input-arcane" placeholder="Seu nome" required />
+                <label className="block text-sm text-gray-300 mb-2 font-medium">{t('services.form.name')}</label>
+                <input type="text" className="input-arcane" placeholder={t('services.form.namePlaceholder')} required />
               </div>
               <div>
-                <label className="block text-sm text-gray-300 mb-2 font-medium">Email</label>
-                <input type="email" className="input-arcane" placeholder="seu@email.com" required />
+                <label className="block text-sm text-gray-300 mb-2 font-medium">{t('services.form.email')}</label>
+                <input type="email" className="input-arcane" placeholder={t('services.form.emailPlaceholder')} required />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm text-gray-300 mb-2 font-medium">Tipo de Serviço</label>
+              <label className="block text-sm text-gray-300 mb-2 font-medium">{t('services.form.serviceType')}</label>
               <select className="input-arcane" required>
-                <option value="">Selecione um serviço</option>
-                {services.map((s) => (
-                  <option key={s.id} value={s.title}>{s.title}</option>
+                <option value="">{t('services.form.serviceDefault')}</option>
+                {servicesMeta.map((s, i) => (
+                  <option key={s.id} value={t(`services.items.${i}.title`)}>{t(`services.items.${i}.title`)}</option>
                 ))}
-                <option value="outro">Outro</option>
+                <option value="outro">{t('services.form.serviceOther')}</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm text-gray-300 mb-2 font-medium">Assunto</label>
-              <input type="text" className="input-arcane" placeholder="Sobre o que é sua encomenda?" required />
+              <label className="block text-sm text-gray-300 mb-2 font-medium">{t('services.form.subject')}</label>
+              <input type="text" className="input-arcane" placeholder={t('services.form.subjectPlaceholder')} required />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-300 mb-2 font-medium">Descrição do Projeto</label>
+              <label className="block text-sm text-gray-300 mb-2 font-medium">{t('services.form.description')}</label>
               <textarea
                 className="input-arcane min-h-[150px] resize-y"
-                placeholder="Descreva sua visão, referências, personagens, cenários... quanto mais detalhes, melhor!"
+                placeholder={t('services.form.descriptionPlaceholder')}
                 required
               />
             </div>
 
             <MagicButton type="submit" variant="fire" className="w-full text-lg py-4">
-              🔥 Enviar Solicitação
+              {t('services.form.submit')}
             </MagicButton>
           </motion.form>
         </div>

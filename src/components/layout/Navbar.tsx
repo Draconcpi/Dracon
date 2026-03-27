@@ -6,11 +6,23 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NAV_LINKS } from '@/lib/constants';
+import { useI18n } from '@/i18n';
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
+  const { t } = useI18n();
+
+  const navLabels: Record<string, string> = {
+    '/': t('nav.home'),
+    '/portfolio': t('nav.portfolio'),
+    '/dragon-eyes': t('nav.dragonEyes'),
+    '/about': t('nav.about'),
+    '/services': t('nav.services'),
+    '/contact': t('nav.contact'),
+  };
 
   // Hide navbar on admin pages
   if (pathname.startsWith('/admin')) return null;
@@ -57,7 +69,7 @@ export default function Navbar() {
                   : 'text-gray-400 hover:text-dracon-purple-300'
               }`}
             >
-              {link.label}
+              {navLabels[link.href] || link.label}
               {pathname === link.href && (
                 <motion.div
                   layoutId="navbar-indicator"
@@ -66,8 +78,7 @@ export default function Navbar() {
                 />
               )}
             </Link>
-          ))}
-        </div>
+          ))}          <LanguageSwitcher />        </div>
 
         {/* Mobile Menu Button */}
         <button
@@ -115,10 +126,13 @@ export default function Navbar() {
                         : 'text-gray-400'
                     }`}
                   >
-                    {link.label}
+                    {navLabels[link.href] || link.label}
                   </Link>
                 </motion.div>
               ))}
+              <div className="pt-2">
+                <LanguageSwitcher />
+              </div>
             </div>
           </motion.div>
         )}

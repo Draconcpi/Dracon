@@ -4,100 +4,47 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlowText from '@/components/ui/GlowText';
 import AnimatedCard from '@/components/ui/AnimatedCard';
+import { useI18n } from '@/i18n';
 
-const categories = ['Todos', 'Ilustração', 'Concept Art', 'Animação', 'Arte Digital Mística'];
-
-// Mock portfolio data (will be replaced with API data)
-const portfolioData = [
-  {
-    id: '1',
-    title: 'O Guardião das Estrelas',
-    slug: 'o-guardiao-das-estrelas',
-    description: 'Uma criatura ancestral que vela pelos segredos das constelações. Esta ilustração foi inspirada nas lendas sobre seres que protegem o equilíbrio entre os mundos terrestre e celeste.',
-    category: 'Ilustração',
-    tags: ['fantasia', 'estrelas', 'guardião'],
-    featured: true,
-    gradient: 'from-dracon-purple-800/50 to-indigo-900/50',
-  },
-  {
-    id: '2',
-    title: 'Dragão Arcano',
-    slug: 'dragao-arcano',
-    description: 'Um dragão nascido das forças primordiais da magia, envolvido em runas e energia arcana. Concept art para projeto pessoal de worldbuilding.',
-    category: 'Concept Art',
-    tags: ['dragão', 'arcano', 'magia'],
-    featured: true,
-    gradient: 'from-dracon-purple-900/50 to-dracon-orange-700/30',
-  },
-  {
-    id: '3',
-    title: 'Ritual da Lua Crescente',
-    slug: 'ritual-da-lua-crescente',
-    description: 'Animação loop de um ritual mágico sob a luz da lua crescente, com partículas de energia fluindo entre símbolos antigos.',
-    category: 'Animação',
-    tags: ['animação', 'lua', 'ritual'],
-    featured: true,
-    gradient: 'from-blue-900/50 to-dracon-purple-900/50',
-  },
-  {
-    id: '4',
-    title: 'Constelação do Fênix',
-    slug: 'constelacao-do-fenix',
-    description: 'Mapa estelar místico representando a constelação perdida do Fênix, desenhada com técnicas de arte digital e elementos de astrologia antiga.',
-    category: 'Arte Digital Mística',
-    tags: ['constelação', 'fênix', 'astrologia'],
-    featured: true,
-    gradient: 'from-dracon-purple-800/50 to-cyan-900/30',
-  },
-  {
-    id: '5',
-    title: 'A Feiticeira das Sombras',
-    slug: 'a-feiticeira-das-sombras',
-    description: 'Personagem mística que manipula as sombras como extensão de sua vontade.',
-    category: 'Ilustração',
-    tags: ['feiticeira', 'sombras', 'personagem'],
-    featured: false,
-    gradient: 'from-gray-900/50 to-dracon-purple-900/50',
-  },
-  {
-    id: '6',
-    title: 'Fortaleza nas Nuvens',
-    slug: 'fortaleza-nas-nuvens',
-    description: 'Concept art de uma fortaleza flutuante entre as nuvens, lar de uma ordem antiga de magos astrais.',
-    category: 'Concept Art',
-    tags: ['fortaleza', 'nuvens', 'ambiente'],
-    featured: false,
-    gradient: 'from-sky-900/40 to-dracon-purple-800/40',
-  },
-  {
-    id: '7',
-    title: 'Olho do Cosmos',
-    slug: 'olho-do-cosmos',
-    description: 'Arte digital mística representando o Olho do Cosmos — um portal entre dimensões.',
-    category: 'Arte Digital Mística',
-    tags: ['cosmos', 'portal', 'runas'],
-    featured: false,
-    gradient: 'from-dracon-orange-700/30 to-dracon-purple-900/50',
-  },
-  {
-    id: '8',
-    title: 'Espírito da Floresta',
-    slug: 'espirito-da-floresta',
-    description: 'Animação de um espírito da floresta emergindo das raízes de uma árvore ancestral.',
-    category: 'Animação',
-    tags: ['espírito', 'floresta', 'natureza'],
-    featured: false,
-    gradient: 'from-green-900/30 to-dracon-purple-900/40',
-  },
+const portfolioItemsMeta = [
+  { id: '1', slug: 'o-guardiao-das-estrelas', featured: true, gradient: 'from-dracon-purple-800/50 to-indigo-900/50' },
+  { id: '2', slug: 'dragao-arcano', featured: true, gradient: 'from-dracon-purple-900/50 to-dracon-orange-700/30' },
+  { id: '3', slug: 'ritual-da-lua-crescente', featured: true, gradient: 'from-blue-900/50 to-dracon-purple-900/50' },
+  { id: '4', slug: 'constelacao-do-fenix', featured: true, gradient: 'from-dracon-purple-800/50 to-cyan-900/30' },
+  { id: '5', slug: 'a-feiticeira-das-sombras', featured: false, gradient: 'from-gray-900/50 to-dracon-purple-900/50' },
+  { id: '6', slug: 'fortaleza-nas-nuvens', featured: false, gradient: 'from-sky-900/40 to-dracon-purple-800/40' },
+  { id: '7', slug: 'olho-do-cosmos', featured: false, gradient: 'from-dracon-orange-700/30 to-dracon-purple-900/50' },
+  { id: '8', slug: 'espirito-da-floresta', featured: false, gradient: 'from-green-900/30 to-dracon-purple-900/40' },
 ];
 
 export default function PortfolioPage() {
-  const [activeCategory, setActiveCategory] = useState('Todos');
-  const [selectedItem, setSelectedItem] = useState<typeof portfolioData[0] | null>(null);
+  const { t, locale } = useI18n();
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
+  const [selectedItem, setSelectedItem] = useState<(typeof portfolioItemsMeta[0] & { title: string; description: string; category: string; tags: string[] }) | null>(null);
 
-  const filteredItems = activeCategory === 'Todos'
+  const categories = [
+    t('portfolio.filters.all'),
+    t('portfolio.categories.0'),
+    t('portfolio.categories.1'),
+    t('portfolio.categories.2'),
+    t('portfolio.categories.3'),
+  ];
+
+  const portfolioData = portfolioItemsMeta.map((meta, i) => ({
+    ...meta,
+    title: t(`portfolio.items.${i}.title`),
+    description: t(`portfolio.items.${i}.description`),
+    category: t(`portfolio.items.${i}.category`),
+    tags: [
+      t(`portfolio.items.${i}.tags.0`),
+      t(`portfolio.items.${i}.tags.1`),
+      t(`portfolio.items.${i}.tags.2`),
+    ],
+  }));
+
+  const filteredItems = activeCategoryIndex === 0
     ? portfolioData
-    : portfolioData.filter((item) => item.category === activeCategory);
+    : portfolioData.filter((item) => item.category === categories[activeCategoryIndex]);
 
   return (
     <div className="min-h-screen pt-24 pb-20">
@@ -108,10 +55,10 @@ export default function PortfolioPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-dracon-orange-400 text-sm tracking-[0.3em] uppercase font-medium mb-4"
         >
-          ✦ Galeria de Obras ✦
+          {t('portfolio.header.tag')}
         </motion.p>
         <GlowText as="h1" className="text-5xl md:text-6xl font-bold mb-4">
-          Portfólio
+          {t('portfolio.header.title')}
         </GlowText>
         <motion.p
           initial={{ opacity: 0 }}
@@ -119,8 +66,7 @@ export default function PortfolioPage() {
           transition={{ delay: 0.3 }}
           className="text-gray-400 max-w-2xl mx-auto text-lg"
         >
-          Explore o universo visual de Dracon — ilustrações, concept art, animações e
-          arte digital mística nascidas entre estrelas e constelações.
+          {t('portfolio.header.subtitle')}
         </motion.p>
       </section>
 
@@ -133,9 +79,9 @@ export default function PortfolioPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              onClick={() => setActiveCategory(cat)}
+              onClick={() => setActiveCategoryIndex(i)}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                activeCategory === cat
+                activeCategoryIndex === i
                   ? 'bg-dracon-purple-600 text-white shadow-arcane'
                   : 'bg-dracon-purple-900/20 text-gray-400 border border-dracon-purple-800/30 hover:border-dracon-purple-600/50 hover:text-dracon-purple-300'
               }`}

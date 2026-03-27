@@ -5,8 +5,10 @@ import { motion } from 'framer-motion';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
 import { SOCIAL_LINKS } from '@/lib/constants';
+import { useI18n } from '@/i18n';
 
 export default function ContactPage() {
+  const { t, locale } = useI18n();
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -51,10 +53,10 @@ export default function ContactPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-dracon-orange-400 text-sm tracking-[0.3em] uppercase font-medium mb-4"
         >
-          ✦ Fale Comigo ✦
+          {t('contact.header.tag')}
         </motion.p>
         <GlowText as="h1" className="text-5xl md:text-6xl font-bold mb-4">
-          Contato
+          {t('contact.header.title')}
         </GlowText>
         <motion.p
           initial={{ opacity: 0 }}
@@ -62,8 +64,7 @@ export default function ContactPage() {
           transition={{ delay: 0.3 }}
           className="text-gray-400 max-w-2xl mx-auto text-lg"
         >
-          Tem um projeto em mente? Uma dúvida? Ou simplesmente quer conversar sobre arte?
-          Envie uma mensagem e retornarei o mais breve possível.
+          {t('contact.header.subtitle')}
         </motion.p>
       </section>
 
@@ -79,21 +80,21 @@ export default function ContactPage() {
             {/* Email */}
             <div className="card-arcane p-6">
               <div className="text-2xl mb-3">📧</div>
-              <h3 className="font-display font-bold text-white mb-1">Email</h3>
-              <p className="text-dracon-purple-300 text-sm">contato@dracon.art</p>
+              <h3 className="font-display font-bold text-white mb-1">{t('contact.info.email')}</h3>
+              <p className="text-dracon-purple-300 text-sm">{t('contact.info.emailAddress')}</p>
             </div>
 
             {/* Response time */}
             <div className="card-arcane p-6">
               <div className="text-2xl mb-3">⏰</div>
-              <h3 className="font-display font-bold text-white mb-1">Tempo de Resposta</h3>
-              <p className="text-gray-400 text-sm">Respondo em até 48 horas</p>
+              <h3 className="font-display font-bold text-white mb-1">{t('contact.info.response')}</h3>
+              <p className="text-gray-400 text-sm">{t('contact.info.responseText')}</p>
             </div>
 
             {/* Social Links */}
             <div className="card-arcane p-6">
               <div className="text-2xl mb-3">🌐</div>
-              <h3 className="font-display font-bold text-white mb-3">Redes Sociais</h3>
+              <h3 className="font-display font-bold text-white mb-3">{t('contact.info.social')}</h3>
               <div className="space-y-2">
                 {Object.entries(SOCIAL_LINKS).map(([name, url]) => (
                   <a
@@ -145,27 +146,27 @@ export default function ContactPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="name" className="block text-sm text-gray-300 mb-2 font-medium">
-                    Nome *
+                    {t('contact.form.name')}
                   </label>
                   <input
                     id="name"
                     name="name"
                     type="text"
                     className="input-arcane"
-                    placeholder="Seu nome completo"
+                    placeholder={t('contact.form.namePlaceholder')}
                     required
                   />
                 </div>
                 <div>
                   <label htmlFor="email" className="block text-sm text-gray-300 mb-2 font-medium">
-                    Email *
+                    {t('contact.form.email')}
                   </label>
                   <input
                     id="email"
                     name="email"
                     type="email"
                     className="input-arcane"
-                    placeholder="seu@email.com"
+                    placeholder={t('contact.form.emailPlaceholder')}
                     required
                   />
                 </div>
@@ -173,27 +174,27 @@ export default function ContactPage() {
 
               <div>
                 <label htmlFor="subject" className="block text-sm text-gray-300 mb-2 font-medium">
-                  Assunto *
+                  {t('contact.form.subject')}
                 </label>
                 <input
                   id="subject"
                   name="subject"
                   type="text"
                   className="input-arcane"
-                  placeholder="Sobre o que gostaria de conversar?"
+                  placeholder={t('contact.form.subjectPlaceholder')}
                   required
                 />
               </div>
 
               <div>
                 <label htmlFor="message" className="block text-sm text-gray-300 mb-2 font-medium">
-                  Mensagem *
+                  {t('contact.form.message')}
                 </label>
                 <textarea
                   id="message"
                   name="message"
                   className="input-arcane min-h-[200px] resize-y"
-                  placeholder="Escreva sua mensagem aqui... descreva seu projeto, suas ideias, referências visuais, ou qualquer outra informação relevante."
+                  placeholder={t('contact.form.messagePlaceholder')}
                   required
                 />
               </div>
@@ -204,7 +205,7 @@ export default function ContactPage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="p-4 rounded-lg bg-green-900/30 border border-green-600/30 text-green-300 text-sm"
                 >
-                  ✅ Mensagem enviada com sucesso! Retornarei em breve.
+                  {t('contact.form.success')}
                 </motion.div>
               )}
 
@@ -214,7 +215,7 @@ export default function ContactPage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="p-4 rounded-lg bg-red-900/30 border border-red-600/30 text-red-300 text-sm"
                 >
-                  ❌ Erro ao enviar mensagem. Por favor, tente novamente.
+                  {t('contact.form.error')}
                 </motion.div>
               )}
 
@@ -224,7 +225,7 @@ export default function ContactPage() {
                 className="w-full text-lg py-4"
                 disabled={formStatus === 'sending'}
               >
-                {formStatus === 'sending' ? '✦ Enviando...' : '✦ Enviar Mensagem'}
+                {formStatus === 'sending' ? t('contact.form.sending') : t('contact.form.submit')}
               </MagicButton>
             </form>
           </motion.div>

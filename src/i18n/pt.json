@@ -1,0 +1,329 @@
+{
+  "nav": {
+    "home": "Home",
+    "portfolio": "Portfólio",
+    "dragonEyes": "Dragon Eyes",
+    "about": "Sobre",
+    "services": "Serviços",
+    "contact": "Contato"
+  },
+  "footer": {
+    "description": "Arte mística, fantasia e mundos arcanos. Criando universos visuais onde magia e imaginação se encontram entre estrelas e constelações.",
+    "navigation": "Navegação",
+    "social": "Redes Sociais",
+    "email": "contato@dracon.art",
+    "copyright": "© {year} Dracon. Todos os direitos reservados.",
+    "madeWith": "Feito com ✦ e magia"
+  },
+  "home": {
+    "hero": {
+      "tagline": "✦ Ilustração & Animação ✦",
+      "title": "DRACON",
+      "subtitle": "Criando universos visuais onde magia e imaginação se encontram entre estrelas e constelações. Arte mística, fantasia e mundos arcanos.",
+      "ctaPortfolio": "✦ Ver Portfólio",
+      "ctaServices": "Encomendar Arte"
+    },
+    "carousel": {
+      "tag": "✦ Galeria",
+      "title": "Últimas Artes",
+      "subtitle": "Navegue pelas criações mais recentes do universo Dracon.",
+      "cta": "Explorar portfólio completo →"
+    },
+    "featured": {
+      "title": "Obras em Destaque",
+      "subtitle": "Uma seleção das obras mais recentes e fascinantes do universo Dracon.",
+      "cta": "Ver todo o portfólio →"
+    },
+    "works": {
+      "guardianStars": {
+        "title": "O Guardião das Estrelas",
+        "category": "Ilustração",
+        "description": "Uma criatura ancestral que vela pelos segredos das constelações."
+      },
+      "arcaneDragon": {
+        "title": "Dragão Arcano",
+        "category": "Concept Art",
+        "description": "Nascido das forças primordiais da magia, envolvido em runas e energia arcana."
+      },
+      "moonRitual": {
+        "title": "Ritual da Lua Crescente",
+        "category": "Animação",
+        "description": "Ritual mágico sob a luz da lua crescente com partículas de energia."
+      },
+      "phoenixConstellation": {
+        "title": "Constelação do Fênix",
+        "category": "Arte Digital Mística",
+        "description": "Mapa estelar representando a constelação perdida do Fênix."
+      }
+    },
+    "aboutPreview": {
+      "tag": "Sobre o Artista",
+      "title": "Arte Nascida das Estrelas",
+      "p1": "Dracon é um estúdio de arte digital especializado em ilustração de fantasia, concept art e animação. Cada obra é uma jornada por mundos arcanos onde a magia flui entre constelações e símbolos ancestrais.",
+      "p2": "Inspirado pela mitologia, astrologia e mistérios do cosmos, cada peça carrega a essência de universos fantásticos esperando para ser descobertos.",
+      "cta": "Conheça a história →"
+    },
+    "cta": {
+      "title": "Transforme sua Visão em Arte",
+      "subtitle": "Encomende uma ilustração, concept art ou animação única. Cada projeto é uma colaboração mágica entre sua visão e a arte Dracon.",
+      "ctaServices": "🔥 Ver Serviços",
+      "ctaContact": "Entrar em Contato"
+    }
+  },
+  "about": {
+    "header": {
+      "tag": "✦ A História ✦",
+      "title": "Sobre Dracon",
+      "subtitle": "Uma jornada entre estrelas, runas e mundos fantásticos — onde cada traço carrega a magia do invisível e a beleza do arcano."
+    },
+    "story": {
+      "title": "O Artista por trás da Magia",
+      "p1": "Dracon nasceu da fusão entre imaginação e obsessão por mundos fantásticos. Como artista digital, meu trabalho é uma exploração constante dos limites entre o real e o sobrenatural.",
+      "p2": "Cada ilustração conta uma história que transcende o visual — são portais para universos onde dragões guardam segredos ancestrais, onde constelações traçam destinos e onde a magia é a linguagem fundamental de toda criação.",
+      "p3": "Trabalho com uma paleta profunda de roxos e laranjas, evocando a atmosfera de noites cósmicas iluminadas por estrelas distantes. A estética arcana e mística é a assinatura de cada peça que crio.",
+      "p4": "Meu objetivo é transformar visões em arte — seja para um personagem de RPG, um mundo de ficção, uma capa de livro ou uma animação que hipnotiza.",
+      "brandEst": "Est. 2020"
+    },
+    "skills": {
+      "title": "Habilidades Arcanas",
+      "subtitle": "Domínio técnico e artístico forjado em anos de prática e paixão pela arte.",
+      "items": ["Ilustração Digital", "Concept Art", "Animação 2D", "Design de Personagens", "Worldbuilding Visual", "Arte Mística / Arcana"]
+    },
+    "timeline": {
+      "title": "Linha do Tempo",
+      "subtitle": "Os marcos da jornada artística de Dracon através dos anos.",
+      "items": [
+        { "year": "2020", "title": "O Despertar", "description": "Início da jornada artística de Dracon, com os primeiros estudos de ilustração digital e fantasia." },
+        { "year": "2021", "title": "Primeiras Constelações", "description": "Desenvolvimento do estilo visual próprio — combinando astrologia, magia e elementos arcanos." },
+        { "year": "2022", "title": "O Portal se Abre", "description": "Primeiros projetos profissionais de concept art e ilustração para clientes e estúdios independentes." },
+        { "year": "2023", "title": "Runas em Movimento", "description": "Expansão para o mundo da animação 2D, trazendo vida aos universos criados através de motion graphics." },
+        { "year": "2024", "title": "O Universo Dracon", "description": "Consolidação da marca como referência em arte mística, fantasia e universos visuais imersivos." }
+      ]
+    }
+  },
+  "portfolio": {
+    "header": {
+      "tag": "✦ Galeria de Obras ✦",
+      "title": "Portfólio",
+      "subtitle": "Explore o universo visual de Dracon — ilustrações, concept art, animações e arte digital mística nascidas entre estrelas e constelações."
+    },
+    "filters": {
+      "all": "Todos"
+    },
+    "categories": ["Ilustração", "Concept Art", "Animação", "Arte Digital Mística"],
+    "items": [
+      {
+        "title": "O Guardião das Estrelas",
+        "description": "Uma criatura ancestral que vela pelos segredos das constelações. Esta ilustração foi inspirada nas lendas sobre seres que protegem o equilíbrio entre os mundos terrestre e celeste.",
+        "category": "Ilustração",
+        "tags": ["fantasia", "estrelas", "guardião"]
+      },
+      {
+        "title": "Dragão Arcano",
+        "description": "Um dragão nascido das forças primordiais da magia, envolvido em runas e energia arcana. Concept art para projeto pessoal de worldbuilding.",
+        "category": "Concept Art",
+        "tags": ["dragão", "arcano", "magia"]
+      },
+      {
+        "title": "Ritual da Lua Crescente",
+        "description": "Animação loop de um ritual mágico sob a luz da lua crescente, com partículas de energia fluindo entre símbolos antigos.",
+        "category": "Animação",
+        "tags": ["animação", "lua", "ritual"]
+      },
+      {
+        "title": "Constelação do Fênix",
+        "description": "Mapa estelar místico representando a constelação perdida do Fênix, desenhada com técnicas de arte digital e elementos de astrologia antiga.",
+        "category": "Arte Digital Mística",
+        "tags": ["constelação", "fênix", "astrologia"]
+      },
+      {
+        "title": "A Feiticeira das Sombras",
+        "description": "Personagem mística que manipula as sombras como extensão de sua vontade.",
+        "category": "Ilustração",
+        "tags": ["feiticeira", "sombras", "personagem"]
+      },
+      {
+        "title": "Fortaleza nas Nuvens",
+        "description": "Concept art de uma fortaleza flutuante entre as nuvens, lar de uma ordem antiga de magos astrais.",
+        "category": "Concept Art",
+        "tags": ["fortaleza", "nuvens", "ambiente"]
+      },
+      {
+        "title": "Olho do Cosmos",
+        "description": "Arte digital mística representando o Olho do Cosmos — um portal entre dimensões.",
+        "category": "Arte Digital Mística",
+        "tags": ["cosmos", "portal", "runas"]
+      },
+      {
+        "title": "Espírito da Floresta",
+        "description": "Animação de um espírito da floresta emergindo das raízes de uma árvore ancestral.",
+        "category": "Animação",
+        "tags": ["espírito", "floresta", "natureza"]
+      }
+    ]
+  },
+  "services": {
+    "header": {
+      "tag": "✦ Comissões & Serviços ✦",
+      "title": "Serviços",
+      "subtitle": "Transforme sua visão em arte. Cada projeto é tratado com dedicação artesanal e paixão pelo fantástico."
+    },
+    "toggleMore": "Ver detalhes →",
+    "toggleLess": "← Menos detalhes",
+    "items": [
+      {
+        "title": "Ilustração Personalizada",
+        "shortDescription": "Ilustrações originais de fantasia e magia sob encomenda.",
+        "description": "Criação de ilustrações únicas e personalizadas com temática de fantasia, magia e elementos místicos. Cada peça é criada do zero, desde o esboço até a arte final em alta resolução.",
+        "price": "A partir de R$ 350",
+        "priceNote": "Preço varia conforme complexidade e tamanho",
+        "features": ["Esboço + 2 revisões", "Arte final em alta resolução", "Arquivo PNG e PSD", "Comercial ou pessoal", "Prazo: 7-14 dias"]
+      },
+      {
+        "title": "Concept Art",
+        "shortDescription": "Design visual de personagens, criaturas e ambientes.",
+        "description": "Desenvolvimento visual de conceitos para jogos, filmes, livros e projetos criativos. Inclui design de personagens, ambientes e criaturas com estética arcana.",
+        "price": "A partir de R$ 500",
+        "priceNote": "Pacotes disponíveis para projetos maiores",
+        "features": ["Múltiplos conceitos iniciais", "Turnaround sheet", "Detalhes de design", "Style guide", "Prazo: 10-21 dias"]
+      },
+      {
+        "title": "Animação 2D",
+        "shortDescription": "Animações curtas e loops com temática mística.",
+        "description": "Animações curtas, loops e motion graphics com estética mística e fantástica. Ideal para redes sociais, intros de vídeo e projetos artísticos.",
+        "price": "A partir de R$ 800",
+        "priceNote": "Consulte para projetos mais longos",
+        "features": ["Storyboard incluído", "Até 15 segundos", "Formato MP4/GIF", "Trilha sonora opcional", "Prazo: 14-30 dias"]
+      },
+      {
+        "title": "Design de Personagem",
+        "shortDescription": "Personagens originais com ficha completa de referência.",
+        "description": "Criação completa de personagens originais com ficha de referência, poses, expressões e detalhes de equipamento/vestimenta.",
+        "price": "A partir de R$ 600",
+        "priceNote": "Inclui ficha de referência completa",
+        "features": ["Design original completo", "Vista frontal e traseira", "Expressões faciais", "Detalhes de equipamento", "Prazo: 10-18 dias"]
+      }
+    ],
+    "process": {
+      "title": "Como Funciona",
+      "subtitle": "O processo de encomenda em 6 passos simples — do conceito à arte final.",
+      "stepLabel": "PASSO",
+      "steps": [
+        { "title": "Contato Inicial", "description": "Descreva sua visão, referências e detalhes do projeto." },
+        { "title": "Orçamento", "description": "Receba um orçamento detalhado e prazo de entrega." },
+        { "title": "Esboço", "description": "Aprovação do esboço inicial antes da arte final." },
+        { "title": "Criação", "description": "Desenvolvimento da arte com atualizações de progresso." },
+        { "title": "Revisão", "description": "Ajustes finais para garantir sua satisfação." },
+        { "title": "Entrega", "description": "Arquivos finais em alta resolução prontos para uso." }
+      ]
+    },
+    "form": {
+      "title": "Solicitar Orçamento",
+      "subtitle": "Preencha o formulário abaixo e retornarei em até 48 horas.",
+      "name": "Nome",
+      "namePlaceholder": "Seu nome",
+      "email": "Email",
+      "emailPlaceholder": "seu@email.com",
+      "serviceType": "Tipo de Serviço",
+      "serviceDefault": "Selecione um serviço",
+      "serviceOther": "Outro",
+      "subject": "Assunto",
+      "subjectPlaceholder": "Sobre o que é sua encomenda?",
+      "description": "Descrição do Projeto",
+      "descriptionPlaceholder": "Descreva sua visão, referências, personagens, cenários... quanto mais detalhes, melhor!",
+      "submit": "🔥 Enviar Solicitação",
+      "alertSent": "Mensagem enviada! (Em produção, isto será enviado ao servidor)"
+    }
+  },
+  "contact": {
+    "header": {
+      "tag": "✦ Fale Comigo ✦",
+      "title": "Contato",
+      "subtitle": "Tem um projeto em mente? Uma dúvida? Ou simplesmente quer conversar sobre arte? Envie uma mensagem e retornarei o mais breve possível."
+    },
+    "info": {
+      "email": "Email",
+      "emailAddress": "contato@dracon.art",
+      "response": "Tempo de Resposta",
+      "responseText": "Respondo em até 48 horas",
+      "social": "Redes Sociais"
+    },
+    "form": {
+      "name": "Nome *",
+      "namePlaceholder": "Seu nome completo",
+      "email": "Email *",
+      "emailPlaceholder": "seu@email.com",
+      "subject": "Assunto *",
+      "subjectPlaceholder": "Sobre o que gostaria de conversar?",
+      "message": "Mensagem *",
+      "messagePlaceholder": "Escreva sua mensagem aqui... descreva seu projeto, suas ideias, referências visuais, ou qualquer outra informação relevante.",
+      "success": "✅ Mensagem enviada com sucesso! Retornarei em breve.",
+      "error": "❌ Erro ao enviar mensagem. Por favor, tente novamente.",
+      "submit": "✦ Enviar Mensagem",
+      "sending": "✦ Enviando..."
+    }
+  },
+  "dragonEyes": {
+    "hero": {
+      "tag": "✦ Projeto Pessoal ✦",
+      "title": "DRAGON EYES",
+      "subtitle": "Sete estrelas. Sete guardiões. Uma constelação que guarda os segredos do poder mais antigo do cosmos."
+    },
+    "constellation": {
+      "title": "A Constelação do Dragão",
+      "subtitle": "Cada estrela representa um guardião cósmico. Explore seus segredos.",
+      "hint": "✦ Passe o mouse sobre uma estrela para conhecer o personagem ✦"
+    },
+    "characters": {
+      "lyra": { "name": "Lyra", "role": "A Vidente Estelar", "description": "Nascida sob a chuva de meteoros de Aldebaran, Lyra enxerga os fios do destino entrelaçados nas estrelas. Seus olhos refletem constelações que outros não podem ver." },
+      "ignis": { "name": "Ignis", "role": "O Guardião do Fogo Arcano", "description": "Forjado nas chamas primordiais, Ignis carrega dentro de si o fogo que deu origem ao primeiro sol. Seu olhar pode derreter aço e iluminar as trevas mais profundas." },
+      "nyx": { "name": "Nyx", "role": "A Sombra Silenciosa", "description": "Filha da noite eterna, Nyx se move entre dimensões como uma brisa gelada. Suas asas escuras carregam segredos que nem os deuses se atrevem a pronunciar." },
+      "aurion": { "name": "Aurion", "role": "O Cavaleiro Celestial", "description": "Último descendente dos Cavaleiros de Orion, Aurion porta a espada que corta entre realidades. Jurou proteger o equilíbrio entre luz e escuridão." },
+      "seraph": { "name": "Seraph", "role": "O Dragão Ancestral", "description": "O mais antigo dos seres mágicos, Seraph testemunhou o nascimento e a morte de incontáveis estrelas. Seus olhos — os Dragon Eyes — são a chave para todo o poder cósmico." },
+      "elara": { "name": "Elara", "role": "A Curandeira das Raízes", "description": "Conectada ao coração da terra, Elara canaliza a energia vital das raízes antigas. Onde ela pisa, flores nascem — onde ela chora, florestas inteiras despertam." },
+      "zephyr": { "name": "Zephyr", "role": "O Mensageiro dos Ventos", "description": "Rápido como o pensamento, Zephyr percorre os céus carregando mensagens entre os reinos. Dizem que ele sussurra profecias ao ouvido de quem está prestes a mudar o mundo." }
+    },
+    "lore": {
+      "tag": "✦ Lore",
+      "title": "A História",
+      "chapterLabel": "Capítulo",
+      "chapters": [
+        { "title": "A Origem", "text": "No princípio, antes do tempo ter nome, existiam apenas os Olhos do Dragão — sete estrelas primordiais que observavam o vazio infinito. Cada estrela carregava dentro de si uma centelha de consciência, um fragmento de poder que moldaria toda a existência." },
+        { "title": "O Despertar", "text": "Quando a primeira estrela piscou, o universo tremeu. A energia liberada criou as primeiras formas de vida — seres feitos de luz e sombra, conectados às estrelas por fios invisíveis de magia. Esses seres se tornaram os guardiões do equilíbrio cósmico." },
+        { "title": "A Guerra das Constelações", "text": "Mas o poder atrai ambição. Uma entidade do vazio, conhecida apenas como O Eclipse, tentou devorar os Dragon Eyes para reescrever a realidade. Os guardiões se uniram na Constelação do Dragão — uma formação lendária que canaliza o poder combinado de todas as estrelas." },
+        { "title": "O Legado", "text": "A guerra não teve vencedor — apenas sobreviventes. Os guardiões se espalharam pelos reinos, cada um carregando a memória de sua estrela. Dizem que quando os sete se reencontrarem, a Constelação do Dragão brilhará novamente e o destino do cosmos será decidido." }
+      ]
+    },
+    "gallery": {
+      "title": "Galeria do Projeto",
+      "subtitle": "Artes conceituais, estudos de personagens e cenas do universo Dragon Eyes.",
+      "items": [
+        "Conceito — Constelação do Dragão",
+        "Estudo — Olhos de Seraph",
+        "Cena — O Despertar",
+        "Conceito — Floresta de Elara",
+        "Cena — Guerra das Constelações",
+        "Estudo — Lâmina de Aurion"
+      ]
+    },
+    "cta": {
+      "title": "Este é apenas o começo",
+      "subtitle": "Dragon Eyes é um projeto em constante evolução. Novos personagens, capítulos e artes serão adicionados conforme o universo se expande.",
+      "ctaPortfolio": "Ver Portfólio Completo",
+      "ctaFollow": "Acompanhe o Projeto"
+    }
+  },
+  "notFound": {
+    "title": "404",
+    "heading": "Portal Não Encontrado",
+    "message": "O caminho que você busca se perdeu entre as constelações. Talvez o portal tenha se fechado, ou nunca tenha existido neste plano.",
+    "ctaHome": "✦ Voltar ao Início",
+    "ctaPortfolio": "Ver Portfólio"
+  },
+  "error": {
+    "heading": "Perturbação no Fluxo Arcano",
+    "message": "Uma energia instável interrompeu o encantamento. Tente novamente ou retorne ao portal principal.",
+    "ctaRetry": "🔄 Tentar Novamente",
+    "ctaHome": "Voltar ao Início"
+  }
+}

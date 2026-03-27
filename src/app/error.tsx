@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import MagicButton from '@/components/ui/MagicButton';
+import { useI18n } from '@/i18n';
 
 export default function Error({
   error,
@@ -10,6 +11,7 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t, locale } = useI18n();
   return (
     <div className="min-h-screen flex items-center justify-center cosmic-bg relative overflow-hidden">
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-red-600/5 rounded-full blur-3xl" />
@@ -29,11 +31,10 @@ export default function Error({
           </motion.div>
 
           <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-4">
-            Perturbação no Fluxo Arcano
+            {t('error.heading')}
           </h1>
           <p className="text-gray-400 max-w-md mx-auto mb-8">
-            Uma energia instável interrompeu o encantamento. 
-            Tente novamente ou retorne ao portal principal.
+            {t('error.message')}
           </p>
 
           {error.message && (
@@ -44,10 +45,10 @@ export default function Error({
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <MagicButton onClick={reset} variant="primary">
-              🔄 Tentar Novamente
+              {t('error.ctaRetry')}
             </MagicButton>
             <a href="/">
-              <MagicButton variant="secondary">Voltar ao Início</MagicButton>
+              <MagicButton variant="secondary">{t('error.ctaHome')}</MagicButton>
             </a>
           </div>
         </motion.div>

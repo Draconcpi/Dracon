@@ -5,10 +5,21 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { NAV_LINKS, SOCIAL_LINKS } from '@/lib/constants';
+import { useI18n } from '@/i18n';
 
 export default function Footer() {
   const pathname = usePathname();
+  const { t } = useI18n();
   if (pathname.startsWith('/admin')) return null;
+
+  const navLabels: Record<string, string> = {
+    '/': t('nav.home'),
+    '/portfolio': t('nav.portfolio'),
+    '/dragon-eyes': t('nav.dragonEyes'),
+    '/about': t('nav.about'),
+    '/services': t('nav.services'),
+    '/contact': t('nav.contact'),
+  };
 
   return (
     <footer className="relative border-t border-dracon-purple-800/20 bg-dracon-void/80 backdrop-blur-sm">
@@ -31,8 +42,7 @@ export default function Footer() {
               className="rounded-sm mb-4"
             />
             <p className="text-gray-400 text-sm leading-relaxed">
-              Arte mística, fantasia e mundos arcanos. Criando universos visuais
-              onde magia e imaginação se encontram entre estrelas e constelações.
+              {t('footer.description')}
             </p>
           </motion.div>
 
@@ -44,7 +54,7 @@ export default function Footer() {
             transition={{ delay: 0.1 }}
           >
             <h4 className="font-display text-sm font-semibold text-dracon-purple-400 uppercase tracking-wider mb-4">
-              Navegação
+              {t('footer.navigation')}
             </h4>
             <ul className="space-y-2">
               {NAV_LINKS.map((link) => (
@@ -53,7 +63,7 @@ export default function Footer() {
                     href={link.href}
                     className="text-gray-400 text-sm hover:text-dracon-purple-300 transition-colors duration-300"
                   >
-                    {link.label}
+                    {navLabels[link.href] || link.label}
                   </Link>
                 </li>
               ))}
@@ -68,7 +78,7 @@ export default function Footer() {
             transition={{ delay: 0.2 }}
           >
             <h4 className="font-display text-sm font-semibold text-dracon-purple-400 uppercase tracking-wider mb-4">
-              Redes Sociais
+              {t('footer.social')}
             </h4>
             <div className="flex gap-4">
               {Object.entries(SOCIAL_LINKS).map(([name, url]) => (
@@ -86,7 +96,7 @@ export default function Footer() {
               ))}
             </div>
             <p className="text-gray-500 text-sm mt-6">
-              contato@dracon.art
+              {t('footer.email')}
             </p>
           </motion.div>
         </div>
@@ -94,18 +104,10 @@ export default function Footer() {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-dracon-purple-800/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-gray-500 text-xs">
-            &copy; {new Date().getFullYear()} Dracon. Todos os direitos reservados.
+            {t('footer.copyright', { year: new Date().getFullYear().toString() })}
           </p>
           <div className="flex items-center gap-2 text-gray-600 text-xs">
-            <span>Feito com</span>
-            <motion.span
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="text-dracon-purple-500"
-            >
-              ✦
-            </motion.span>
-            <span>e magia</span>
+            <span>{t('footer.madeWith')}</span>
           </div>
         </div>
       </div>

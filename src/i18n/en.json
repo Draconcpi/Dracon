@@ -1,0 +1,329 @@
+{
+  "nav": {
+    "home": "Home",
+    "portfolio": "Portfolio",
+    "dragonEyes": "Dragon Eyes",
+    "about": "About",
+    "services": "Services",
+    "contact": "Contact"
+  },
+  "footer": {
+    "description": "Mystic art, fantasy and arcane worlds. Creating visual universes where magic and imagination meet among stars and constellations.",
+    "navigation": "Navigation",
+    "social": "Social",
+    "email": "contact@dracon.art",
+    "copyright": "© {year} Dracon. All rights reserved.",
+    "madeWith": "Made with ✦ and magic"
+  },
+  "home": {
+    "hero": {
+      "tagline": "✦ Illustration & Animation ✦",
+      "title": "DRACON",
+      "subtitle": "Creating visual universes where magic and imagination meet among stars and constellations. Mystic art, fantasy and arcane worlds.",
+      "ctaPortfolio": "✦ View Portfolio",
+      "ctaServices": "Commission Art"
+    },
+    "carousel": {
+      "tag": "✦ Gallery",
+      "title": "Latest Works",
+      "subtitle": "Browse the latest creations from the Dracon universe.",
+      "cta": "Explore full portfolio →"
+    },
+    "featured": {
+      "title": "Featured Works",
+      "subtitle": "A selection of the most recent and fascinating works from the Dracon universe.",
+      "cta": "View full portfolio →"
+    },
+    "works": {
+      "guardianStars": {
+        "title": "The Guardian of Stars",
+        "category": "Illustration",
+        "description": "An ancestral creature that watches over the secrets of the constellations."
+      },
+      "arcaneDragon": {
+        "title": "Arcane Dragon",
+        "category": "Concept Art",
+        "description": "Born from the primordial forces of magic, cloaked in runes and arcane energy."
+      },
+      "moonRitual": {
+        "title": "Crescent Moon Ritual",
+        "category": "Animation",
+        "description": "A magical ritual under the crescent moonlight with flowing energy particles."
+      },
+      "phoenixConstellation": {
+        "title": "Phoenix Constellation",
+        "category": "Mystic Digital Art",
+        "description": "A stellar map depicting the lost constellation of the Phoenix."
+      }
+    },
+    "aboutPreview": {
+      "tag": "About the Artist",
+      "title": "Art Born from the Stars",
+      "p1": "Dracon is a digital art studio specializing in fantasy illustration, concept art and animation. Each piece is a journey through arcane worlds where magic flows between constellations and ancestral symbols.",
+      "p2": "Inspired by mythology, astrology and the mysteries of the cosmos, each piece carries the essence of fantastic universes waiting to be discovered.",
+      "cta": "Learn the story →"
+    },
+    "cta": {
+      "title": "Transform Your Vision into Art",
+      "subtitle": "Commission a unique illustration, concept art or animation. Each project is a magical collaboration between your vision and Dracon's art.",
+      "ctaServices": "🔥 View Services",
+      "ctaContact": "Get in Touch"
+    }
+  },
+  "about": {
+    "header": {
+      "tag": "✦ The Story ✦",
+      "title": "About Dracon",
+      "subtitle": "A journey among stars, runes and fantastic worlds — where every stroke carries the magic of the invisible and the beauty of the arcane."
+    },
+    "story": {
+      "title": "The Artist Behind the Magic",
+      "p1": "Dracon was born from the fusion between imagination and an obsession with fantastic worlds. As a digital artist, my work is a constant exploration of the boundaries between the real and the supernatural.",
+      "p2": "Each illustration tells a story that transcends the visual — they are portals to universes where dragons guard ancestral secrets, where constellations trace destinies and where magic is the fundamental language of all creation.",
+      "p3": "I work with a deep palette of purples and oranges, evoking the atmosphere of cosmic nights illuminated by distant stars. The arcane and mystic aesthetic is the signature of every piece I create.",
+      "p4": "My goal is to transform visions into art — whether for an RPG character, a fiction world, a book cover or a mesmerizing animation.",
+      "brandEst": "Est. 2020"
+    },
+    "skills": {
+      "title": "Arcane Skills",
+      "subtitle": "Technical and artistic mastery forged through years of practice and passion for art.",
+      "items": ["Digital Illustration", "Concept Art", "2D Animation", "Character Design", "Visual Worldbuilding", "Mystic / Arcane Art"]
+    },
+    "timeline": {
+      "title": "Timeline",
+      "subtitle": "The milestones of Dracon's artistic journey through the years.",
+      "items": [
+        { "year": "2020", "title": "The Awakening", "description": "The beginning of Dracon's artistic journey, with the first studies in digital illustration and fantasy." },
+        { "year": "2021", "title": "First Constellations", "description": "Development of a unique visual style — combining astrology, magic and arcane elements." },
+        { "year": "2022", "title": "The Portal Opens", "description": "First professional concept art and illustration projects for clients and indie studios." },
+        { "year": "2023", "title": "Runes in Motion", "description": "Expansion into the world of 2D animation, bringing life to the created universes through motion graphics." },
+        { "year": "2024", "title": "The Dracon Universe", "description": "Consolidation of the brand as a reference in mystic art, fantasy and immersive visual universes." }
+      ]
+    }
+  },
+  "portfolio": {
+    "header": {
+      "tag": "✦ Gallery of Works ✦",
+      "title": "Portfolio",
+      "subtitle": "Explore Dracon's visual universe — illustrations, concept art, animations and mystic digital art born between stars and constellations."
+    },
+    "filters": {
+      "all": "All"
+    },
+    "categories": ["Illustration", "Concept Art", "Animation", "Mystic Digital Art"],
+    "items": [
+      {
+        "title": "The Guardian of Stars",
+        "description": "An ancestral creature that watches over the secrets of the constellations. This illustration was inspired by legends about beings that protect the balance between the terrestrial and celestial worlds.",
+        "category": "Illustration",
+        "tags": ["fantasy", "stars", "guardian"]
+      },
+      {
+        "title": "Arcane Dragon",
+        "description": "A dragon born from the primordial forces of magic, cloaked in runes and arcane energy. Concept art for a personal worldbuilding project.",
+        "category": "Concept Art",
+        "tags": ["dragon", "arcane", "magic"]
+      },
+      {
+        "title": "Crescent Moon Ritual",
+        "description": "Loop animation of a magical ritual under the crescent moonlight, with energy particles flowing between ancient symbols.",
+        "category": "Animation",
+        "tags": ["animation", "moon", "ritual"]
+      },
+      {
+        "title": "Phoenix Constellation",
+        "description": "A mystic stellar map representing the lost constellation of the Phoenix, drawn with digital art techniques and elements of ancient astrology.",
+        "category": "Mystic Digital Art",
+        "tags": ["constellation", "phoenix", "astrology"]
+      },
+      {
+        "title": "The Shadow Sorceress",
+        "description": "A mystic character who manipulates shadows as an extension of her will.",
+        "category": "Illustration",
+        "tags": ["sorceress", "shadows", "character"]
+      },
+      {
+        "title": "Fortress in the Clouds",
+        "description": "Concept art of a floating fortress among the clouds, home to an ancient order of astral mages.",
+        "category": "Concept Art",
+        "tags": ["fortress", "clouds", "environment"]
+      },
+      {
+        "title": "Eye of the Cosmos",
+        "description": "Mystic digital art representing the Eye of the Cosmos — a portal between dimensions.",
+        "category": "Mystic Digital Art",
+        "tags": ["cosmos", "portal", "runes"]
+      },
+      {
+        "title": "Spirit of the Forest",
+        "description": "Animation of a forest spirit emerging from the roots of an ancestral tree.",
+        "category": "Animation",
+        "tags": ["spirit", "forest", "nature"]
+      }
+    ]
+  },
+  "services": {
+    "header": {
+      "tag": "✦ Commissions & Services ✦",
+      "title": "Services",
+      "subtitle": "Transform your vision into art. Every project is treated with artisanal dedication and a passion for the fantastic."
+    },
+    "toggleMore": "View details →",
+    "toggleLess": "← Less details",
+    "items": [
+      {
+        "title": "Custom Illustration",
+        "shortDescription": "Original fantasy and magic illustrations made to order.",
+        "description": "Creation of unique and personalized illustrations with fantasy, magic and mystic themes. Each piece is created from scratch, from sketch to the final high-resolution art.",
+        "price": "Starting at $100",
+        "priceNote": "Price varies by complexity and size",
+        "features": ["Sketch + 2 revisions", "High-resolution final art", "PNG and PSD files", "Commercial or personal use", "Timeline: 7-14 days"]
+      },
+      {
+        "title": "Concept Art",
+        "shortDescription": "Visual design of characters, creatures and environments.",
+        "description": "Visual concept development for games, films, books and creative projects. Includes character, environment and creature design with arcane aesthetics.",
+        "price": "Starting at $150",
+        "priceNote": "Packages available for larger projects",
+        "features": ["Multiple initial concepts", "Turnaround sheet", "Design details", "Style guide", "Timeline: 10-21 days"]
+      },
+      {
+        "title": "2D Animation",
+        "shortDescription": "Short animations and loops with mystic themes.",
+        "description": "Short animations, loops and motion graphics with mystic and fantastic aesthetics. Ideal for social media, video intros and artistic projects.",
+        "price": "Starting at $250",
+        "priceNote": "Contact for longer projects",
+        "features": ["Storyboard included", "Up to 15 seconds", "MP4/GIF format", "Optional soundtrack", "Timeline: 14-30 days"]
+      },
+      {
+        "title": "Character Design",
+        "shortDescription": "Original characters with full reference sheet.",
+        "description": "Complete creation of original characters with reference sheet, poses, expressions and equipment/clothing details.",
+        "price": "Starting at $180",
+        "priceNote": "Includes complete reference sheet",
+        "features": ["Complete original design", "Front and back views", "Facial expressions", "Equipment details", "Timeline: 10-18 days"]
+      }
+    ],
+    "process": {
+      "title": "How It Works",
+      "subtitle": "The commission process in 6 simple steps — from concept to final art.",
+      "stepLabel": "STEP",
+      "steps": [
+        { "title": "Initial Contact", "description": "Describe your vision, references and project details." },
+        { "title": "Quote", "description": "Receive a detailed quote and delivery timeline." },
+        { "title": "Sketch", "description": "Approval of the initial sketch before final art." },
+        { "title": "Creation", "description": "Art development with progress updates." },
+        { "title": "Review", "description": "Final adjustments to ensure your satisfaction." },
+        { "title": "Delivery", "description": "Final files in high resolution ready for use." }
+      ]
+    },
+    "form": {
+      "title": "Request a Quote",
+      "subtitle": "Fill out the form below and I'll get back to you within 48 hours.",
+      "name": "Name",
+      "namePlaceholder": "Your name",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "serviceType": "Service Type",
+      "serviceDefault": "Select a service",
+      "serviceOther": "Other",
+      "subject": "Subject",
+      "subjectPlaceholder": "What is your commission about?",
+      "description": "Project Description",
+      "descriptionPlaceholder": "Describe your vision, references, characters, settings... the more details, the better!",
+      "submit": "🔥 Submit Request",
+      "alertSent": "Message sent! (In production, this will be sent to the server)"
+    }
+  },
+  "contact": {
+    "header": {
+      "tag": "✦ Get in Touch ✦",
+      "title": "Contact",
+      "subtitle": "Have a project in mind? A question? Or simply want to chat about art? Send a message and I'll get back to you as soon as possible."
+    },
+    "info": {
+      "email": "Email",
+      "emailAddress": "contact@dracon.art",
+      "response": "Response Time",
+      "responseText": "I respond within 48 hours",
+      "social": "Social Media"
+    },
+    "form": {
+      "name": "Name *",
+      "namePlaceholder": "Your full name",
+      "email": "Email *",
+      "emailPlaceholder": "your@email.com",
+      "subject": "Subject *",
+      "subjectPlaceholder": "What would you like to talk about?",
+      "message": "Message *",
+      "messagePlaceholder": "Write your message here... describe your project, ideas, visual references, or any other relevant information.",
+      "success": "✅ Message sent successfully! I'll get back to you soon.",
+      "error": "❌ Error sending message. Please try again.",
+      "submit": "✦ Send Message",
+      "sending": "✦ Sending..."
+    }
+  },
+  "dragonEyes": {
+    "hero": {
+      "tag": "✦ Personal Project ✦",
+      "title": "DRAGON EYES",
+      "subtitle": "Seven stars. Seven guardians. A constellation that holds the secrets of the oldest power in the cosmos."
+    },
+    "constellation": {
+      "title": "The Dragon Constellation",
+      "subtitle": "Each star represents a cosmic guardian. Explore their secrets.",
+      "hint": "✦ Hover over a star to discover the character ✦"
+    },
+    "characters": {
+      "lyra": { "name": "Lyra", "role": "The Stellar Seer", "description": "Born under the meteor shower of Aldebaran, Lyra sees the threads of fate intertwined in the stars. Her eyes reflect constellations that others cannot see." },
+      "ignis": { "name": "Ignis", "role": "The Guardian of Arcane Fire", "description": "Forged in the primordial flames, Ignis carries within him the fire that gave birth to the first sun. His gaze can melt steel and illuminate the deepest darkness." },
+      "nyx": { "name": "Nyx", "role": "The Silent Shadow", "description": "Daughter of the eternal night, Nyx moves between dimensions like a cold breeze. Her dark wings carry secrets that not even the gods dare to speak." },
+      "aurion": { "name": "Aurion", "role": "The Celestial Knight", "description": "Last descendant of the Knights of Orion, Aurion wields the sword that cuts between realities. He swore to protect the balance between light and darkness." },
+      "seraph": { "name": "Seraph", "role": "The Ancestral Dragon", "description": "The oldest of magical beings, Seraph witnessed the birth and death of countless stars. His eyes — the Dragon Eyes — are the key to all cosmic power." },
+      "elara": { "name": "Elara", "role": "The Root Healer", "description": "Connected to the heart of the earth, Elara channels the vital energy of ancient roots. Where she steps, flowers bloom — where she cries, entire forests awaken." },
+      "zephyr": { "name": "Zephyr", "role": "The Wind Messenger", "description": "Swift as thought, Zephyr travels the skies carrying messages between realms. They say he whispers prophecies to those about to change the world." }
+    },
+    "lore": {
+      "tag": "✦ Lore",
+      "title": "The Story",
+      "chapterLabel": "Chapter",
+      "chapters": [
+        { "title": "The Origin", "text": "In the beginning, before time had a name, there were only the Dragon Eyes — seven primordial stars that watched the infinite void. Each star carried within it a spark of consciousness, a fragment of power that would shape all existence." },
+        { "title": "The Awakening", "text": "When the first star blinked, the universe trembled. The energy released created the first forms of life — beings made of light and shadow, connected to the stars by invisible threads of magic. These beings became the guardians of cosmic balance." },
+        { "title": "The War of Constellations", "text": "But power attracts ambition. An entity of the void, known only as The Eclipse, tried to devour the Dragon Eyes to rewrite reality. The guardians united in the Dragon Constellation — a legendary formation that channels the combined power of all stars." },
+        { "title": "The Legacy", "text": "The war had no winner — only survivors. The guardians scattered across the realms, each carrying the memory of their star. They say that when the seven reunite, the Dragon Constellation will shine again and the fate of the cosmos will be decided." }
+      ]
+    },
+    "gallery": {
+      "title": "Project Gallery",
+      "subtitle": "Concept art, character studies and scenes from the Dragon Eyes universe.",
+      "items": [
+        "Concept — Dragon Constellation",
+        "Study — Eyes of Seraph",
+        "Scene — The Awakening",
+        "Concept — Elara's Forest",
+        "Scene — War of Constellations",
+        "Study — Aurion's Blade"
+      ]
+    },
+    "cta": {
+      "title": "This is just the beginning",
+      "subtitle": "Dragon Eyes is a constantly evolving project. New characters, chapters and art will be added as the universe expands.",
+      "ctaPortfolio": "View Full Portfolio",
+      "ctaFollow": "Follow the Project"
+    }
+  },
+  "notFound": {
+    "title": "404",
+    "heading": "Portal Not Found",
+    "message": "The path you seek has been lost among the constellations. Perhaps the portal has closed, or it never existed in this plane.",
+    "ctaHome": "✦ Return Home",
+    "ctaPortfolio": "View Portfolio"
+  },
+  "error": {
+    "heading": "Disturbance in the Arcane Flow",
+    "message": "An unstable energy interrupted the enchantment. Try again or return to the main portal.",
+    "ctaRetry": "🔄 Try Again",
+    "ctaHome": "Return Home"
+  }
+}

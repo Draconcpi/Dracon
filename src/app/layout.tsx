@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { Inter, Cinzel, Cinzel_Decorative } from "next/font/google";
 import "./globals.css";
+import dynamic from "next/dynamic";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import StarField from "@/components/ui/StarField";
-import CosmicDust from "@/components/ui/CosmicDust";
+import { I18nProvider } from "@/i18n";
+
+// Lazy-load heavy 3D background — no SSR needed
+const CosmicBackground = dynamic(() => import("@/components/ui/CosmicBackground"), {
+  ssr: false,
+});
 
 const inter = Inter({
   subsets: ["latin"],
@@ -72,13 +77,14 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${cinzel.variable} ${cinzelDecorative.variable} antialiased cosmic-bg min-h-screen overflow-x-hidden`}
       >
-        <StarField count={80} />
-        <CosmicDust count={20} />
-        <Navbar />
-        <main className="relative z-10">
-          {children}
-        </main>
-        <Footer />
+        <I18nProvider>
+          <CosmicBackground />
+          <Navbar />
+          <main className="relative z-10">
+            {children}
+          </main>
+          <Footer />
+        </I18nProvider>
       </body>
     </html>
   );
