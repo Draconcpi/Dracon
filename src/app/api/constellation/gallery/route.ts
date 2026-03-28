@@ -5,16 +5,16 @@ import { getSession } from '@/lib/auth';
 // GET - List all gallery items
 export async function GET() {
   try {
+    if (!prisma.constellationGallery) {
+      return NextResponse.json({ success: true, data: [] });
+    }
     const gallery = await prisma.constellationGallery.findMany({
       orderBy: { order: 'asc' },
     });
     return NextResponse.json({ success: true, data: gallery });
   } catch (error) {
     console.error('Gallery GET error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erro ao buscar galeria.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: true, data: [] });
   }
 }
 

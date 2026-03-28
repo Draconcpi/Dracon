@@ -5,6 +5,9 @@ import { getSession } from '@/lib/auth';
 // GET - List all characters (admin: all, public: active only)
 export async function GET() {
   try {
+    if (!prisma.constellationCharacter) {
+      return NextResponse.json({ success: true, data: [] });
+    }
     const characters = await prisma.constellationCharacter.findMany({
       orderBy: { order: 'asc' },
       include: {
@@ -16,8 +19,7 @@ export async function GET() {
   } catch (error) {
     console.error('Characters GET error:', error);
     return NextResponse.json(
-      { success: false, error: 'Erro ao buscar personagens.' },
-      { status: 500 }
+      { success: true, data: [] }
     );
   }
 }
@@ -28,6 +30,13 @@ export async function POST(request: NextRequest) {
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ success: false, error: 'Não autorizado.' }, { status: 401 });
+    }
+
+    if (!prisma.constellationCharacter) {
+      return NextResponse.json(
+        { success: false, error: 'Tabelas da constelação não encontradas. Execute: npx prisma generate && npx prisma db push' },
+        { status: 500 }
+      );
     }
 
     const body = await request.json();
@@ -58,8 +67,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: character }, { status: 201 });
   } catch (error) {
     console.error('Characters POST error:', error);
+    const msg = error instanceof Error ? error.message : 'Erro ao criar personagem.';
     return NextResponse.json(
-      { success: false, error: 'Erro ao criar personagem.' },
+      { success: false, error: msg },
       { status: 500 }
     );
   }

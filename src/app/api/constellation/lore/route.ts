@@ -5,16 +5,16 @@ import { getSession } from '@/lib/auth';
 // GET - List all lore sections
 export async function GET() {
   try {
+    if (!prisma.constellationLore) {
+      return NextResponse.json({ success: true, data: [] });
+    }
     const lore = await prisma.constellationLore.findMany({
       orderBy: { order: 'asc' },
     });
     return NextResponse.json({ success: true, data: lore });
   } catch (error) {
     console.error('Lore GET error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erro ao buscar lore.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: true, data: [] });
   }
 }
 
