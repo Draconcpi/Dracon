@@ -1,24 +1,48 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
 import AnimatedCard from '@/components/ui/AnimatedCard';
 import { useI18n } from '@/i18n';
 
-const servicesMeta = [
-  { id: '1', icon: '🎨' },
-  { id: '2', icon: '✏️' },
-  { id: '3', icon: '🎬' },
-  { id: '4', icon: '🐉' },
-];
+interface Service {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  shortDescription: string;
+  price: string | null;
+  priceNote: string | null;
+  features: string[];
+  icon: string;
+  order: number;
+  active: boolean;
+}
 
 const processIcons = ['💬', '📋', '✏️', '🎨', '🔍', '✨'];
 
 export default function ServicesPage() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [expandedService, setExpandedService] = useState<string | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchServices() {
+      try {
+        const res = await fetch('/api/services');
+        const data = await res.json();
+        if (data.success) setServices(data.data);
+      } catch (err) {
+        console.error('Error fetching services:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchServices();
+  }, []);
 
   return (
     <div className="min-h-screen pt-24 pb-20">
@@ -46,8 +70,20 @@ export default function ServicesPage() {
 
       {/* Services Grid */}
       <section className="section-container mb-32">
+        {loading && (
+          <div className="text-center py-20">
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} className="text-4xl inline-block">✦</motion.div>
+            <p className="text-gray-400 mt-4">Carregando...</p>
+          </div>
+        )}
+        {!loading && services.length === 0 && (
+          <div className="text-center py-20">
+            <p className="text-5xl mb-4">💼</p>
+            <p className="text-gray-400 text-lg">Nenhum serviço disponível no momento.</p>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {servicesMeta.map((service, i) => (
+          {services.map((service, i) => (
             <AnimatedCard
               key={service.id}
               delay={i * 0.1}
@@ -62,15 +98,17 @@ export default function ServicesPage() {
                   >
                     {service.icon}
                   </motion.span>
-                  <span className="text-dracon-orange-400 font-bold text-lg">
-                    {t(`services.items.${i}.price`)}
-                  </span>
+                  {service.price && (
+                    <span className="text-dracon-orange-400 font-bold text-lg">
+                      {service.price}
+                    </span>
+                  )}
                 </div>
 
                 <h3 className="text-2xl font-display font-bold text-white mb-2">
-                  {t(`services.items.${i}.title`)}
+                  {service.title}
                 </h3>
-                <p className="text-gray-400 mb-4">{t(`services.items.${i}.shortDescription`)}</p>
+                <p className="text-gray-400 mb-4">{service.shortDescription}</p>
 
                 {/* Expanded content */}
                 <motion.div
@@ -82,13 +120,15 @@ export default function ServicesPage() {
                   className="overflow-hidden"
                 >
                   <div className="pt-4 border-t border-dracon-purple-800/20">
-                    <p className="text-gray-300 text-sm mb-4 leading-relaxed">{t(`services.items.${i}.description`)}</p>
-                    <p className="text-dracon-purple-400 text-xs mb-4 italic">{t(`services.items.${i}.priceNote`)}</p>
+                    <p className="text-gray-300 text-sm mb-4 leading-relaxed">{service.description}</p>
+                    {service.priceNote && (
+                      <p className="text-dracon-purple-400 text-xs mb-4 italic">{service.priceNote}</p>
+                    )}
                     <ul className="space-y-2">
-                      {Array.from({ length: 5 }, (_, fi) => (
+                      {service.features.map((feature, fi) => (
                         <li key={fi} className="flex items-center gap-2 text-sm text-gray-300">
                           <span className="text-dracon-purple-400">✦</span>
-                          {t(`services.items.${i}.features.${fi}`)}
+                          {feature}
                         </li>
                       ))}
                     </ul>
@@ -177,8 +217,8 @@ export default function ServicesPage() {
               <label className="block text-sm text-gray-300 mb-2 font-medium">{t('services.form.serviceType')}</label>
               <select className="input-arcane" required>
                 <option value="">{t('services.form.serviceDefault')}</option>
-                {servicesMeta.map((s, i) => (
-                  <option key={s.id} value={t(`services.items.${i}.title`)}>{t(`services.items.${i}.title`)}</option>
+                {services.map((s) => (
+                  <option key={s.id} value={s.title}>{s.title}</option>
                 ))}
                 <option value="outro">{t('services.form.serviceOther')}</option>
               </select>

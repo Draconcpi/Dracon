@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
 import AnimatedCard from '@/components/ui/AnimatedCard';
@@ -35,82 +36,32 @@ function ArcaneSymbol() {
   );
 }
 
-const featuredWorks = [
-  {
-    title: 'O Guardião das Estrelas',
-    category: 'Ilustração',
-    description: 'Uma criatura ancestral que vela pelos segredos das constelações.',
-    gradient: 'from-dracon-purple-800/40 to-dracon-purple-900/40',
-  },
-  {
-    title: 'Dragão Arcano',
-    category: 'Concept Art',
-    description: 'Nascido das forças primordiais da magia, envolvido em runas e energia arcana.',
-    gradient: 'from-dracon-purple-900/40 to-dracon-orange-700/20',
-  },
-  {
-    title: 'Ritual da Lua Crescente',
-    category: 'Animação',
-    description: 'Ritual mágico sob a luz da lua crescente com partículas de energia.',
-    gradient: 'from-dracon-orange-700/20 to-dracon-purple-800/40',
-  },
-  {
-    title: 'Constelação do Fênix',
-    category: 'Arte Digital Mística',
-    description: 'Mapa estelar representando a constelação perdida do Fênix.',
-    gradient: 'from-dracon-purple-800/40 to-dracon-cosmic',
-  },
+interface PortfolioItem {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  imageUrl: string;
+  thumbnailUrl: string | null;
+  category: { id: string; name: string; slug: string };
+  tags: string[];
+  featured: boolean;
+  order: number;
+}
+
+const defaultGradients = [
+  'from-dracon-purple-800/40 to-dracon-purple-900/40',
+  'from-dracon-purple-900/40 to-dracon-orange-700/20',
+  'from-dracon-orange-700/20 to-dracon-purple-800/40',
+  'from-dracon-purple-800/40 to-dracon-cosmic',
 ];
 
-const latestArts = [
-  {
-    title: 'O Guardião das Estrelas',
-    category: 'Ilustração',
-    imageUrl: '/images/portfolio/guardian-stars.jpg',
-    color: 'from-purple-900/80 via-purple-800/60 to-transparent',
-    accent: '#a855f4',
-  },
-  {
-    title: 'Dragão Arcano',
-    category: 'Concept Art',
-    imageUrl: '/images/portfolio/arcane-dragon.jpg',
-    color: 'from-orange-900/80 via-orange-800/60 to-transparent',
-    accent: '#f97316',
-  },
-  {
-    title: 'Ritual da Lua Crescente',
-    category: 'Animação',
-    imageUrl: '/images/portfolio/moon-ritual.jpg',
-    color: 'from-indigo-900/80 via-indigo-800/60 to-transparent',
-    accent: '#818cf8',
-  },
-  {
-    title: 'Constelação do Fênix',
-    category: 'Arte Digital Mística',
-    imageUrl: '/images/portfolio/phoenix-constellation.jpg',
-    color: 'from-purple-900/80 via-purple-800/60 to-transparent',
-    accent: '#c084fc',
-  },
-  {
-    title: 'A Feiticeira das Sombras',
-    category: 'Ilustração',
-    imageUrl: '/images/portfolio/shadow-sorceress.jpg',
-    color: 'from-violet-900/80 via-violet-800/60 to-transparent',
-    accent: '#8b5cf6',
-  },
-  {
-    title: 'Olho do Cosmos',
-    category: 'Arte Digital Mística',
-    imageUrl: '/images/portfolio/cosmic-eye.jpg',
-    color: 'from-amber-900/80 via-amber-800/60 to-transparent',
-    accent: '#f59e0b',
-  },
-];
+const defaultAccents = ['#a855f4', '#f97316', '#818cf8', '#c084fc', '#8b5cf6', '#f59e0b'];
 
-function ArtCarousel() {
+function ArtCarousel({ items }: { items: PortfolioItem[] }) {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
-  const total = latestArts.length;
+  const total = items.length;
 
   const next = useCallback(() => {
     setDirection(1);
@@ -124,11 +75,15 @@ function ArtCarousel() {
 
   // Auto-play
   useEffect(() => {
+    if (total === 0) return;
     const timer = setInterval(next, 5000);
     return () => clearInterval(timer);
-  }, [next]);
+  }, [next, total]);
 
-  const art = latestArts[current];
+  if (total === 0) return null;
+
+  const art = items[current];
+  const accent = defaultAccents[current % defaultAccents.length];
 
   const variants = {
     enter: (dir: number) => ({ x: dir > 0 ? 300 : -300, opacity: 0, scale: 0.95 }),
@@ -152,13 +107,25 @@ function ArtCarousel() {
             transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
             className="absolute inset-0"
           >
-            {/* Gradient background as placeholder for image */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `radial-gradient(ellipse at 30% 50%, ${art.accent}33 0%, transparent 70%), radial-gradient(ellipse at 70% 30%, ${art.accent}22 0%, transparent 60%), linear-gradient(135deg, #0a0015 0%, #1a0030 50%, #0a0015 100%)`,
-              }}
-            />
+            {/* Gradient background or real image */}
+            <div className="absolute inset-0">
+              {art.imageUrl && !art.imageUrl.startsWith('/images/portfolio/') ? (
+                <Image
+                  src={art.imageUrl}
+                  alt={art.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 1200px"
+                />
+              ) : (
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `radial-gradient(ellipse at 30% 50%, ${accent}33 0%, transparent 70%), radial-gradient(ellipse at 70% 30%, ${accent}22 0%, transparent 60%), linear-gradient(135deg, #0a0015 0%, #1a0030 50%, #0a0015 100%)`,
+                  }}
+                />
+              )}
+            </div>
 
             {/* Decorative elements */}
             <div className="absolute inset-0 flex items-center justify-center opacity-10">
@@ -166,15 +133,15 @@ function ArtCarousel() {
                 <polygon
                   points="100,10 125,75 195,75 140,115 155,185 100,145 45,185 60,115 5,75 75,75"
                   fill="none"
-                  stroke={art.accent}
+                  stroke={accent}
                   strokeWidth="0.5"
                 />
-                <circle cx="100" cy="100" r="80" fill="none" stroke={art.accent} strokeWidth="0.3" />
+                <circle cx="100" cy="100" r="80" fill="none" stroke={accent} strokeWidth="0.3" />
               </svg>
             </div>
 
             {/* Bottom gradient overlay */}
-            <div className={`absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t ${art.color}`} />
+            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-dracon-void/90 via-dracon-void/40 to-transparent" />
 
             {/* Content */}
             <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10">
@@ -184,7 +151,7 @@ function ArtCarousel() {
                 transition={{ delay: 0.2 }}
                 className="text-dracon-orange-400 text-xs md:text-sm tracking-[0.2em] uppercase font-medium mb-2"
               >
-                ✦ {art.category}
+                ✦ {art.category.name}
               </motion.span>
               <motion.h3
                 initial={{ opacity: 0, y: 15 }}
@@ -219,7 +186,7 @@ function ArtCarousel() {
 
       {/* Dots indicator */}
       <div className="flex justify-center gap-2 mt-6">
-        {latestArts.map((_, i) => (
+        {items.map((_, i) => (
           <button
             key={i}
             onClick={() => {
@@ -237,7 +204,7 @@ function ArtCarousel() {
 
       {/* Thumbnails row */}
       <div className="flex gap-3 mt-6 overflow-x-auto pb-2 scrollbar-thin">
-        {latestArts.map((item, i) => (
+        {items.map((item, i) => (
           <button
             key={i}
             onClick={() => {
@@ -250,12 +217,18 @@ function ArtCarousel() {
                 : 'border-dracon-purple-800/30 opacity-50 hover:opacity-80 hover:border-dracon-purple-600/50'
             }`}
           >
-            <div
-              className="w-full h-full"
-              style={{
-                background: `radial-gradient(ellipse at center, ${item.accent}44 0%, #0a001588 100%)`,
-              }}
-            />
+            {item.imageUrl && !item.imageUrl.startsWith('/images/portfolio/') ? (
+              <div className="relative w-full h-full">
+                <Image src={item.thumbnailUrl || item.imageUrl} alt={item.title} fill className="object-cover" sizes="112px" />
+              </div>
+            ) : (
+              <div
+                className="w-full h-full"
+                style={{
+                  background: `radial-gradient(ellipse at center, ${defaultAccents[i % defaultAccents.length]}44 0%, #0a001588 100%)`,
+                }}
+              />
+            )}
           </button>
         ))}
       </div>
@@ -265,13 +238,26 @@ function ArtCarousel() {
 
 export default function HomePage() {
   const { t } = useI18n();
+  const [allItems, setAllItems] = useState<PortfolioItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const translatedWorks = [
-    { ...featuredWorks[0], title: t('home.works.guardianStars.title'), category: t('home.works.guardianStars.category'), description: t('home.works.guardianStars.description') },
-    { ...featuredWorks[1], title: t('home.works.arcaneDragon.title'), category: t('home.works.arcaneDragon.category'), description: t('home.works.arcaneDragon.description') },
-    { ...featuredWorks[2], title: t('home.works.moonRitual.title'), category: t('home.works.moonRitual.category'), description: t('home.works.moonRitual.description') },
-    { ...featuredWorks[3], title: t('home.works.phoenixConstellation.title'), category: t('home.works.phoenixConstellation.category'), description: t('home.works.phoenixConstellation.description') },
-  ];
+  useEffect(() => {
+    async function fetchPortfolio() {
+      try {
+        const res = await fetch('/api/portfolio');
+        const data = await res.json();
+        if (data.success) setAllItems(data.data);
+      } catch (err) {
+        console.error('Error fetching portfolio:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchPortfolio();
+  }, []);
+
+  const featuredItems = allItems.filter((item) => item.featured);
+  const carouselItems = allItems.slice(0, 6); // up to 6 items for carousel
 
   return (
     <>
@@ -384,7 +370,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <ArtCarousel />
+            <ArtCarousel items={carouselItems} />
           </motion.div>
 
           <motion.div
@@ -419,22 +405,40 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {translatedWorks.map((work, i) => (
-              <AnimatedCard key={work.title} delay={i * 0.15}>
-                <div className={`p-8 h-80 flex flex-col justify-end bg-gradient-to-br ${work.gradient} rounded-xl relative overflow-hidden group`}>
-                  <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-30 transition-opacity duration-500">
-                    <svg width="120" height="120" viewBox="0 0 100 100">
-                      <polygon
-                        points="50,5 63,35 95,35 70,57 78,90 50,72 22,90 30,57 5,35 37,35"
-                        fill="none"
-                        stroke="rgba(168,85,244,0.5)"
-                        strokeWidth="1"
+            {featuredItems.length > 0 ? featuredItems.map((work, i) => (
+              <AnimatedCard key={work.id} delay={i * 0.15}>
+                <div className={`p-8 h-80 flex flex-col justify-end rounded-xl relative overflow-hidden group ${
+                  work.imageUrl && !work.imageUrl.startsWith('/images/portfolio/')
+                    ? ''
+                    : `bg-gradient-to-br ${defaultGradients[i % defaultGradients.length]}`
+                }`}>
+                  {work.imageUrl && !work.imageUrl.startsWith('/images/portfolio/') && (
+                    <>
+                      <Image
+                        src={work.imageUrl}
+                        alt={work.title}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        sizes="(max-width: 768px) 100vw, 50vw"
                       />
-                    </svg>
-                  </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-dracon-void via-dracon-void/60 to-transparent" />
+                    </>
+                  )}
+                  {(!work.imageUrl || work.imageUrl.startsWith('/images/portfolio/')) && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-30 transition-opacity duration-500">
+                      <svg width="120" height="120" viewBox="0 0 100 100">
+                        <polygon
+                          points="50,5 63,35 95,35 70,57 78,90 50,72 22,90 30,57 5,35 37,35"
+                          fill="none"
+                          stroke="rgba(168,85,244,0.5)"
+                          strokeWidth="1"
+                        />
+                      </svg>
+                    </div>
+                  )}
                   <div className="relative z-10">
                     <span className="text-dracon-orange-400 text-xs tracking-wider uppercase font-medium">
-                      {work.category}
+                      {work.category.name}
                     </span>
                     <h3 className="text-2xl font-display font-bold text-white mt-2 mb-2">
                       {work.title}
@@ -443,7 +447,11 @@ export default function HomePage() {
                   </div>
                 </div>
               </AnimatedCard>
-            ))}
+            )) : !loading && (
+              <div className="col-span-2 text-center py-12">
+                <p className="text-gray-500">✦</p>
+              </div>
+            )}
           </div>
 
           <motion.div
