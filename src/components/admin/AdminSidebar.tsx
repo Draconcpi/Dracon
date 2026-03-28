@@ -9,6 +9,7 @@ const sidebarLinks = [
   { href: '/admin/portfolio', label: 'Portfólio', icon: '🖼️' },
   { href: '/admin/categories', label: 'Categorias', icon: '📁' },
   { href: '/admin/services', label: 'Serviços', icon: '💼' },
+  { href: '/admin/constellation', label: 'Constelação', icon: '⭐' },
   { href: '/admin/messages', label: 'Mensagens', icon: '💬' },
   { href: '/admin/settings', label: 'Configurações', icon: '⚙️' },
 ];

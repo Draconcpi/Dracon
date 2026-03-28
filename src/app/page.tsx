@@ -203,7 +203,7 @@ function ArtCarousel({ items }: { items: PortfolioItem[] }) {
       </div>
 
       {/* Thumbnails row */}
-      <div className="flex gap-3 mt-6 overflow-x-auto pb-2 scrollbar-thin">
+      <div className="flex gap-3 mt-6 overflow-x-auto py-2 px-1 scrollbar-thin">
         {items.map((item, i) => (
           <button
             key={i}

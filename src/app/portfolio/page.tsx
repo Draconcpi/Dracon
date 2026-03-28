@@ -224,7 +224,7 @@ export default function PortfolioPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dracon-void/90 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dracon-void/90 backdrop-blur-sm"
             onClick={() => setSelectedItem(null)}
           >
             <motion.div
@@ -236,7 +236,7 @@ export default function PortfolioPage() {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Image area */}
-              <div className="h-64 rounded-t-2xl relative overflow-hidden">
+              <div className="aspect-[16/9] rounded-t-2xl relative overflow-hidden">
                 {selectedItem.imageUrl && !selectedItem.imageUrl.startsWith('/images/portfolio/') ? (
                   <Image
                     src={selectedItem.imageUrl}

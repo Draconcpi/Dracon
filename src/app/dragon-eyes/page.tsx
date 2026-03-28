@@ -1,131 +1,56 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
 import { useI18n } from '@/i18n';
 
-// ─── Characters (stars in the constellation) ──────────────────────
-// Each star has a position on the constellation map, a color, and character info.
-// Replace imageUrl with real images in public/images/dragon-eyes/
-const characters = [
-  {
-    id: 'lyra',
-    name: 'Lyra',
-    role: 'A Vidente Estelar',
-    description:
-      'Nascida sob a chuva de meteoros de Aldebaran, Lyra enxerga os fios do destino entrelaçados nas estrelas. Seus olhos refletem constelações que outros não podem ver.',
-    color: '#a855f4', // purple
-    cx: 200,
-    cy: 120,
-    imageUrl: '/images/dragon-eyes/lyra.png',
-  },
-  {
-    id: 'ignis',
-    name: 'Ignis',
-    role: 'O Guardião do Fogo Arcano',
-    description:
-      'Forjado nas chamas primordiais, Ignis carrega dentro de si o fogo que deu origem ao primeiro sol. Seu olhar pode derreter aço e iluminar as trevas mais profundas.',
-    color: '#f97316', // orange
-    cx: 400,
-    cy: 80,
-    imageUrl: '/images/dragon-eyes/ignis.png',
-  },
-  {
-    id: 'nyx',
-    name: 'Nyx',
-    role: 'A Sombra Silenciosa',
-    description:
-      'Filha da noite eterna, Nyx se move entre dimensões como uma brisa gelada. Suas asas escuras carregam segredos que nem os deuses se atrevem a pronunciar.',
-    color: '#6366f1', // indigo
-    cx: 600,
-    cy: 150,
-    imageUrl: '/images/dragon-eyes/nyx.png',
-  },
-  {
-    id: 'aurion',
-    name: 'Aurion',
-    role: 'O Cavaleiro Celestial',
-    description:
-      'Último descendente dos Cavaleiros de Orion, Aurion porta a espada que corta entre realidades. Jurou proteger o equilíbrio entre luz e escuridão.',
-    color: '#eab308', // gold
-    cx: 300,
-    cy: 260,
-    imageUrl: '/images/dragon-eyes/aurion.png',
-  },
-  {
-    id: 'seraph',
-    name: 'Seraph',
-    role: 'O Dragão Ancestral',
-    description:
-      'O mais antigo dos seres mágicos, Seraph testemunhou o nascimento e a morte de incontáveis estrelas. Seus olhos — os Dragon Eyes — são a chave para todo o poder cósmico.',
-    color: '#ef4444', // red
-    cx: 500,
-    cy: 300,
-    imageUrl: '/images/dragon-eyes/seraph.png',
-  },
-  {
-    id: 'elara',
-    name: 'Elara',
-    role: 'A Curandeira das Raízes',
-    description:
-      'Conectada ao coração da terra, Elara canaliza a energia vital das raízes antigas. Onde ela pisa, flores nascem — onde ela chora, florestas inteiras despertam.',
-    color: '#22c55e', // green
-    cx: 150,
-    cy: 310,
-    imageUrl: '/images/dragon-eyes/elara.png',
-  },
-  {
-    id: 'zephyr',
-    name: 'Zephyr',
-    role: 'O Mensageiro dos Ventos',
-    description:
-      'Rápido como o pensamento, Zephyr percorre os céus carregando mensagens entre os reinos. Dizem que ele sussurra profecias ao ouvido de quem está prestes a mudar o mundo.',
-    color: '#06b6d4', // cyan
-    cx: 700,
-    cy: 240,
-    imageUrl: '/images/dragon-eyes/zephyr.png',
-  },
-];
+/* ─── Types ─────────────────────────────────────────────────── */
+interface Character {
+  id: string;
+  charId: string;
+  name: string;
+  role: string;
+  description: string;
+  color: string;
+  cx: number;
+  cy: number;
+  imageUrl: string | null;
+  order: number;
+  active: boolean;
+}
 
-// Lines connecting the stars to form the constellation
-const constellationLines: [string, string][] = [
-  ['lyra', 'ignis'],
-  ['ignis', 'nyx'],
-  ['lyra', 'aurion'],
-  ['ignis', 'aurion'],
-  ['ignis', 'seraph'],
-  ['nyx', 'seraph'],
-  ['nyx', 'zephyr'],
-  ['aurion', 'seraph'],
-  ['aurion', 'elara'],
-  ['elara', 'seraph'],
-  ['seraph', 'zephyr'],
-];
+interface Line {
+  id: string;
+  fromId: string;
+  toId: string;
+}
 
-// ─── Project lore sections ────────────────────────────────────────
-const loreSections = [
-  {
-    title: 'A Origem',
-    text: 'No princípio, antes do tempo ter nome, existiam apenas os Olhos do Dragão — sete estrelas primordiais que observavam o vazio infinito. Cada estrela carregava dentro de si uma centelha de consciência, um fragmento de poder que moldaria toda a existência.',
-  },
-  {
-    title: 'O Despertar',
-    text: 'Quando a primeira estrela piscou, o universo tremeu. A energia liberada criou as primeiras formas de vida — seres feitos de luz e sombra, conectados às estrelas por fios invisíveis de magia. Esses seres se tornaram os guardiões do equilíbrio cósmico.',
-  },
-  {
-    title: 'A Guerra das Constelações',
-    text: 'Mas o poder atrai ambição. Uma entidade do vazio, conhecida apenas como O Eclipse, tentou devorar os Dragon Eyes para reescrever a realidade. Os guardiões se uniram na Constelação do Dragão — uma formação lendária que canaliza o poder combinado de todas as estrelas.',
-  },
-  {
-    title: 'O Legado',
-    text: 'A guerra não teve vencedor — apenas sobreviventes. Os guardiões se espalharam pelos reinos, cada um carregando a memória de sua estrela. Dizem que quando os sete se reencontrarem, a Constelação do Dragão brilhará novamente e o destino do cosmos será decidido.',
-  },
-];
+interface LoreSection {
+  id: string;
+  title: string;
+  text: string;
+  chapter: number;
+  order: number;
+}
 
-// ─── Constellation Component ─────────────────────────────────────
-function InteractiveConstellation() {
+interface GalleryItem {
+  id: string;
+  title: string;
+  imageUrl: string | null;
+  accent: string;
+  order: number;
+}
+
+/* ─── Constellation Component ─────────────────────────────────*/
+function InteractiveConstellation({
+  characters,
+  lines,
+}: {
+  characters: Character[];
+  lines: Line[];
+}) {
   const { t } = useI18n();
   const [hoveredChar, setHoveredChar] = useState<string | null>(null);
   const [selectedChar, setSelectedChar] = useState<string | null>(null);
@@ -133,7 +58,7 @@ function InteractiveConstellation() {
   const activeCharId = selectedChar ?? hoveredChar;
   const activeChar = characters.find((c) => c.id === activeCharId);
 
-  const getCharById = (id: string) => characters.find((c) => c.id === id)!;
+  const getCharById = (id: string) => characters.find((c) => c.id === id);
 
   return (
     <div className="relative w-full">
@@ -145,13 +70,14 @@ function InteractiveConstellation() {
           style={{ filter: 'drop-shadow(0 0 20px rgba(168,85,244,0.1))' }}
         >
           {/* Connection lines */}
-          {constellationLines.map(([fromId, toId], i) => {
-            const from = getCharById(fromId);
-            const to = getCharById(toId);
-            const isActive = activeCharId === fromId || activeCharId === toId;
+          {lines.map((line) => {
+            const from = getCharById(line.fromId);
+            const to = getCharById(line.toId);
+            if (!from || !to) return null;
+            const isActive = activeCharId === from.id || activeCharId === to.id;
             return (
               <line
-                key={i}
+                key={line.id}
                 x1={from.cx}
                 y1={from.cy}
                 x2={to.cx}
@@ -169,6 +95,9 @@ function InteractiveConstellation() {
           {/* Stars */}
           {characters.map((char) => {
             const isActive = activeCharId === char.id;
+            // Try i18n key, fall back to DB value
+            const charNameKey = `dragonEyes.characters.${char.charId}.name`;
+            const charName = t(charNameKey) !== charNameKey ? t(charNameKey) : char.name;
             return (
               <g
                 key={char.id}
@@ -228,7 +157,7 @@ function InteractiveConstellation() {
                   fontWeight={isActive ? 700 : 400}
                   style={{ transition: 'all 0.3s ease' }}
                 >
-                  {t(`dragonEyes.characters.${char.id}.name`)}
+                  {charName}
                 </text>
               </g>
             );
@@ -247,57 +176,7 @@ function InteractiveConstellation() {
             transition={{ duration: 0.3 }}
             className="mt-8 max-w-3xl mx-auto"
           >
-            <div
-              className="rounded-2xl border p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center"
-              style={{
-                borderColor: `${activeChar.color}33`,
-                background: `linear-gradient(135deg, ${activeChar.color}08 0%, transparent 60%), rgba(10,0,21,0.8)`,
-              }}
-            >
-              {/* Character image placeholder */}
-              <div
-                className="w-32 h-32 md:w-40 md:h-40 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border"
-                style={{
-                  borderColor: `${activeChar.color}44`,
-                  background: `radial-gradient(circle at center, ${activeChar.color}22 0%, transparent 70%), rgba(10,0,21,0.6)`,
-                }}
-              >
-                {/* Replace with <Image> when you have character images */}
-                <svg width="60" height="60" viewBox="0 0 100 100">
-                  <polygon
-                    points="50,5 63,35 95,35 70,57 78,90 50,72 22,90 30,57 5,35 37,35"
-                    fill="none"
-                    stroke={activeChar.color}
-                    strokeWidth="2"
-                    opacity="0.5"
-                  />
-                  <circle cx="50" cy="50" r="15" fill={activeChar.color} opacity="0.3" />
-                  <circle cx="50" cy="50" r="6" fill={activeChar.color} opacity="0.6" />
-                </svg>
-              </div>
-
-              {/* Character info */}
-              <div className="flex-1 text-center md:text-left">
-                <div className="flex items-center gap-3 justify-center md:justify-start mb-1">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: activeChar.color }}
-                  />
-                  <span
-                    className="text-xs tracking-[0.2em] uppercase font-medium"
-                    style={{ color: activeChar.color }}
-                  >
-                    {t(`dragonEyes.characters.${activeChar.id}.role`)}
-                  </span>
-                </div>
-                <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-3">
-                  {t(`dragonEyes.characters.${activeChar.id}.name`)}
-                </h3>
-                <p className="text-gray-400 leading-relaxed text-sm md:text-base">
-                  {t(`dragonEyes.characters.${activeChar.id}.description`)}
-                </p>
-              </div>
-            </div>
+            <CharacterDetail char={activeChar} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -316,9 +195,116 @@ function InteractiveConstellation() {
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────
+/* ─── Character Detail (reused in constellation) ──────────── */
+function CharacterDetail({ char: c }: { char: Character }) {
+  const { t } = useI18n();
+
+  // Try i18n key, fall back to DB value
+  const nameKey = `dragonEyes.characters.${c.charId}.name`;
+  const roleKey = `dragonEyes.characters.${c.charId}.role`;
+  const descKey = `dragonEyes.characters.${c.charId}.description`;
+  const charName = t(nameKey) !== nameKey ? t(nameKey) : c.name;
+  const charRole = t(roleKey) !== roleKey ? t(roleKey) : c.role;
+  const charDesc = t(descKey) !== descKey ? t(descKey) : c.description;
+
+  return (
+    <div
+      className="rounded-2xl border p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center"
+      style={{
+        borderColor: `${c.color}33`,
+        background: `linear-gradient(135deg, ${c.color}08 0%, transparent 60%), rgba(10,0,21,0.8)`,
+      }}
+    >
+      {/* Character image or placeholder */}
+      <div
+        className="w-32 h-32 md:w-40 md:h-40 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border"
+        style={{
+          borderColor: `${c.color}44`,
+          background: `radial-gradient(circle at center, ${c.color}22 0%, transparent 70%), rgba(10,0,21,0.6)`,
+        }}
+      >
+        {c.imageUrl ? (
+          <img src={c.imageUrl} alt={charName} className="w-full h-full object-cover" />
+        ) : (
+          <svg width="60" height="60" viewBox="0 0 100 100">
+            <polygon
+              points="50,5 63,35 95,35 70,57 78,90 50,72 22,90 30,57 5,35 37,35"
+              fill="none"
+              stroke={c.color}
+              strokeWidth="2"
+              opacity="0.5"
+            />
+            <circle cx="50" cy="50" r="15" fill={c.color} opacity="0.3" />
+            <circle cx="50" cy="50" r="6" fill={c.color} opacity="0.6" />
+          </svg>
+        )}
+      </div>
+
+      {/* Character info */}
+      <div className="flex-1 text-center md:text-left">
+        <div className="flex items-center gap-3 justify-center md:justify-start mb-1">
+          <div
+            className="w-3 h-3 rounded-full"
+            style={{ backgroundColor: c.color }}
+          />
+          <span
+            className="text-xs tracking-[0.2em] uppercase font-medium"
+            style={{ color: c.color }}
+          >
+            {charRole}
+          </span>
+        </div>
+        <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-3">
+          {charName}
+        </h3>
+        <p className="text-gray-400 leading-relaxed text-sm md:text-base">
+          {charDesc}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main Page ────────────────────────────────────────────── */
 export default function DragonEyesPage() {
   const { t } = useI18n();
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [lines, setLines] = useState<Line[]>([]);
+  const [loreSections, setLoreSections] = useState<LoreSection[]>([]);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch('/api/constellation');
+      const json = await res.json();
+      if (json.success) {
+        setCharacters(json.data.characters);
+        setLines(json.data.lines);
+        setLoreSections(json.data.lore);
+        setGalleryItems(json.data.gallery);
+      }
+    } catch (err) {
+      console.error('Failed to fetch constellation data:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  if (loading) {
+    return (
+      <section className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-dracon-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400 text-sm">Carregando constelação...</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <>
@@ -359,116 +345,122 @@ export default function DragonEyesPage() {
       </section>
 
       {/* CONSTELLATION */}
-      <section className="relative py-20">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-dracon-purple-500/30 to-transparent" />
-        <div className="section-container">
-          <div className="text-center mb-12">
-            <GlowText as="h2" className="text-3xl md:text-4xl font-bold mb-4">
-              {t('dragonEyes.constellation.title')}
-            </GlowText>
-            <p className="text-gray-400 max-w-lg mx-auto">
-              {t('dragonEyes.constellation.subtitle')}
-            </p>
-          </div>
+      {characters.length > 0 && (
+        <section className="relative py-20">
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-dracon-purple-500/30 to-transparent" />
+          <div className="section-container">
+            <div className="text-center mb-12">
+              <GlowText as="h2" className="text-3xl md:text-4xl font-bold mb-4">
+                {t('dragonEyes.constellation.title')}
+              </GlowText>
+              <p className="text-gray-400 max-w-lg mx-auto">
+                {t('dragonEyes.constellation.subtitle')}
+              </p>
+            </div>
 
-          <InteractiveConstellation />
-        </div>
-      </section>
+            <InteractiveConstellation characters={characters} lines={lines} />
+          </div>
+        </section>
+      )}
 
       {/* LORE / STORY */}
-      <section className="relative py-24">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-dracon-orange-500/20 to-transparent" />
-        <div className="section-container">
-          <div className="text-center mb-16">
-            <motion.span
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="text-dracon-orange-400 text-sm tracking-[0.2em] uppercase font-medium"
-            >
-              {t('dragonEyes.lore.tag')}
-            </motion.span>
-            <GlowText as="h2" className="text-3xl md:text-4xl font-bold mt-3 mb-4" color="orange">
-              {t('dragonEyes.lore.title')}
-            </GlowText>
-          </div>
-
-          <div className="max-w-3xl mx-auto space-y-16">
-            {loreSections.map((section, i) => (
-              <motion.div
-                key={section.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+      {loreSections.length > 0 && (
+        <section className="relative py-24">
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-dracon-orange-500/20 to-transparent" />
+          <div className="section-container">
+            <div className="text-center mb-16">
+              <motion.span
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.1 }}
-                className="relative pl-8 border-l-2 border-dracon-purple-800/30"
+                className="text-dracon-orange-400 text-sm tracking-[0.2em] uppercase font-medium"
               >
-                <div className="absolute left-0 top-0 w-3 h-3 rounded-full bg-dracon-purple-500 -translate-x-[7px]" />
-                <span className="text-dracon-purple-400 text-xs tracking-[0.15em] uppercase font-medium">
-                  {t('dragonEyes.lore.chapterLabel')} {i + 1}
-                </span>
-                <h3 className="text-xl md:text-2xl font-display font-bold text-white mt-1 mb-3">
-                  {section.title}
-                </h3>
-                <p className="text-gray-400 leading-relaxed">{section.text}</p>
-              </motion.div>
-            ))}
+                {t('dragonEyes.lore.tag')}
+              </motion.span>
+              <GlowText as="h2" className="text-3xl md:text-4xl font-bold mt-3 mb-4" color="orange">
+                {t('dragonEyes.lore.title')}
+              </GlowText>
+            </div>
+
+            <div className="max-w-3xl mx-auto space-y-16">
+              {loreSections.map((section, i) => (
+                <motion.div
+                  key={section.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: i * 0.1 }}
+                  className="relative pl-8 border-l-2 border-dracon-purple-800/30"
+                >
+                  <div className="absolute left-0 top-0 w-3 h-3 rounded-full bg-dracon-purple-500 -translate-x-[7px]" />
+                  <span className="text-dracon-purple-400 text-xs tracking-[0.15em] uppercase font-medium">
+                    {t('dragonEyes.lore.chapterLabel')} {section.chapter || i + 1}
+                  </span>
+                  <h3 className="text-xl md:text-2xl font-display font-bold text-white mt-1 mb-3">
+                    {section.title}
+                  </h3>
+                  <p className="text-gray-400 leading-relaxed">{section.text}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* GALLERY */}
-      <section className="relative py-24">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-dracon-purple-500/30 to-transparent" />
-        <div className="section-container">
-          <div className="text-center mb-12">
-            <GlowText as="h2" className="text-3xl md:text-4xl font-bold mb-4">
-              {t('dragonEyes.gallery.title')}
-            </GlowText>
-            <p className="text-gray-400 max-w-lg mx-auto">
-              {t('dragonEyes.gallery.subtitle')}
-            </p>
-          </div>
+      {galleryItems.length > 0 && (
+        <section className="relative py-24">
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-dracon-purple-500/30 to-transparent" />
+          <div className="section-container">
+            <div className="text-center mb-12">
+              <GlowText as="h2" className="text-3xl md:text-4xl font-bold mb-4">
+                {t('dragonEyes.gallery.title')}
+              </GlowText>
+              <p className="text-gray-400 max-w-lg mx-auto">
+                {t('dragonEyes.gallery.subtitle')}
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { title: 'Conceito — Constelação do Dragão', accent: '#a855f4' },
-              { title: 'Estudo — Olhos de Seraph', accent: '#ef4444' },
-              { title: 'Cena — O Despertar', accent: '#f97316' },
-              { title: 'Conceito — Floresta de Elara', accent: '#22c55e' },
-              { title: 'Cena — Guerra das Constelações', accent: '#6366f1' },
-              { title: 'Estudo — Lâmina de Aurion', accent: '#eab308' },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="aspect-[4/3] rounded-xl overflow-hidden border border-dracon-purple-800/20 group relative cursor-pointer"
-                style={{
-                  background: `radial-gradient(ellipse at 40% 40%, ${item.accent}15 0%, transparent 70%), linear-gradient(135deg, #0a0015 0%, #1a0030 100%)`,
-                }}
-              >
-                {/* Placeholder decorative element */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity duration-500">
-                  <svg width="80" height="80" viewBox="0 0 100 100">
-                    <polygon
-                      points="50,5 63,35 95,35 70,57 78,90 50,72 22,90 30,57 5,35 37,35"
-                      fill="none"
-                      stroke={item.accent}
-                      strokeWidth="1.5"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {galleryItems.map((item, i) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="aspect-[4/3] rounded-xl overflow-hidden border border-dracon-purple-800/20 group relative cursor-pointer"
+                  style={{
+                    background: `radial-gradient(ellipse at 40% 40%, ${item.accent}15 0%, transparent 70%), linear-gradient(135deg, #0a0015 0%, #1a0030 100%)`,
+                  }}
+                >
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity duration-500"
                     />
-                  </svg>
-                </div>
-                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                  <p className="text-sm text-gray-300 font-display">{item.title}</p>
-                </div>
-              </motion.div>
-            ))}
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity duration-500">
+                      <svg width="80" height="80" viewBox="0 0 100 100">
+                        <polygon
+                          points="50,5 63,35 95,35 70,57 78,90 50,72 22,90 30,57 5,35 37,35"
+                          fill="none"
+                          stroke={item.accent}
+                          strokeWidth="1.5"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                  <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                    <p className="text-sm text-gray-300 font-display">{item.title}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA */}
       <section className="relative py-24">

@@ -86,3 +86,60 @@ model Settings {
 
   @@map("settings")
 }
+
+// ─── Dragon Eyes / Constellation ────────────────────────────────
+model ConstellationCharacter {
+  id          String  @id @default(cuid())
+  charId      String  @unique // e.g. "lyra", "ignis" — used as slug
+  name        String
+  role        String
+  description String
+  color       String  @default("#a855f4")
+  cx          Float   @default(400)
+  cy          Float   @default(200)
+  imageUrl    String?
+  order       Int     @default(0)
+  active      Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  connectionsFrom ConstellationLine[] @relation("fromChar")
+  connectionsTo   ConstellationLine[] @relation("toChar")
+
+  @@map("constellation_characters")
+}
+
+model ConstellationLine {
+  id     String @id @default(cuid())
+  fromId String
+  toId   String
+  from   ConstellationCharacter @relation("fromChar", fields: [fromId], references: [id], onDelete: Cascade)
+  to     ConstellationCharacter @relation("toChar", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@unique([fromId, toId])
+  @@map("constellation_lines")
+}
+
+model ConstellationLore {
+  id       String @id @default(cuid())
+  title    String
+  text     String
+  chapter  Int    @default(0)
+  order    Int    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("constellation_lore")
+}
+
+model ConstellationGallery {
+  id       String  @id @default(cuid())
+  title    String
+  imageUrl String?
+  accent   String  @default("#a855f4")
+  order    Int     @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("constellation_gallery")
+}
