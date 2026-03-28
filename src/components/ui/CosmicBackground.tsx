@@ -4,9 +4,37 @@ import { useRef, useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
+// ─── Generate a circular star sprite texture ─────────────────────
+function createStarTexture(): THREE.Texture {
+  const size = 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+
+  // Radial gradient: bright center → transparent edge (circular)
+  const gradient = ctx.createRadialGradient(
+    size / 2, size / 2, 0,
+    size / 2, size / 2, size / 2
+  );
+  gradient.addColorStop(0, 'rgba(255,255,255,1)');
+  gradient.addColorStop(0.15, 'rgba(255,255,255,0.8)');
+  gradient.addColorStop(0.4, 'rgba(200,180,255,0.3)');
+  gradient.addColorStop(1, 'rgba(200,180,255,0)');
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
 // ─── Stars (Points) ──────────────────────────────────────────────
 function Stars({ count = 600 }: { count?: number }) {
   const ref = useRef<THREE.Points>(null);
+
+  const starTexture = useMemo(() => createStarTexture(), []);
 
   const [positions, sizes] = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -40,7 +68,8 @@ function Stars({ count = 600 }: { count?: number }) {
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.08}
+        map={starTexture}
+        size={0.12}
         color="#c4b5ff"
         transparent
         opacity={0.7}
@@ -55,6 +84,8 @@ function Stars({ count = 600 }: { count?: number }) {
 // ─── Cosmic Dust (larger faint particles) ────────────────────────
 function CosmicDustParticles({ count = 80 }: { count?: number }) {
   const ref = useRef<THREE.Points>(null);
+
+  const dustTexture = useMemo(() => createStarTexture(), []);
 
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -79,7 +110,8 @@ function CosmicDustParticles({ count = 80 }: { count?: number }) {
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
       <pointsMaterial
-        size={0.12}
+        map={dustTexture}
+        size={0.18}
         color="#a855f4"
         transparent
         opacity={0.25}
@@ -89,6 +121,29 @@ function CosmicDustParticles({ count = 80 }: { count?: number }) {
       />
     </points>
   );
+}
+
+// ─── Constellation Line Segment (memoized) ──────────────────────
+function ConstellationLineSegment({ start, end }: { start: number[]; end: number[] }) {
+  const lineRef = useRef<THREE.Line>(null);
+
+  const lineObj = useMemo(() => {
+    const points = [
+      new THREE.Vector3(...start),
+      new THREE.Vector3(...end),
+    ];
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineBasicMaterial({
+      color: '#a855f4',
+      transparent: true,
+      opacity: 0.15,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    return new THREE.Line(geometry, material);
+  }, [start, end]);
+
+  return <primitive ref={lineRef} object={lineObj} />;
 }
 
 // ─── Constellation Lines (3D) ────────────────────────────────────
@@ -150,20 +205,7 @@ function ConstellationLines3D() {
           {constellation.connections.map(([a, b], li) => {
             const start = constellation.stars[a];
             const end = constellation.stars[b];
-            const points = [
-              new THREE.Vector3(...start),
-              new THREE.Vector3(...end),
-            ];
-            const geometry = new THREE.BufferGeometry().setFromPoints(points);
-            const material = new THREE.LineBasicMaterial({
-              color: '#a855f4',
-              transparent: true,
-              opacity: 0.15,
-              depthWrite: false,
-              blending: THREE.AdditiveBlending,
-            });
-            const lineObj = new THREE.Line(geometry, material);
-            return <primitive key={li} object={lineObj} />;
+            return <ConstellationLineSegment key={li} start={start} end={end} />;
           })}
           {/* Star nodes */}
           {constellation.stars.map((pos, si) => (

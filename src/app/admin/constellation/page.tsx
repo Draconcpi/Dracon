@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import MagicButton from '@/components/ui/MagicButton';
+import { resolveImageUrl } from '@/lib/utils';
 
 /* ─── Types ─────────────────────────────────────────────────── */
 interface Character {
@@ -119,7 +120,7 @@ export default function AdminConstellationPage() {
 
       {/* Tab Content */}
       {tab === 'characters' && (
-        <CharactersTab characters={characters} onRefresh={fetchAll} />
+        <CharactersTab characters={characters} lines={lines} onRefresh={fetchAll} />
       )}
       {tab === 'lines' && (
         <LinesTab lines={lines} characters={characters} onRefresh={fetchAll} />
@@ -143,9 +144,11 @@ export default function AdminConstellationPage() {
    ═══════════════════════════════════════════════════════════════ */
 function CharactersTab({
   characters,
+  lines,
   onRefresh,
 }: {
   characters: Character[];
+  lines: Line[];
   onRefresh: () => void;
 }) {
   const [showForm, setShowForm] = useState(false);
@@ -276,6 +279,14 @@ function CharactersTab({
               )}
             </div>
             <p className="text-gray-400 text-xs mb-3 line-clamp-2">{c.description}</p>
+            {(() => {
+              const connCount = lines.filter(l => l.fromId === c.id || l.toId === c.id).length;
+              return connCount === 0 ? (
+                <p className="text-xs text-amber-400/80 mb-2">⚠️ Sem conexões — vá em "Conexões" para interligar</p>
+              ) : (
+                <p className="text-xs text-gray-500 mb-2">🔗 {connCount} conexão(ões)</p>
+              );
+            })()}
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span>
                 Pos: ({c.cx}, {c.cy}) | Ordem: {c.order}
@@ -428,8 +439,9 @@ function CharactersTab({
                       className={inputClass}
                       value={imageUrl}
                       onChange={(e) => setImageUrl(e.target.value)}
-                      placeholder="/images/dragon-eyes/..."
+                      placeholder="ID do Google Drive ou URL completa"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Ex: 1ABC...xyz (ID do Drive) ou https://...</p>
                   </div>
                   <div>
                     <label className={labelClass}>Ordem</label>
@@ -845,14 +857,13 @@ function GalleryTab({
               background: `radial-gradient(ellipse at 40% 40%, ${g.accent}15 0%, transparent 70%), linear-gradient(135deg, #0a0015 0%, #1a0030 100%)`,
             }}
           >
-            {g.imageUrl && (
+            {resolveImageUrl(g.imageUrl) ? (
               <img
-                src={g.imageUrl}
+                src={resolveImageUrl(g.imageUrl)!}
                 alt={g.title}
                 className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
               />
-            )}
-            {!g.imageUrl && (
+            ) : (
               <div className="absolute inset-0 flex items-center justify-center opacity-10">
                 <svg width="80" height="80" viewBox="0 0 100 100">
                   <polygon
@@ -922,8 +933,9 @@ function GalleryTab({
                     className={inputClass}
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="/images/dragon-eyes/..."
+                    placeholder="ID do Google Drive ou URL completa"
                   />
+                  <p className="text-xs text-gray-500 mt-1">Ex: 1ABC...xyz (ID do Drive) ou https://...</p>
                 </div>
                 <div>
                   <label className={labelClass}>Cor de Destaque</label>

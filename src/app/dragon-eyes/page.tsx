@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
 import { useI18n } from '@/i18n';
+import { resolveImageUrl } from '@/lib/utils';
 
 /* ─── Types ─────────────────────────────────────────────────── */
 interface Character {
@@ -206,6 +207,7 @@ function CharacterDetail({ char: c }: { char: Character }) {
   const charName = t(nameKey) !== nameKey ? t(nameKey) : c.name;
   const charRole = t(roleKey) !== roleKey ? t(roleKey) : c.role;
   const charDesc = t(descKey) !== descKey ? t(descKey) : c.description;
+  const imgSrc = resolveImageUrl(c.imageUrl);
 
   return (
     <div
@@ -223,8 +225,8 @@ function CharacterDetail({ char: c }: { char: Character }) {
           background: `radial-gradient(circle at center, ${c.color}22 0%, transparent 70%), rgba(10,0,21,0.6)`,
         }}
       >
-        {c.imageUrl ? (
-          <img src={c.imageUrl} alt={charName} className="w-full h-full object-cover" />
+        {imgSrc ? (
+          <img src={imgSrc} alt={charName} className="w-full h-full object-cover" />
         ) : (
           <svg width="60" height="60" viewBox="0 0 100 100">
             <polygon
@@ -434,9 +436,9 @@ export default function DragonEyesPage() {
                     background: `radial-gradient(ellipse at 40% 40%, ${item.accent}15 0%, transparent 70%), linear-gradient(135deg, #0a0015 0%, #1a0030 100%)`,
                   }}
                 >
-                  {item.imageUrl ? (
+                  {resolveImageUrl(item.imageUrl) ? (
                     <img
-                      src={item.imageUrl}
+                      src={resolveImageUrl(item.imageUrl)!}
                       alt={item.title}
                       className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity duration-500"
                     />
