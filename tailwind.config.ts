@@ -58,8 +58,14 @@ const config: Config = {
         'constellation': 'constellation 4s ease-in-out infinite',
         'cosmic-dust': 'cosmic-dust 20s linear infinite',
         'shimmer': 'shimmer 2s linear infinite',
+        'pulse-ring': 'pulse-ring 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite',
+        'spin-slow': 'spin 24s linear infinite',
       },
       keyframes: {
+        'pulse-ring': {
+          '0%': { transform: 'scale(0.7)', opacity: '0.8' },
+          '100%': { transform: 'scale(2.2)', opacity: '0' },
+        },
         twinkle: {
           '0%, 100%': { opacity: '0.3', transform: 'scale(1)' },
           '50%': { opacity: '1', transform: 'scale(1.2)' },

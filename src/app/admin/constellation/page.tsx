@@ -282,7 +282,7 @@ function CharactersTab({
             {(() => {
               const connCount = lines.filter(l => l.fromId === c.id || l.toId === c.id).length;
               return connCount === 0 ? (
-                <p className="text-xs text-amber-400/80 mb-2">⚠️ Sem conexões — vá em "Conexões" para interligar</p>
+                <p className="text-xs text-amber-400/80 mb-2">⚠️ Sem conexões — vá em &ldquo;Conexões&rdquo; para interligar</p>
               ) : (
                 <p className="text-xs text-gray-500 mb-2">🔗 {connCount} conexão(ões)</p>
               );

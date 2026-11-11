@@ -1,11 +1,25 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
+import AnimatedCard from '@/components/ui/AnimatedCard';
+import ConstellationDivider from '@/components/ui/ConstellationDivider';
+import ConstellationGlyph from '@/components/ui/ConstellationGlyph';
+import ConstellationLoader from '@/components/ui/ConstellationLoader';
+import ArtImage from '@/components/ui/ArtImage';
+import { constellationAt } from '@/lib/constellations';
 import { useI18n } from '@/i18n';
-import { resolveImageUrl } from '@/lib/utils';
+
+const CONSTELLATION_BOX = 'mx-auto aspect-[4/3] w-full max-w-5xl sm:aspect-[2/1]';
+
+// WebGL scene (client-only)
+const DragonConstellation3D = dynamic(() => import('@/components/three/DragonConstellation3D'), {
+  ssr: false,
+  loading: () => <div className={CONSTELLATION_BOX} />,
+});
 
 /* ─── Types ─────────────────────────────────────────────────── */
 interface Character {
@@ -44,6 +58,115 @@ interface GalleryItem {
   order: number;
 }
 
+/* ─── 2D constellation (fallback when WebGL is unavailable) ─────*/
+function ConstellationSVG({
+  characters,
+  lines,
+  activeCharId,
+  getName,
+  onHover,
+  onSelect,
+}: {
+  characters: Character[];
+  lines: Line[];
+  activeCharId: string | null;
+  getName: (char: Character) => string;
+  onHover: (id: string | null) => void;
+  onSelect: (id: string) => void;
+}) {
+  const getCharById = (id: string) => characters.find((c) => c.id === id);
+
+  return (
+    <div className="relative w-full max-w-4xl mx-auto">
+      <svg
+        viewBox="0 0 850 420"
+        className="w-full h-auto"
+        style={{ filter: 'drop-shadow(0 0 20px rgba(168,85,244,0.1))' }}
+      >
+        {lines.map((line) => {
+          const from = getCharById(line.fromId);
+          const to = getCharById(line.toId);
+          if (!from || !to) return null;
+          const isActive = activeCharId === from.id || activeCharId === to.id;
+          return (
+            <line
+              key={line.id}
+              x1={from.cx}
+              y1={from.cy}
+              x2={to.cx}
+              y2={to.cy}
+              stroke={isActive ? '#a855f4' : 'rgba(168,85,244,0.15)'}
+              strokeWidth={isActive ? 1.5 : 0.8}
+              strokeDasharray={isActive ? 'none' : '4 4'}
+              style={{ transition: 'all 0.4s ease' }}
+            />
+          );
+        })}
+
+        {characters.map((char) => {
+          const isActive = activeCharId === char.id;
+          return (
+            <g
+              key={char.id}
+              onMouseEnter={() => onHover(char.id)}
+              onMouseLeave={() => onHover(null)}
+              onClick={() => onSelect(char.id)}
+              className="cursor-pointer"
+            >
+              <circle
+                cx={char.cx}
+                cy={char.cy}
+                r={isActive ? 28 : 18}
+                fill="none"
+                stroke={char.color}
+                strokeWidth={isActive ? 1.5 : 0.5}
+                opacity={isActive ? 0.6 : 0.2}
+                style={{ transition: 'all 0.4s ease' }}
+              />
+              <circle
+                cx={char.cx}
+                cy={char.cy}
+                r={isActive ? 20 : 12}
+                fill={char.color}
+                opacity={isActive ? 0.15 : 0.05}
+                style={{ transition: 'all 0.4s ease' }}
+              />
+              <circle
+                cx={char.cx}
+                cy={char.cy}
+                r={isActive ? 7 : 5}
+                fill={char.color}
+                opacity={isActive ? 1 : 0.7}
+                style={{ transition: 'all 0.3s ease' }}
+              />
+              <circle
+                cx={char.cx}
+                cy={char.cy}
+                r={isActive ? 3 : 2}
+                fill="white"
+                opacity={isActive ? 0.9 : 0.6}
+                style={{ transition: 'all 0.3s ease' }}
+              />
+              <text
+                x={char.cx}
+                y={char.cy - (isActive ? 36 : 24)}
+                textAnchor="middle"
+                fill={isActive ? char.color : 'rgba(200,180,255,0.5)'}
+                fontSize={isActive ? 14 : 11}
+                fontFamily="var(--font-cinzel)"
+                fontWeight={isActive ? 700 : 400}
+                style={{ transition: 'all 0.3s ease' }}
+              >
+                {getName(char)}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
 /* ─── Constellation Component ─────────────────────────────────*/
 function InteractiveConstellation({
   characters,
@@ -59,111 +182,73 @@ function InteractiveConstellation({
   const activeCharId = selectedChar ?? hoveredChar;
   const activeChar = characters.find((c) => c.id === activeCharId);
 
-  const getCharById = (id: string) => characters.find((c) => c.id === id);
+  // Try i18n key, fall back to DB value
+  const getName = useCallback(
+    (char: Character) => {
+      const key = `dragonEyes.characters.${char.charId}.name`;
+      const value = t(key);
+      return value !== key ? value : char.name;
+    },
+    [t]
+  );
+
+  const toggle = useCallback((id: string) => {
+    setSelectedChar((prev) => (prev === id ? null : id));
+  }, []);
+
+  const nodes = useMemo(
+    () => characters.map((c) => ({ id: c.id, name: getName(c), color: c.color, cx: c.cx, cy: c.cy })),
+    [characters, getName]
+  );
 
   return (
     <div className="relative w-full">
-      {/* Constellation SVG */}
-      <div className="relative w-full max-w-4xl mx-auto">
-        <svg
-          viewBox="0 0 850 420"
-          className="w-full h-auto"
-          style={{ filter: 'drop-shadow(0 0 20px rgba(168,85,244,0.1))' }}
-        >
-          {/* Connection lines */}
-          {lines.map((line) => {
-            const from = getCharById(line.fromId);
-            const to = getCharById(line.toId);
-            if (!from || !to) return null;
-            const isActive = activeCharId === from.id || activeCharId === to.id;
-            return (
-              <line
-                key={line.id}
-                x1={from.cx}
-                y1={from.cy}
-                x2={to.cx}
-                y2={to.cy}
-                stroke={isActive ? '#a855f4' : 'rgba(168,85,244,0.15)'}
-                strokeWidth={isActive ? 1.5 : 0.8}
-                strokeDasharray={isActive ? 'none' : '4 4'}
-                style={{
-                  transition: 'all 0.4s ease',
-                }}
-              />
-            );
-          })}
+      <DragonConstellation3D
+        nodes={nodes}
+        links={lines}
+        activeId={activeCharId}
+        onHover={setHoveredChar}
+        onSelect={toggle}
+        className={CONSTELLATION_BOX}
+        fallback={
+          <ConstellationSVG
+            characters={characters}
+            lines={lines}
+            activeCharId={activeCharId}
+            getName={getName}
+            onHover={setHoveredChar}
+            onSelect={toggle}
+          />
+        }
+      />
 
-          {/* Stars */}
-          {characters.map((char) => {
-            const isActive = activeCharId === char.id;
-            // Try i18n key, fall back to DB value
-            const charNameKey = `dragonEyes.characters.${char.charId}.name`;
-            const charName = t(charNameKey) !== charNameKey ? t(charNameKey) : char.name;
-            return (
-              <g
-                key={char.id}
-                onMouseEnter={() => setHoveredChar(char.id)}
-                onMouseLeave={() => setHoveredChar(null)}
-                onClick={() =>
-                  setSelectedChar(selectedChar === char.id ? null : char.id)
-                }
-                className="cursor-pointer"
-              >
-                {/* Glow ring */}
-                <circle
-                  cx={char.cx}
-                  cy={char.cy}
-                  r={isActive ? 28 : 18}
-                  fill="none"
-                  stroke={char.color}
-                  strokeWidth={isActive ? 1.5 : 0.5}
-                  opacity={isActive ? 0.6 : 0.2}
-                  style={{ transition: 'all 0.4s ease' }}
-                />
-                {/* Outer glow */}
-                <circle
-                  cx={char.cx}
-                  cy={char.cy}
-                  r={isActive ? 20 : 12}
-                  fill={char.color}
-                  opacity={isActive ? 0.15 : 0.05}
-                  style={{ transition: 'all 0.4s ease' }}
-                />
-                {/* Star core */}
-                <circle
-                  cx={char.cx}
-                  cy={char.cy}
-                  r={isActive ? 7 : 5}
-                  fill={char.color}
-                  opacity={isActive ? 1 : 0.7}
-                  style={{ transition: 'all 0.3s ease' }}
-                />
-                {/* White center */}
-                <circle
-                  cx={char.cx}
-                  cy={char.cy}
-                  r={isActive ? 3 : 2}
-                  fill="white"
-                  opacity={isActive ? 0.9 : 0.6}
-                  style={{ transition: 'all 0.3s ease' }}
-                />
-                {/* Name label */}
-                <text
-                  x={char.cx}
-                  y={char.cy - (isActive ? 36 : 24)}
-                  textAnchor="middle"
-                  fill={isActive ? char.color : 'rgba(200,180,255,0.5)'}
-                  fontSize={isActive ? 14 : 11}
-                  fontFamily="var(--font-cinzel)"
-                  fontWeight={isActive ? 700 : 400}
-                  style={{ transition: 'all 0.3s ease' }}
-                >
-                  {charName}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
+      {/* Guardian legend — keyboard & touch friendly selection */}
+      <div className="mt-6 flex flex-wrap justify-center gap-2">
+        {characters.map((c) => {
+          const isActive = c.id === activeCharId;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => toggle(c.id)}
+              onMouseEnter={() => setHoveredChar(c.id)}
+              onMouseLeave={() => setHoveredChar(null)}
+              aria-pressed={selectedChar === c.id}
+              className={`flex items-center gap-2 rounded-full border px-3 py-1.5 font-display text-xs uppercase tracking-[0.2em] transition-all duration-300 ${
+                isActive
+                  ? 'border-white/30 bg-white/10 text-white'
+                  : 'border-white/10 bg-white/[0.03] text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              <span
+                aria-hidden
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: c.color, boxShadow: `0 0 10px ${c.color}` }}
+              />
+              {getName(c)}
+            </button>
+          );
+        })}
       </div>
 
       {/* Character Detail Panel */}
@@ -207,39 +292,31 @@ function CharacterDetail({ char: c }: { char: Character }) {
   const charName = t(nameKey) !== nameKey ? t(nameKey) : c.name;
   const charRole = t(roleKey) !== roleKey ? t(roleKey) : c.role;
   const charDesc = t(descKey) !== descKey ? t(descKey) : c.description;
-  const imgSrc = resolveImageUrl(c.imageUrl);
 
   return (
     <div
-      className="rounded-2xl border p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center"
+      className="border-celestial relative flex flex-col items-center gap-6 overflow-hidden rounded-2xl p-6 md:flex-row md:p-8"
       style={{
-        borderColor: `${c.color}33`,
-        background: `linear-gradient(135deg, ${c.color}08 0%, transparent 60%), rgba(10,0,21,0.8)`,
+        background: `radial-gradient(ellipse at top left, ${c.color}24 0%, transparent 60%), rgba(10,0,21,0.82)`,
       }}
     >
       {/* Character image or placeholder */}
       <div
-        className="w-32 h-32 md:w-40 md:h-40 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border"
+        className="relative w-32 h-32 md:w-40 md:h-40 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border"
         style={{
           borderColor: `${c.color}44`,
           background: `radial-gradient(circle at center, ${c.color}22 0%, transparent 70%), rgba(10,0,21,0.6)`,
+          boxShadow: `0 0 40px -10px ${c.color}`,
         }}
       >
-        {imgSrc ? (
-          <img src={imgSrc} alt={charName} className="w-full h-full object-cover" />
-        ) : (
-          <svg width="60" height="60" viewBox="0 0 100 100">
-            <polygon
-              points="50,5 63,35 95,35 70,57 78,90 50,72 22,90 30,57 5,35 37,35"
-              fill="none"
-              stroke={c.color}
-              strokeWidth="2"
-              opacity="0.5"
-            />
-            <circle cx="50" cy="50" r="15" fill={c.color} opacity="0.3" />
-            <circle cx="50" cy="50" r="6" fill={c.color} opacity="0.6" />
-          </svg>
-        )}
+        <ArtImage
+          src={c.imageUrl}
+          alt={charName}
+          fill
+          sizes="160px"
+          className="object-cover"
+          fallback={<ConstellationGlyph id={constellationAt(c.order)} color={c.color} className="h-3/4 w-3/4" />}
+        />
       </div>
 
       {/* Character info */}
@@ -300,10 +377,7 @@ export default function DragonEyesPage() {
   if (loading) {
     return (
       <section className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-dracon-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400 text-sm">Carregando constelação...</p>
-        </div>
+        <ConstellationLoader label={t('common.aligningStars')} />
       </section>
     );
   }
@@ -312,6 +386,12 @@ export default function DragonEyesPage() {
     <>
       {/* HERO */}
       <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-1/2 w-[min(92vw,960px)] -translate-x-1/2 -translate-y-1/2 opacity-[0.14]"
+        >
+          <ConstellationGlyph id="draco" color="#fdba74" className="h-auto w-full" />
+        </div>
         <div className="section-container relative z-10 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -330,9 +410,9 @@ export default function DragonEyesPage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 1 }}
-              className="text-5xl md:text-7xl lg:text-8xl font-display font-bold glow-text text-dracon-purple-200 mb-4 tracking-wider"
+              className="hero-title text-5xl md:text-7xl lg:text-8xl font-display font-bold mb-4 tracking-wider"
             >
-              {t('dragonEyes.hero.title')}
+              <span className="starlight-fill">{t('dragonEyes.hero.title')}</span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -349,7 +429,7 @@ export default function DragonEyesPage() {
       {/* CONSTELLATION */}
       {characters.length > 0 && (
         <section className="relative py-20">
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-dracon-purple-500/30 to-transparent" />
+          <ConstellationDivider />
           <div className="section-container">
             <div className="text-center mb-12">
               <GlowText as="h2" className="text-3xl md:text-4xl font-bold mb-4">
@@ -368,7 +448,7 @@ export default function DragonEyesPage() {
       {/* LORE / STORY */}
       {loreSections.length > 0 && (
         <section className="relative py-24">
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-dracon-orange-500/20 to-transparent" />
+          <ConstellationDivider tone="orange" variant={2} />
           <div className="section-container">
             <div className="text-center mb-16">
               <motion.span
@@ -384,26 +464,35 @@ export default function DragonEyesPage() {
               </GlowText>
             </div>
 
-            <div className="max-w-3xl mx-auto space-y-16">
-              {loreSections.map((section, i) => (
-                <motion.div
-                  key={section.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: i * 0.1 }}
-                  className="relative pl-8 border-l-2 border-dracon-purple-800/30"
-                >
-                  <div className="absolute left-0 top-0 w-3 h-3 rounded-full bg-dracon-purple-500 -translate-x-[7px]" />
-                  <span className="text-dracon-purple-400 text-xs tracking-[0.15em] uppercase font-medium">
-                    {t('dragonEyes.lore.chapterLabel')} {section.chapter || i + 1}
-                  </span>
-                  <h3 className="text-xl md:text-2xl font-display font-bold text-white mt-1 mb-3">
-                    {section.title}
-                  </h3>
-                  <p className="text-gray-400 leading-relaxed">{section.text}</p>
-                </motion.div>
-              ))}
+            <div className="relative mx-auto max-w-3xl">
+              <div
+                aria-hidden
+                className="absolute bottom-0 left-[7px] top-2 w-px bg-gradient-to-b from-dracon-purple-300/60 via-dracon-orange-300/30 to-transparent"
+              />
+              <div className="space-y-14">
+                {loreSections.map((section, i) => (
+                  <motion.div
+                    key={section.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: i * 0.1 }}
+                    className="relative pl-12"
+                  >
+                    <span aria-hidden className="absolute left-0 top-1 flex h-4 w-4 items-center justify-center">
+                      <span className="absolute inset-0 rounded-full bg-dracon-purple-300/40 animate-pulse-ring" />
+                      <span className="relative h-2.5 w-2.5 rounded-full bg-dracon-purple-50 shadow-[0_0_12px_3px_rgba(192,132,252,0.8)]" />
+                    </span>
+                    <span className="text-dracon-purple-200 text-xs tracking-[0.15em] uppercase font-medium">
+                      {t('dragonEyes.lore.chapterLabel')} {section.chapter || i + 1}
+                    </span>
+                    <h3 className="text-xl md:text-2xl font-display font-bold text-white mt-1 mb-3">
+                      {section.title}
+                    </h3>
+                    <p className="text-gray-400 leading-relaxed">{section.text}</p>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -412,7 +501,7 @@ export default function DragonEyesPage() {
       {/* GALLERY */}
       {galleryItems.length > 0 && (
         <section className="relative py-24">
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-dracon-purple-500/30 to-transparent" />
+          <ConstellationDivider variant={1} />
           <div className="section-container">
             <div className="text-center mb-12">
               <GlowText as="h2" className="text-3xl md:text-4xl font-bold mb-4">
@@ -425,39 +514,30 @@ export default function DragonEyesPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {galleryItems.map((item, i) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="aspect-[4/3] rounded-xl overflow-hidden border border-dracon-purple-800/20 group relative cursor-pointer"
-                  style={{
-                    background: `radial-gradient(ellipse at 40% 40%, ${item.accent}15 0%, transparent 70%), linear-gradient(135deg, #0a0015 0%, #1a0030 100%)`,
-                  }}
-                >
-                  {resolveImageUrl(item.imageUrl) ? (
-                    <img
-                      src={resolveImageUrl(item.imageUrl)!}
+                <AnimatedCard key={item.id} delay={i * 0.1}>
+                  <div
+                    className="group relative aspect-[4/3] overflow-hidden rounded-xl"
+                    style={{
+                      background: `radial-gradient(ellipse at 40% 40%, ${item.accent}22 0%, transparent 70%), linear-gradient(135deg, #0a0015 0%, #1a0030 100%)`,
+                    }}
+                  >
+                    <ArtImage
+                      src={item.imageUrl}
                       alt={item.title}
-                      className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity duration-500"
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover opacity-80 transition-all duration-700 group-hover:scale-105 group-hover:opacity-100"
+                      fallback={
+                        <div className="absolute inset-[16%] opacity-40 transition-opacity duration-500 group-hover:opacity-70">
+                          <ConstellationGlyph id={constellationAt(i)} color={item.accent} className="h-full w-full" />
+                        </div>
+                      }
                     />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity duration-500">
-                      <svg width="80" height="80" viewBox="0 0 100 100">
-                        <polygon
-                          points="50,5 63,35 95,35 70,57 78,90 50,72 22,90 30,57 5,35 37,35"
-                          fill="none"
-                          stroke={item.accent}
-                          strokeWidth="1.5"
-                        />
-                      </svg>
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                      <p className="font-display text-sm text-gray-200">{item.title}</p>
                     </div>
-                  )}
-                  <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                    <p className="text-sm text-gray-300 font-display">{item.title}</p>
                   </div>
-                </motion.div>
+                </AnimatedCard>
               ))}
             </div>
           </div>
@@ -466,7 +546,7 @@ export default function DragonEyesPage() {
 
       {/* CTA */}
       <section className="relative py-24">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-dracon-purple-500/30 to-transparent" />
+        <ConstellationDivider variant={2} />
         <div className="section-container text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}

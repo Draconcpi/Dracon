@@ -3,10 +3,11 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import MagicButton from '@/components/ui/MagicButton';
+import Astrolabe from '@/components/ui/Astrolabe';
 import { useI18n } from '@/i18n';
 
 export default function NotFound() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   return (
     <div className="min-h-screen flex items-center justify-center cosmic-bg relative overflow-hidden">
       {/* Background effects */}
@@ -20,17 +21,9 @@ export default function NotFound() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, type: 'spring' }}
         >
-          <motion.h1
-            className="text-[10rem] md:text-[14rem] font-display font-bold glow-text text-dracon-purple-300 leading-none"
-            animate={{ textShadow: [
-              '0 0 20px rgba(168,85,244,0.3)',
-              '0 0 60px rgba(168,85,244,0.5)',
-              '0 0 20px rgba(168,85,244,0.3)',
-            ] }}
-            transition={{ duration: 3, repeat: Infinity }}
-          >
-            404
-          </motion.h1>
+          <h1 className="hero-title text-[10rem] md:text-[14rem] font-display font-bold leading-none">
+            <span className="starlight-fill">404</span>
+          </h1>
         </motion.div>
 
         <motion.div
@@ -48,14 +41,10 @@ export default function NotFound() {
             {t('notFound.message')}
           </p>
 
-          {/* Floating rune */}
-          <motion.div
-            animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
-            transition={{ duration: 4, repeat: Infinity }}
-            className="text-5xl mb-8"
-          >
-            🔮
-          </motion.div>
+          {/* A lost little astrolabe */}
+          <div className="mb-8 flex justify-center">
+            <Astrolabe className="w-32" />
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/">

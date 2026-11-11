@@ -1,4 +1,9 @@
 {
+  "common": {
+    "loading": "Carregando",
+    "aligningStars": "Alinhando as estrelas",
+    "close": "Fechar"
+  },
   "nav": {
     "home": "Home",
     "portfolio": "Portfólio",
@@ -21,13 +26,16 @@
       "title": "DRACON",
       "subtitle": "Criando universos visuais onde magia e imaginação se encontram entre estrelas e constelações. Arte mística, fantasia e mundos arcanos.",
       "ctaPortfolio": "✦ Ver Portfólio",
-      "ctaServices": "Encomendar Arte"
+      "ctaServices": "Encomendar Arte",
+      "scroll": "Role para explorar"
     },
     "carousel": {
       "tag": "✦ Galeria",
       "title": "Últimas Artes",
       "subtitle": "Navegue pelas criações mais recentes do universo Dracon.",
-      "cta": "Explorar portfólio completo →"
+      "cta": "Explorar portfólio completo →",
+      "prev": "Arte anterior",
+      "next": "Próxima arte"
     },
     "featured": {
       "title": "Obras em Destaque",

@@ -1,78 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const DRIVE_ID = /^[\w-]{10,200}$/;
+const RASTER_IMAGE = /^image\/(jpeg|png|webp|gif|avif)/;
+const USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+// Tried in order. Files that aren't public are redirected to Google's sign-in page (HTML).
+const driveSources = (id: string) => [
+  `https://drive.google.com/thumbnail?id=${id}&sz=w2000`,
+  `https://drive.usercontent.google.com/download?id=${id}&export=view`,
+  `https://lh3.googleusercontent.com/d/${id}=w2000`,
+];
+
 /**
- * Image proxy that fetches images from Google Drive (or any external URL)
- * server-side to avoid CORS/referrer blocking in the browser.
- *
- * Usage: /api/image-proxy?url=ENCODED_URL
- *    or: /api/image-proxy?driveId=FILE_ID
+ * Serves a publicly shared Google Drive image from our own origin
+ * (browsers block Drive hotlinks). Usage: /api/image-proxy?driveId=FILE_ID
  */
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const driveId = searchParams.get('driveId');
-  const rawUrl = searchParams.get('url');
-
-  let targetUrl: string | null = null;
-
-  if (driveId) {
-    // Try multiple Google Drive URL formats in order of reliability
-    targetUrl = `https://drive.google.com/uc?export=view&id=${driveId}`;
-  } else if (rawUrl) {
-    targetUrl = rawUrl;
+  const driveId = request.nextUrl.searchParams.get('driveId');
+  if (!driveId || !DRIVE_ID.test(driveId)) {
+    return NextResponse.json({ error: 'Parâmetro "driveId" ausente ou inválido.' }, { status: 400 });
   }
 
-  if (!targetUrl) {
-    return NextResponse.json(
-      { error: 'Missing "driveId" or "url" parameter' },
-      { status: 400 }
-    );
-  }
+  for (const source of driveSources(driveId)) {
+    try {
+      const upstream = await fetch(source, {
+        headers: { 'User-Agent': USER_AGENT, Accept: 'image/avif,image/webp,image/*;q=0.8' },
+        redirect: 'follow',
+        // Next 14 caches fetch() by default — a cached sign-in page would outlive a sharing fix
+        cache: 'no-store',
+        signal: AbortSignal.timeout(10_000),
+      });
+      const contentType = upstream.headers.get('content-type') ?? '';
 
-  try {
-    // Fetch the image server-side (no CORS issues)
-    const response = await fetch(targetUrl, {
-      headers: {
-        // Mimic a browser request
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-      },
-      redirect: 'follow', // Follow Google's redirects
-    });
+      if (!upstream.ok || !RASTER_IMAGE.test(contentType) || !upstream.body) {
+        await upstream.body?.cancel();
+        // Redirected to sign-in: the file isn't public, the other sources would fail too
+        if (new URL(upstream.url).hostname === 'accounts.google.com') break;
+        continue;
+      }
 
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: `Upstream returned ${response.status}` },
-        { status: 502 }
-      );
+      return new NextResponse(upstream.body, {
+        status: 200,
+        headers: {
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400',
+          'Content-Security-Policy': "default-src 'none'; sandbox",
+          'X-Content-Type-Options': 'nosniff',
+        },
+      });
+    } catch (error) {
+      console.error('Image proxy error:', source, error);
     }
-
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
-
-    // Only proxy image content types
-    if (!contentType.startsWith('image/') && !contentType.includes('octet-stream')) {
-      // Google may return HTML (sign-in page) if file isn't shared properly
-      return NextResponse.json(
-        { error: 'O arquivo não é uma imagem pública. Verifique se o compartilhamento está como "Qualquer pessoa com o link".' },
-        { status: 400 }
-      );
-    }
-
-    const imageBuffer = await response.arrayBuffer();
-
-    return new NextResponse(imageBuffer, {
-      status: 200,
-      headers: {
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=86400, s-maxage=604800', // Cache 1d browser, 7d CDN
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  } catch (error) {
-    console.error('Image proxy error:', error);
-    return NextResponse.json(
-      { error: 'Falha ao buscar imagem' },
-      { status: 500 }
-    );
   }
+
+  return NextResponse.json(
+    {
+      error:
+        'Imagem não encontrada ou privada. No Google Drive, compartilhe o arquivo como "Qualquer pessoa com o link" (Leitor).',
+    },
+    { status: 404, headers: { 'Cache-Control': 'no-store' } }
+  );
 }

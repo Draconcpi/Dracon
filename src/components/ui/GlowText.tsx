@@ -18,11 +18,10 @@ export default function GlowText({
   color = 'purple',
   animate = true,
 }: GlowTextProps) {
-  const glowClass = color === 'purple' ? 'glow-text' : 'glow-text-orange';
-  const colorClass = color === 'purple' ? 'text-dracon-purple-300' : 'text-dracon-orange-400';
+  const glowClass = color === 'purple' ? 'text-starlight' : 'text-ember';
 
   const content = (
-    <Tag className={`${glowClass} ${colorClass} ${className}`}>
+    <Tag className={`${glowClass} ${className}`}>
       {children}
     </Tag>
   );

@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
 import GlowText from '@/components/ui/GlowText';
 import AnimatedCard from '@/components/ui/AnimatedCard';
+import ArtImage from '@/components/ui/ArtImage';
+import ConstellationGlyph from '@/components/ui/ConstellationGlyph';
+import ConstellationLoader from '@/components/ui/ConstellationLoader';
+import { constellationAt } from '@/lib/constellations';
 import { useI18n } from '@/i18n';
 
 interface Category {
@@ -96,51 +99,40 @@ export default function PortfolioPage() {
 
       {/* Category Filters */}
       <section className="section-container mb-12">
-        <div className="flex flex-wrap justify-center gap-3">
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={() => setActiveCategory('all')}
-            className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-              activeCategory === 'all'
-                ? 'bg-dracon-purple-600 text-white shadow-arcane'
-                : 'bg-dracon-purple-900/20 text-gray-400 border border-dracon-purple-800/30 hover:border-dracon-purple-600/50 hover:text-dracon-purple-300'
-            }`}
-          >
-            {t('portfolio.filters.all')}
-          </motion.button>
-          {categories.map((cat, i) => (
-            <motion.button
-              key={cat.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: (i + 1) * 0.1 }}
-              onClick={() => setActiveCategory(cat.slug)}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                activeCategory === cat.slug
-                  ? 'bg-dracon-purple-600 text-white shadow-arcane'
-                  : 'bg-dracon-purple-900/20 text-gray-400 border border-dracon-purple-800/30 hover:border-dracon-purple-600/50 hover:text-dracon-purple-300'
-              }`}
-            >
-              {cat.name}
-            </motion.button>
-          ))}
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex justify-center"
+        >
+          <div className="glass inline-flex max-w-full flex-wrap justify-center gap-1 rounded-2xl p-1.5 sm:rounded-full">
+            {[{ id: '__all', slug: 'all', name: t('portfolio.filters.all') }, ...categories].map((cat) => {
+              const active = activeCategory === cat.slug;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setActiveCategory(cat.slug)}
+                  className={`relative rounded-full px-5 py-2 text-sm font-medium transition-colors duration-300 ${
+                    active ? 'text-white' : 'text-gray-400 hover:text-dracon-purple-100'
+                  }`}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="portfolio-filter"
+                      className="absolute inset-0 rounded-full bg-gradient-to-r from-dracon-purple-500/80 to-dracon-purple-600/80 shadow-[0_0_20px_rgba(168,85,244,0.45)]"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <span className="relative z-10">{cat.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </motion.div>
       </section>
 
       {/* Loading state */}
-      {loading && (
-        <div className="section-container text-center py-20">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-            className="text-4xl inline-block"
-          >
-            ✦
-          </motion.div>
-          <p className="text-gray-400 mt-4">Carregando...</p>
-        </div>
-      )}
+      {loading && <ConstellationLoader label={t('common.loading')} className="section-container py-20" />}
 
       {/* Empty state */}
       {!loading && items.length === 0 && (
@@ -165,29 +157,22 @@ export default function PortfolioPage() {
                 transition={{ duration: 0.4, delay: i * 0.05 }}
               >
                 <AnimatedCard onClick={() => setSelectedItem(item)}>
-                  <div className={`relative h-72 rounded-xl overflow-hidden group ${
-                    item.imageUrl ? '' : `bg-gradient-to-br ${gradients[i % gradients.length]}`
-                  }`}>
+                  <div className="relative h-72 rounded-xl overflow-hidden group">
                     {/* Image or decorative fallback */}
-                    {item.imageUrl && !item.imageUrl.startsWith('/images/portfolio/') ? (
-                      <Image
-                        src={item.imageUrl}
-                        alt={item.title}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-110"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      />
-                    ) : (
-                      <div className={`absolute inset-0 bg-gradient-to-br ${gradients[i % gradients.length]}`}>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <motion.div
-                            className="w-20 h-20 border border-dracon-purple-500/20 rounded-full"
-                            animate={{ rotate: 360, scale: [1, 1.1, 1] }}
-                            transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
-                          />
+                    <ArtImage
+                      src={item.imageUrl}
+                      alt={item.title}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      fallback={
+                        <div className={`absolute inset-0 bg-gradient-to-br ${gradients[i % gradients.length]}`}>
+                          <div className="absolute inset-[18%] opacity-50 transition-opacity duration-500 group-hover:opacity-80">
+                            <ConstellationGlyph id={constellationAt(i)} className="h-full w-full" />
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      }
+                    />
 
                     {/* Hover overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-dracon-void via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
@@ -232,33 +217,30 @@ export default function PortfolioPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: 'spring', damping: 25 }}
-              className="bg-dracon-midnight border border-dracon-purple-800/30 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-arcane-lg"
+              className="border-celestial bg-dracon-midnight/95 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-arcane-lg"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Image area */}
               <div className="aspect-[16/9] rounded-t-2xl relative overflow-hidden">
-                {selectedItem.imageUrl && !selectedItem.imageUrl.startsWith('/images/portfolio/') ? (
-                  <Image
-                    src={selectedItem.imageUrl}
-                    alt={selectedItem.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 672px) 100vw, 672px"
-                  />
-                ) : (
-                  <div className={`h-full bg-gradient-to-br ${gradients[0]}`}>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                        className="w-24 h-24 border border-dracon-purple-400/30 rounded-full"
-                      />
+                <ArtImage
+                  src={selectedItem.imageUrl}
+                  alt={selectedItem.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 672px) 100vw, 672px"
+                  fallback={
+                    <div className={`h-full bg-gradient-to-br ${gradients[0]}`}>
+                      <div className="absolute inset-[15%]">
+                        <ConstellationGlyph id={constellationAt(items.indexOf(selectedItem))} className="h-full w-full" />
+                      </div>
                     </div>
-                  </div>
-                )}
+                  }
+                />
                 <button
+                  type="button"
+                  aria-label={t('common.close')}
                   onClick={() => setSelectedItem(null)}
-                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-dracon-void/60 backdrop-blur-sm flex items-center justify-center text-gray-300 hover:text-white hover:bg-dracon-purple-600/60 transition-all"
+                  className="glass absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-gray-200 hover:text-white transition-colors"
                 >
                   ✕
                 </button>
@@ -269,8 +251,8 @@ export default function PortfolioPage() {
                 <span className="text-dracon-orange-400 text-xs tracking-wider uppercase font-medium">
                   {selectedItem.category.name}
                 </span>
-                <h2 className="text-3xl font-display font-bold text-white mt-2 mb-4 glow-text">
-                  {selectedItem.title}
+                <h2 className="text-3xl font-display font-bold mt-2 mb-4">
+                  <span className="starlight-fill">{selectedItem.title}</span>
                 </h2>
                 <p className="text-gray-300 leading-relaxed mb-6">
                   {selectedItem.description}

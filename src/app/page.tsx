@@ -1,40 +1,22 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useCallback } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import Image from 'next/image';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
 import AnimatedCard from '@/components/ui/AnimatedCard';
+import ArtImage from '@/components/ui/ArtImage';
+import Astrolabe from '@/components/ui/Astrolabe';
+import ConstellationDivider from '@/components/ui/ConstellationDivider';
+import ConstellationGlyph from '@/components/ui/ConstellationGlyph';
+import ConstellationLoader from '@/components/ui/ConstellationLoader';
+import { constellationAt } from '@/lib/constellations';
 import { useI18n } from '@/i18n';
 
-function ArcaneSymbol() {
-  return (
-    <motion.svg
-      width="200"
-      height="200"
-      viewBox="0 0 300 300"
-      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-10"
-    >
-      <circle cx="150" cy="150" r="140" fill="none" stroke="rgba(168,85,244,0.3)" strokeWidth="0.5" />
-      <circle cx="150" cy="150" r="120" fill="none" stroke="rgba(168,85,244,0.2)" strokeWidth="0.5" />
-      <circle cx="150" cy="150" r="100" fill="none" stroke="rgba(168,85,244,0.15)" strokeWidth="0.5" />
-      {[0, 60, 120, 180, 240, 300].map((angle) => {
-        const rad = (angle * Math.PI) / 180;
-        const x = 150 + 130 * Math.cos(rad);
-        const y = 150 + 130 * Math.sin(rad);
-        return <circle key={angle} cx={x} cy={y} r="4" fill="rgba(168,85,244,0.4)" />;
-      })}
-      <polygon
-        points="150,30 170,110 250,110 185,160 205,240 150,190 95,240 115,160 50,110 130,110"
-        fill="none"
-        stroke="rgba(249,115,22,0.15)"
-        strokeWidth="0.5"
-      />
-    </motion.svg>
-  );
-}
+// WebGL hero centrepiece (client-only)
+const CelestialOrb = dynamic(() => import('@/components/three/CelestialOrb'), { ssr: false });
 
 interface PortfolioItem {
   id: string;
@@ -49,190 +31,286 @@ interface PortfolioItem {
   order: number;
 }
 
-const defaultGradients = [
-  'from-dracon-purple-800/40 to-dracon-purple-900/40',
-  'from-dracon-purple-900/40 to-dracon-orange-700/20',
-  'from-dracon-orange-700/20 to-dracon-purple-800/40',
-  'from-dracon-purple-800/40 to-dracon-cosmic',
-];
-
 const defaultAccents = ['#a855f4', '#f97316', '#818cf8', '#c084fc', '#8b5cf6', '#f59e0b'];
 
+/** Star-chart placeholder used while an artwork has no image. */
+function ArtPlaceholder({ index }: { index: number }) {
+  const accent = defaultAccents[index % defaultAccents.length];
+  return (
+    <div
+      className="absolute inset-0"
+      style={{
+        background: `radial-gradient(ellipse at 30% 40%, ${accent}33 0%, transparent 65%), radial-gradient(ellipse at 75% 70%, ${accent}1f 0%, transparent 60%), linear-gradient(135deg, #0a0015 0%, #1a0030 50%, #0a0015 100%)`,
+      }}
+    >
+      <div className="absolute inset-[14%] opacity-70">
+        <ConstellationGlyph id={constellationAt(index)} color={accent} className="h-full w-full" />
+      </div>
+    </div>
+  );
+}
+
+const CAROUSEL_FADE = 'linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)';
+
+/** 3D coverflow carousel: drag/swipe, arrows, dots and autoplay (paused on hover). */
 function ArtCarousel({ items }: { items: PortfolioItem[] }) {
+  const { t } = useI18n();
   const [current, setCurrent] = useState(0);
-  const [direction, setDirection] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const panned = useRef(false);
   const total = items.length;
 
-  const next = useCallback(() => {
-    setDirection(1);
-    setCurrent((prev) => (prev + 1) % total);
-  }, [total]);
+  const go = useCallback((index: number) => setCurrent(((index % total) + total) % total), [total]);
 
-  const prev = useCallback(() => {
-    setDirection(-1);
-    setCurrent((prev) => (prev - 1 + total) % total);
-  }, [total]);
-
-  // Auto-play
   useEffect(() => {
-    if (total === 0) return;
-    const timer = setInterval(next, 5000);
+    if (total <= 1 || paused) return;
+    const timer = setInterval(() => setCurrent((c) => (c + 1) % total), 5000);
     return () => clearInterval(timer);
-  }, [next, total]);
+  }, [total, paused]);
 
   if (total === 0) return null;
 
-  const art = items[current];
-  const accent = defaultAccents[current % defaultAccents.length];
+  return (
+    <div
+      className="relative mx-auto w-full max-w-6xl"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      <div className="relative">
+        <motion.div
+          className="relative h-[230px] overflow-hidden sm:h-[330px] md:h-[430px] lg:h-[470px]"
+          style={{ touchAction: 'pan-y', WebkitMaskImage: CAROUSEL_FADE, maskImage: CAROUSEL_FADE }}
+          onPanStart={() => {
+            panned.current = true;
+          }}
+          onPanEnd={(_, info) => {
+            if (info.offset.x < -50) go(current + 1);
+            else if (info.offset.x > 50) go(current - 1);
+            setTimeout(() => {
+              panned.current = false;
+            }, 0);
+          }}
+        >
+          <div className="absolute inset-0 flex items-center justify-center [perspective:1600px]">
+            {items.map((art, i) => {
+              let offset = i - current;
+              if (offset > total / 2) offset -= total;
+              if (offset < -total / 2) offset += total;
+              const distance = Math.abs(offset);
+              const visible = distance <= 2;
+              const isActive = offset === 0;
 
-  const variants = {
-    enter: (dir: number) => ({ x: dir > 0 ? 300 : -300, opacity: 0, scale: 0.95 }),
-    center: { x: 0, opacity: 1, scale: 1 },
-    exit: (dir: number) => ({ x: dir > 0 ? -300 : 300, opacity: 0, scale: 0.95 }),
-  };
+              return (
+                <motion.button
+                  key={art.id}
+                  type="button"
+                  aria-label={art.title}
+                  aria-current={isActive}
+                  tabIndex={isActive ? 0 : -1}
+                  onClick={() => {
+                    if (!panned.current && !isActive) go(i);
+                  }}
+                  initial={false}
+                  animate={{
+                    x: `${offset * 62}%`,
+                    z: -distance * 240,
+                    rotateY: offset * -28,
+                    scale: 1 - distance * 0.04,
+                    opacity: visible ? [1, 0.6, 0.25][distance] : 0,
+                  }}
+                  transition={{ type: 'spring', stiffness: 110, damping: 20, mass: 0.9 }}
+                  style={{ zIndex: 10 - distance, pointerEvents: visible ? 'auto' : 'none' }}
+                  className="absolute h-[88%] w-[80%] overflow-hidden rounded-2xl border border-white/10 bg-dracon-dark text-left shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)] sm:w-[64%] md:w-[58%]"
+                >
+                  <ArtImage
+                    src={art.imageUrl}
+                    alt={art.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 80vw, 700px"
+                    fallback={<ArtPlaceholder index={i} />}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-dracon-void/95 via-dracon-void/20 to-transparent" />
+                  <div
+                    className={`absolute inset-x-0 bottom-0 p-5 transition-opacity duration-500 md:p-8 ${
+                      isActive ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  >
+                    <span className="text-[11px] font-medium uppercase tracking-[0.25em] text-dracon-orange-300 md:text-xs">
+                      ✦ {art.category.name}
+                    </span>
+                    <h3 className="mt-2 font-display text-xl font-bold text-white md:text-3xl">{art.title}</h3>
+                  </div>
+                  {isActive && (
+                    <span aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-dracon-purple-100/30" />
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        {total > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => go(current - 1)}
+              aria-label={t('home.carousel.prev')}
+              className="glass absolute left-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-dracon-purple-100 transition-colors duration-300 hover:text-white md:left-3 md:h-12 md:w-12"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => go(current + 1)}
+              aria-label={t('home.carousel.next')}
+              className="glass absolute right-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-dracon-purple-100 transition-colors duration-300 hover:text-white md:right-3 md:h-12 md:w-12"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </>
+        )}
+      </div>
+
+      {total > 1 && (
+        <div className="mt-8 flex justify-center gap-2">
+          {items.map((item, i) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => go(i)}
+              aria-label={item.title}
+              className={`h-1.5 rounded-full transition-all duration-500 ${
+                i === current
+                  ? 'w-10 bg-gradient-to-r from-dracon-purple-300 to-dracon-orange-400 shadow-[0_0_10px_rgba(168,85,244,0.6)]'
+                  : 'w-2 bg-dracon-purple-100/25 hover:bg-dracon-purple-100/50'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Full-screen hero with the 3D celestial orb and a letter-by-letter title reveal. */
+function Hero() {
+  const { t } = useI18n();
+  const { scrollY } = useScroll();
+  const contentY = useTransform(scrollY, [0, 800], [0, 110]);
+  const contentOpacity = useTransform(scrollY, [0, 520], [1, 0]);
+  const hintOpacity = useTransform(scrollY, [0, 140], [1, 0]);
+  const title = t('home.hero.title');
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto">
-      {/* Main carousel area */}
-      <div className="relative aspect-[16/9] md:aspect-[21/9] rounded-2xl overflow-hidden border border-dracon-purple-800/30">
-        {/* Background with gradient placeholder */}
-        <AnimatePresence initial={false} custom={direction} mode="wait">
+    <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
+      <CelestialOrb className="absolute inset-0" />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_40%_at_50%_62%,rgba(5,0,16,0.75),transparent_75%)]"
+      />
+
+      <motion.div style={{ y: contentY, opacity: contentOpacity }} className="section-container relative z-10 pb-24 pt-28 text-center">
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.8 }}
+          className="mb-6 inline-flex items-center gap-3 text-xs font-medium uppercase tracking-[0.35em] text-dracon-orange-300 sm:text-sm"
+        >
+          <span aria-hidden className="h-px w-8 bg-gradient-to-r from-transparent to-dracon-orange-400/80 sm:w-14" />
+          {t('home.hero.tagline')}
+          <span aria-hidden className="h-px w-8 bg-gradient-to-l from-transparent to-dracon-orange-400/80 sm:w-14" />
+        </motion.p>
+
+        <h1
+          aria-label={title}
+          className="hero-title mb-8 pl-[0.12em] font-display text-[clamp(3.25rem,13vw,10rem)] font-bold leading-none tracking-[0.12em] [perspective:800px]"
+        >
+          {Array.from(title).map((char, i) => (
+            <motion.span
+              key={`${char}-${i}`}
+              aria-hidden
+              className="starlight-fill inline-block"
+              initial={{ opacity: 0, y: 50, rotateX: -80, filter: 'blur(12px)' }}
+              animate={{ opacity: 1, y: 0, rotateX: 0, filter: 'blur(0px)' }}
+              transition={{ delay: 0.35 + i * 0.08, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {char === ' ' ? '\u00A0' : char}
+            </motion.span>
+          ))}
+        </h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9, duration: 0.8 }}
+          className="text-balance mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-gray-300/90 md:text-xl"
+        >
+          {t('home.hero.subtitle')}
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.15, duration: 0.8 }}
+          className="flex flex-col justify-center gap-4 sm:flex-row"
+        >
+          <Link href="/portfolio">
+            <MagicButton variant="primary" className="px-8 py-4 text-lg">
+              {t('home.hero.ctaPortfolio')}
+            </MagicButton>
+          </Link>
+          <Link href="/services">
+            <MagicButton variant="secondary" className="px-8 py-4 text-lg">
+              {t('home.hero.ctaServices')}
+            </MagicButton>
+          </Link>
+        </motion.div>
+      </motion.div>
+
+      {/* Star-chart annotations */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-8 left-8 hidden font-display text-[10px] uppercase tracking-[0.35em] text-dracon-purple-100/40 lg:block"
+      >
+        γ Draconis · RA 17h 56m · Dec +51° 29′
+      </div>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-8 right-8 hidden font-display text-[10px] uppercase tracking-[0.35em] text-dracon-purple-100/40 lg:block"
+      >
+        Draco · 1083 deg²
+      </div>
+
+      <motion.div
+        style={{ opacity: hintOpacity }}
+        className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 sm:block"
+      >
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2 }}
+          className="flex flex-col items-center gap-3"
+        >
+          <span className="text-[10px] uppercase tracking-[0.35em] text-gray-500">{t('home.hero.scroll')}</span>
           <motion.div
-            key={current}
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
-            className="absolute inset-0"
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="flex h-10 w-6 justify-center rounded-full border-2 border-dracon-purple-200/40"
           >
-            {/* Gradient background or real image */}
-            <div className="absolute inset-0">
-              {art.imageUrl && !art.imageUrl.startsWith('/images/portfolio/') ? (
-                <Image
-                  src={art.imageUrl}
-                  alt={art.title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 1200px"
-                />
-              ) : (
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background: `radial-gradient(ellipse at 30% 50%, ${accent}33 0%, transparent 70%), radial-gradient(ellipse at 70% 30%, ${accent}22 0%, transparent 60%), linear-gradient(135deg, #0a0015 0%, #1a0030 50%, #0a0015 100%)`,
-                  }}
-                />
-              )}
-            </div>
-
-            {/* Decorative elements */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-10">
-              <svg width="200" height="200" viewBox="0 0 200 200">
-                <polygon
-                  points="100,10 125,75 195,75 140,115 155,185 100,145 45,185 60,115 5,75 75,75"
-                  fill="none"
-                  stroke={accent}
-                  strokeWidth="0.5"
-                />
-                <circle cx="100" cy="100" r="80" fill="none" stroke={accent} strokeWidth="0.3" />
-              </svg>
-            </div>
-
-            {/* Bottom gradient overlay */}
-            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-dracon-void/90 via-dracon-void/40 to-transparent" />
-
-            {/* Content */}
-            <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10">
-              <motion.span
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-dracon-orange-400 text-xs md:text-sm tracking-[0.2em] uppercase font-medium mb-2"
-              >
-                ✦ {art.category.name}
-              </motion.span>
-              <motion.h3
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-2xl md:text-4xl font-display font-bold text-white mb-2 glow-text"
-              >
-                {art.title}
-              </motion.h3>
-            </div>
+            <motion.div
+              animate={{ y: [0, 12, 0], opacity: [1, 0.3, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="mt-2 h-3 w-1.5 rounded-full bg-dracon-purple-100/70"
+            />
           </motion.div>
-        </AnimatePresence>
-
-        {/* Navigation arrows */}
-        <button
-          onClick={prev}
-          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-dracon-void/60 border border-dracon-purple-600/40 backdrop-blur-sm flex items-center justify-center text-dracon-purple-300 hover:bg-dracon-purple-600/30 hover:border-dracon-purple-400 transition-all duration-300"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
-        <button
-          onClick={next}
-          className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-dracon-void/60 border border-dracon-purple-600/40 backdrop-blur-sm flex items-center justify-center text-dracon-purple-300 hover:bg-dracon-purple-600/30 hover:border-dracon-purple-400 transition-all duration-300"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M9 18l6-6-6-6" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Dots indicator */}
-      <div className="flex justify-center gap-2 mt-6">
-        {items.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => {
-              setDirection(i > current ? 1 : -1);
-              setCurrent(i);
-            }}
-            className={`h-2 rounded-full transition-all duration-500 ${
-              i === current
-                ? 'w-8 bg-dracon-purple-400'
-                : 'w-2 bg-dracon-purple-800/50 hover:bg-dracon-purple-600/50'
-            }`}
-          />
-        ))}
-      </div>
-
-      {/* Thumbnails row */}
-      <div className="flex gap-3 mt-6 overflow-x-auto py-2 px-1 scrollbar-thin">
-        {items.map((item, i) => (
-          <button
-            key={i}
-            onClick={() => {
-              setDirection(i > current ? 1 : -1);
-              setCurrent(i);
-            }}
-            className={`flex-shrink-0 w-20 h-14 md:w-28 md:h-20 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
-              i === current
-                ? 'border-dracon-purple-400 shadow-arcane scale-105'
-                : 'border-dracon-purple-800/30 opacity-50 hover:opacity-80 hover:border-dracon-purple-600/50'
-            }`}
-          >
-            {item.imageUrl && !item.imageUrl.startsWith('/images/portfolio/') ? (
-              <div className="relative w-full h-full">
-                <Image src={item.thumbnailUrl || item.imageUrl} alt={item.title} fill className="object-cover" sizes="112px" />
-              </div>
-            ) : (
-              <div
-                className="w-full h-full"
-                style={{
-                  background: `radial-gradient(ellipse at center, ${defaultAccents[i % defaultAccents.length]}44 0%, #0a001588 100%)`,
-                }}
-              />
-            )}
-          </button>
-        ))}
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </section>
   );
 }
 
@@ -261,86 +339,11 @@ export default function HomePage() {
 
   return (
     <>
-      {/* HERO SECTION */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <ArcaneSymbol />
-
-        <div className="section-container relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, ease: 'easeOut' }}
-          >
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-              className="text-dracon-orange-400 text-sm tracking-[0.3em] uppercase font-medium mb-6"
-            >
-              {t('home.hero.tagline')}
-            </motion.p>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 1 }}
-              className="text-6xl md:text-8xl lg:text-9xl font-display font-bold glow-text text-dracon-purple-200 mb-6 tracking-wider"
-            >
-              {t('home.hero.title')}
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 0.8 }}
-              className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
-            >
-              {t('home.hero.subtitle')}
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.1, duration: 0.8 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center"
-            >
-              <Link href="/portfolio">
-                <MagicButton variant="primary" className="text-lg px-8 py-4">
-                  {t('home.hero.ctaPortfolio')}
-                </MagicButton>
-              </Link>
-              <Link href="/services">
-                <MagicButton variant="secondary" className="text-lg px-8 py-4">
-                  {t('home.hero.ctaServices')}
-                </MagicButton>
-              </Link>
-            </motion.div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2 }}
-            className="absolute -bottom-20 left-1/2 -translate-x-1/2"
-          >
-            <motion.div
-              animate={{ y: [0, 10, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-6 h-10 border-2 border-dracon-purple-600/40 rounded-full flex justify-center"
-            >
-              <motion.div
-                animate={{ y: [0, 12, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="w-1.5 h-3 bg-dracon-purple-400/60 rounded-full mt-2"
-              />
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
+      <Hero />
 
       {/* LATEST ARTS CAROUSEL */}
       <section className="relative py-24">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-dracon-purple-500/30 to-transparent" />
+        <ConstellationDivider />
         <div className="section-container">
           <div className="text-center mb-12">
             <motion.span
@@ -370,7 +373,11 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <ArtCarousel items={carouselItems} />
+            {loading ? (
+              <ConstellationLoader label={t('common.aligningStars')} className="py-24" />
+            ) : (
+              <ArtCarousel items={carouselItems} />
+            )}
           </motion.div>
 
           <motion.div
@@ -387,8 +394,8 @@ export default function HomePage() {
       </section>
 
       {/* FEATURED WORKS */}
-      <section className="relative py-32">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-dracon-purple-500/30 to-transparent" />
+      <section className="relative py-28">
+        <ConstellationDivider variant={1} />
         <div className="section-container">
           <div className="text-center mb-16">
             <GlowText as="h2" className="text-4xl md:text-5xl font-bold mb-4">
@@ -407,43 +414,24 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {featuredItems.length > 0 ? featuredItems.map((work, i) => (
               <AnimatedCard key={work.id} delay={i * 0.15}>
-                <div className={`p-8 h-80 flex flex-col justify-end rounded-xl relative overflow-hidden group ${
-                  work.imageUrl && !work.imageUrl.startsWith('/images/portfolio/')
-                    ? ''
-                    : `bg-gradient-to-br ${defaultGradients[i % defaultGradients.length]}`
-                }`}>
-                  {work.imageUrl && !work.imageUrl.startsWith('/images/portfolio/') && (
-                    <>
-                      <Image
-                        src={work.imageUrl}
-                        alt={work.title}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-110"
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-dracon-void via-dracon-void/60 to-transparent" />
-                    </>
-                  )}
-                  {(!work.imageUrl || work.imageUrl.startsWith('/images/portfolio/')) && (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-30 transition-opacity duration-500">
-                      <svg width="120" height="120" viewBox="0 0 100 100">
-                        <polygon
-                          points="50,5 63,35 95,35 70,57 78,90 50,72 22,90 30,57 5,35 37,35"
-                          fill="none"
-                          stroke="rgba(168,85,244,0.5)"
-                          strokeWidth="1"
-                        />
-                      </svg>
-                    </div>
-                  )}
+                <div className="group relative flex h-80 flex-col justify-end overflow-hidden rounded-xl p-8">
+                  <ArtImage
+                    src={work.imageUrl}
+                    alt={work.title}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    fallback={<ArtPlaceholder index={i + 2} />}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-dracon-void via-dracon-void/50 to-transparent" />
                   <div className="relative z-10">
-                    <span className="text-dracon-orange-400 text-xs tracking-wider uppercase font-medium">
-                      {work.category.name}
+                    <span className="inline-flex items-center gap-2 rounded-full border border-dracon-orange-400/30 bg-dracon-orange-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em] text-dracon-orange-300">
+                      ✦ {work.category.name}
                     </span>
-                    <h3 className="text-2xl font-display font-bold text-white mt-2 mb-2">
+                    <h3 className="mt-3 mb-2 font-display text-2xl font-bold text-white">
                       {work.title}
                     </h3>
-                    <p className="text-gray-300 text-sm">{work.description}</p>
+                    <p className="line-clamp-2 text-sm text-gray-300">{work.description}</p>
                   </div>
                 </div>
               </AnimatedCard>
@@ -468,8 +456,8 @@ export default function HomePage() {
       </section>
 
       {/* ABOUT PREVIEW */}
-      <section className="relative py-32">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-dracon-orange-500/20 to-transparent" />
+      <section className="relative py-28">
+        <ConstellationDivider tone="orange" variant={2} />
         <div className="section-container">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div
@@ -496,66 +484,67 @@ export default function HomePage() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="relative"
+              transition={{ duration: 1, ease: 'easeOut' }}
+              className="relative mx-auto w-full max-w-md"
             >
-              <div className="aspect-square max-w-md mx-auto relative">
-                <div className="absolute inset-0 border border-dracon-purple-600/20 rounded-full" />
-                <div className="absolute inset-8 border border-dracon-purple-500/15 rounded-full" />
-                <div className="absolute inset-16 border border-dracon-orange-500/10 rounded-full" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-dracon-purple-500/20 to-dracon-orange-500/10" />
-                  <div className="absolute w-16 h-16 rounded-full bg-dracon-purple-400/30" />
+              <Astrolabe className="w-full">
+                <div className="relative w-[46%]">
+                  <div
+                    aria-hidden
+                    className="absolute -inset-[20%] rounded-full bg-[radial-gradient(circle,rgba(249,115,22,0.18),transparent_70%)]"
+                  />
+                  <ConstellationGlyph id="draco" color="#fdba74" className="relative h-auto w-full" />
                 </div>
-                {[0, 90, 180, 270].map((angle) => {
-                  const rad = (angle * Math.PI) / 180;
-                  const x = 50 + 45 * Math.cos(rad);
-                  const y = 50 + 45 * Math.sin(rad);
-                  return (
-                    <div
-                      key={angle}
-                      className="absolute w-3 h-3 bg-dracon-purple-400/40 rounded-full"
-                      style={{ left: `${x}%`, top: `${y}%` }}
-                    />
-                  );
-                })}
-              </div>
+              </Astrolabe>
             </motion.div>
           </div>
         </div>
       </section>
 
       {/* CTA SECTION */}
-      <section className="relative py-32">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-dracon-purple-500/30 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-dracon-purple-900/5 to-transparent" />
-        <div className="section-container relative z-10 text-center">
+      <section className="relative py-28">
+        <ConstellationDivider />
+        <div className="section-container relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
+            className="border-celestial relative overflow-hidden rounded-3xl bg-dracon-dark/60 px-6 py-16 text-center backdrop-blur-md md:px-16 md:py-20"
           >
-            <GlowText as="h2" className="text-4xl md:text-5xl font-bold mb-6" color="orange" animate={false}>
-              {t('home.cta.title')}
-            </GlowText>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-10">
-              {t('home.cta.subtitle')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/services">
-                <MagicButton variant="fire" className="text-lg px-8 py-4">
-                  {t('home.cta.ctaServices')}
-                </MagicButton>
-              </Link>
-              <Link href="/contact">
-                <MagicButton variant="secondary" className="text-lg px-8 py-4">
-                  {t('home.cta.ctaContact')}
-                </MagicButton>
-              </Link>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(249,115,22,0.14),transparent_60%)]"
+            />
+            <div aria-hidden className="pointer-events-none absolute -right-8 -top-6 w-[48%] opacity-25">
+              <ConstellationGlyph id="draco" color="#fdba74" className="h-auto w-full" />
+            </div>
+            <div aria-hidden className="pointer-events-none absolute -bottom-10 -left-6 w-[34%] opacity-20">
+              <ConstellationGlyph id="cassiopeia" className="h-auto w-full" delay={0.6} />
+            </div>
+
+            <div className="relative">
+              <GlowText as="h2" className="mb-6 text-4xl font-bold md:text-5xl" color="orange" animate={false}>
+                {t('home.cta.title')}
+              </GlowText>
+              <p className="mx-auto mb-10 max-w-2xl text-lg text-gray-300/90">
+                {t('home.cta.subtitle')}
+              </p>
+              <div className="flex flex-col justify-center gap-4 sm:flex-row">
+                <Link href="/services">
+                  <MagicButton variant="fire" className="px-8 py-4 text-lg">
+                    {t('home.cta.ctaServices')}
+                  </MagicButton>
+                </Link>
+                <Link href="/contact">
+                  <MagicButton variant="secondary" className="px-8 py-4 text-lg">
+                    {t('home.cta.ctaContact')}
+                  </MagicButton>
+                </Link>
+              </div>
             </div>
           </motion.div>
         </div>

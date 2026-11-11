@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MagicButton from '@/components/ui/MagicButton';
+import ArtImage from '@/components/ui/ArtImage';
 
 interface PortfolioItem {
   id: string;
@@ -163,7 +164,23 @@ export default function AdminPortfolioPage() {
                 </div>
                 <div>
                   <label className="block text-sm text-gray-300 mb-1">URL da Imagem</label>
-                  <input type="text" className="input-arcane" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} required placeholder="/images/portfolio/example.jpg" />
+                  <input type="text" className="input-arcane" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} required placeholder="Link do Google Drive (ou /uploads/arquivo.jpg)" />
+                  {imageUrl.trim() && (
+                    <div className="relative mt-3 h-40 overflow-hidden rounded-lg border border-white/10 bg-dracon-void/60">
+                      <ArtImage
+                        src={imageUrl}
+                        alt="Pré-visualização"
+                        fill
+                        sizes="640px"
+                        className="object-contain"
+                        fallback={
+                          <p className="flex h-full items-center justify-center p-4 text-center text-xs text-amber-300/90">
+                            ⚠️ Não foi possível carregar a imagem. No Google Drive, compartilhe o arquivo como &ldquo;Qualquer pessoa com o link&rdquo;.
+                          </p>
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm text-gray-300 mb-1">Categoria</label>

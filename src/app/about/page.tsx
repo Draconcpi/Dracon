@@ -2,13 +2,15 @@
 
 import { motion } from 'framer-motion';
 import GlowText from '@/components/ui/GlowText';
+import Astrolabe from '@/components/ui/Astrolabe';
+import ConstellationGlyph from '@/components/ui/ConstellationGlyph';
 import { useI18n } from '@/i18n';
 
 const skillLevels = [95, 90, 85, 92, 88, 97];
-const timelineIcons = ['🌙', '⭐', '🔮', '✨', '🐉'];
+const timelineSteps = [0, 1, 2, 3, 4];
 
 export default function AboutPage() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   return (
     <div className="min-h-screen pt-24 pb-20">
       {/* Header */}
@@ -62,42 +64,25 @@ export default function AboutPage() {
             transition={{ duration: 0.8 }}
             className="relative"
           >
-            <div className="aspect-[4/5] rounded-2xl bg-gradient-to-br from-dracon-purple-900/40 to-dracon-cosmic border border-dracon-purple-800/20 relative overflow-hidden">
-              {/* Mystic symbols */}
-              <motion.div
-                className="absolute inset-0"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-              >
-                <svg width="100%" height="100%" viewBox="0 0 400 500" className="opacity-10">
-                  <circle cx="200" cy="250" r="150" fill="none" stroke="rgba(168,85,244,0.5)" strokeWidth="0.5" />
-                  <circle cx="200" cy="250" r="120" fill="none" stroke="rgba(168,85,244,0.3)" strokeWidth="0.5" />
-                  <polygon
-                    points="200,100 260,220 340,220 280,300 300,400 200,340 100,400 120,300 60,220 140,220"
-                    fill="none"
-                    stroke="rgba(249,115,22,0.2)"
-                    strokeWidth="0.5"
-                  />
-                </svg>
-              </motion.div>
-
-              {/* Center content */}
+            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-dracon-purple-900/80 via-dracon-cosmic/90 to-dracon-void/95 backdrop-blur-sm">
+              <div
+                aria-hidden
+                className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,rgba(124,34,206,0.25),transparent_65%)]"
+              />
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <motion.div
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 4, repeat: Infinity }}
-                    className="text-7xl mb-4"
-                  >
-                    🐉
-                  </motion.div>
-                  <p className="font-display text-2xl font-bold glow-text text-dracon-purple-300">
-                    DRACON
-                  </p>
-                  <p className="text-dracon-orange-400/60 text-sm tracking-wider mt-1">
-                    {t('about.story.brandEst')}
-                  </p>
-                </div>
+                <Astrolabe className="w-[86%]">
+                  <div className="text-center">
+                    <p className="starlight-fill font-display text-2xl font-bold tracking-[0.2em] md:text-3xl">
+                      DRACON
+                    </p>
+                    <p className="mt-1 text-[10px] uppercase tracking-[0.35em] text-dracon-orange-300/70 md:text-xs">
+                      {t('about.story.brandEst')}
+                    </p>
+                  </div>
+                </Astrolabe>
+              </div>
+              <div aria-hidden className="absolute bottom-6 left-1/2 w-1/2 -translate-x-1/2 opacity-40">
+                <ConstellationGlyph id="draco" color="#fdba74" className="h-auto w-full" />
               </div>
             </div>
           </motion.div>
@@ -126,16 +111,21 @@ export default function AboutPage() {
             >
               <div className="flex justify-between mb-2">
                 <span className="text-gray-300 font-medium">{t(`about.skills.items.${i}`)}</span>
-                <span className="text-dracon-purple-400">{level}%</span>
+                <span className="font-display text-dracon-purple-200">{level}%</span>
               </div>
-              <div className="h-2 bg-dracon-purple-900/30 rounded-full overflow-hidden">
+              <div className="relative h-1.5 rounded-full bg-white/5">
                 <motion.div
                   initial={{ width: 0 }}
                   whileInView={{ width: `${level}%` }}
                   viewport={{ once: true }}
-                  transition={{ duration: 1, delay: i * 0.1, ease: 'easeOut' }}
-                  className="h-full bg-gradient-to-r from-dracon-purple-600 to-dracon-orange-500 rounded-full"
-                />
+                  transition={{ duration: 1.2, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  className="relative h-full rounded-full bg-gradient-to-r from-dracon-purple-600 via-dracon-purple-300 to-dracon-orange-400"
+                >
+                  <span
+                    aria-hidden
+                    className="absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 translate-x-1/2 rounded-full bg-white shadow-[0_0_12px_4px_rgba(251,146,60,0.7)]"
+                  />
+                </motion.div>
               </div>
             </motion.div>
           ))}
@@ -155,9 +145,9 @@ export default function AboutPage() {
 
         <div className="relative max-w-3xl mx-auto">
           {/* Central line */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-dracon-purple-600/50 via-dracon-purple-500/30 to-transparent" />
+          <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-gradient-to-b from-dracon-purple-300/60 via-dracon-orange-300/30 to-transparent" />
 
-          {timelineIcons.map((icon, i) => (
+          {timelineSteps.map((i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 30 }}
@@ -179,14 +169,17 @@ export default function AboutPage() {
                 </div>
               </div>
 
-              {/* Center dot */}
+              {/* Center star */}
               <div className="relative z-10 flex-shrink-0">
                 <motion.div
                   whileInView={{ scale: [0, 1.2, 1] }}
                   viewport={{ once: true }}
-                  className="w-12 h-12 rounded-full bg-dracon-purple-900/80 border-2 border-dracon-purple-500 flex items-center justify-center shadow-arcane"
+                  className="relative flex h-12 w-12 items-center justify-center rounded-full border border-dracon-purple-100/40 bg-dracon-dark shadow-arcane"
                 >
-                  <span className="text-lg">{icon}</span>
+                  <span aria-hidden className="absolute inset-0 rounded-full border border-dracon-purple-300/40 animate-pulse-ring" />
+                  <svg viewBox="0 0 24 24" className="h-5 w-5 text-dracon-orange-200" fill="currentColor" aria-hidden>
+                    <path d="M12 0 L14.2 9.8 L24 12 L14.2 14.2 L12 24 L9.8 14.2 L0 12 L9.8 9.8 Z" />
+                  </svg>
                 </motion.div>
               </div>
 

@@ -1,14 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
+import Astrolabe from '@/components/ui/Astrolabe';
 import { SOCIAL_LINKS } from '@/lib/constants';
 import { useI18n } from '@/i18n';
 
+function IconBadge({ children }: { children: ReactNode }) {
+  return (
+    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full border border-dracon-purple-100/25 bg-dracon-purple-500/10 text-dracon-purple-100 shadow-[0_0_20px_rgba(168,85,244,0.25)]">
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        {children}
+      </svg>
+    </div>
+  );
+}
+
 export default function ContactPage() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -79,21 +90,31 @@ export default function ContactPage() {
           >
             {/* Email */}
             <div className="card-arcane p-6">
-              <div className="text-2xl mb-3">📧</div>
+              <IconBadge>
+                <rect x="3.5" y="5.5" width="17" height="13" rx="2" />
+                <path d="m4 7 8 6 8-6" />
+              </IconBadge>
               <h3 className="font-display font-bold text-white mb-1">{t('contact.info.email')}</h3>
               <p className="text-dracon-purple-300 text-sm">{t('contact.info.emailAddress')}</p>
             </div>
 
             {/* Response time */}
             <div className="card-arcane p-6">
-              <div className="text-2xl mb-3">⏰</div>
+              <IconBadge>
+                <circle cx="12" cy="12" r="8.5" />
+                <path d="M12 7.5V12l3 2" />
+              </IconBadge>
               <h3 className="font-display font-bold text-white mb-1">{t('contact.info.response')}</h3>
               <p className="text-gray-400 text-sm">{t('contact.info.responseText')}</p>
             </div>
 
             {/* Social Links */}
             <div className="card-arcane p-6">
-              <div className="text-2xl mb-3">🌐</div>
+              <IconBadge>
+                <circle cx="12" cy="12" r="8.5" />
+                <path d="M3.5 12h17" />
+                <path d="M12 3.5a13 13 0 0 1 0 17a13 13 0 0 1 0-17" />
+              </IconBadge>
               <h3 className="font-display font-bold text-white mb-3">{t('contact.info.social')}</h3>
               <div className="space-y-2">
                 {Object.entries(SOCIAL_LINKS).map(([name, url]) => (
@@ -114,24 +135,8 @@ export default function ContactPage() {
             </div>
 
             {/* Cosmic decoration */}
-            <div className="hidden lg:block relative h-48">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
-                className="absolute inset-0 flex items-center justify-center"
-              >
-                <svg width="150" height="150" viewBox="0 0 150 150" className="opacity-20">
-                  <circle cx="75" cy="75" r="70" fill="none" stroke="rgba(168,85,244,0.4)" strokeWidth="0.5" />
-                  <circle cx="75" cy="75" r="50" fill="none" stroke="rgba(168,85,244,0.3)" strokeWidth="0.5" />
-                  <circle cx="75" cy="75" r="30" fill="none" stroke="rgba(249,115,22,0.2)" strokeWidth="0.5" />
-                  {[0, 72, 144, 216, 288].map((angle) => {
-                    const rad = (angle * Math.PI) / 180;
-                    const x = 75 + 60 * Math.cos(rad);
-                    const y = 75 + 60 * Math.sin(rad);
-                    return <circle key={angle} cx={x} cy={y} r="3" fill="rgba(168,85,244,0.4)" />;
-                  })}
-                </svg>
-              </motion.div>
+            <div className="hidden lg:flex justify-center opacity-80">
+              <Astrolabe className="w-56" />
             </div>
           </motion.div>
 

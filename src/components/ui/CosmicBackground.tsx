@@ -1,286 +1,572 @@
 'use client';
 
-import { useRef, useMemo, useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useReducedMotion } from 'framer-motion';
 import * as THREE from 'three';
+import CanvasErrorBoundary from '@/components/three/CanvasErrorBoundary';
+import {
+  NOISE_GLSL,
+  createLabelTexture,
+  createLineGeometry,
+  createLineMaterial,
+  createMeteorMaterial,
+  createStarGeometry,
+  createStarMaterial,
+  randomDirection,
+  sequentialSegments,
+  sphereProjector,
+  srgb,
+  type SkyPlacement,
+  type StarPoint,
+} from '@/components/three/materials';
+import { CONSTELLATIONS, type ConstellationId } from '@/lib/constellations';
+import { hasWebGL2 } from '@/lib/webgl';
 
-// ─── Generate a circular star sprite texture ─────────────────────
-function createStarTexture(): THREE.Texture {
-  const size = 64;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
+/* ───────────────────────────────────────────────────────────────
+ * Global celestial sphere: baked nebula dome, twinkling star field,
+ * real constellations that trace themselves when they turn into
+ * view, shooting stars and scroll/mouse-driven parallax.
+ * ─────────────────────────────────────────────────────────────── */
 
-  // Radial gradient: bright center → transparent edge (circular)
-  const gradient = ctx.createRadialGradient(
-    size / 2, size / 2, 0,
-    size / 2, size / 2, size / 2
-  );
-  gradient.addColorStop(0, 'rgba(255,255,255,1)');
-  gradient.addColorStop(0.15, 'rgba(255,255,255,0.8)');
-  gradient.addColorStop(0.4, 'rgba(200,180,255,0.3)');
-  gradient.addColorStop(1, 'rgba(200,180,255,0)');
+const SKY_RADIUS = 24;
+const REVEAL_DOT = 0.78; // ~39° from the view direction
 
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, size, size);
+const SKY_LAYOUT: ReadonlyArray<SkyPlacement & { id: ConstellationId; color: string }> = [
+  { id: 'draco', az: -30, el: 16, rot: -0.12, scale: 0.068, color: '#fdba74' },
+  { id: 'orion', az: 30, el: -9, rot: 0.1, scale: 0.075, color: '#c4b5fd' },
+  { id: 'cassiopeia', az: 88, el: 20, rot: 0.25, scale: 0.075, color: '#d8b4fe' },
+  { id: 'ursaMajor', az: 145, el: 6, rot: -0.2, scale: 0.07, color: '#c4b5fd' },
+  { id: 'cygnus', az: 205, el: -4, rot: 0.35, scale: 0.075, color: '#a5b4fc' },
+  { id: 'scorpius', az: 258, el: -14, rot: 0.15, scale: 0.07, color: '#f9a8d4' },
+  { id: 'lyra', az: 310, el: 18, rot: 0, scale: 0.1, color: '#c4b5fd' },
+];
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  return texture;
+/* ─── Nebula (baked once into an equirectangular texture) ─────── */
+
+const BAKE_VERTEX = /* glsl */ `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = vec4(position.xy, 0.0, 1.0);
+  }
+`;
+
+const BAKE_FRAGMENT = /* glsl */ `
+  uniform vec3 uDeep;
+  uniform vec3 uViolet;
+  uniform vec3 uIndigo;
+  uniform vec3 uEmber;
+  uniform vec3 uRose;
+  varying vec2 vUv;
+  ${NOISE_GLSL}
+
+  void main() {
+    float lon = (vUv.x - 0.5) * 6.28318530718;
+    float lat = (vUv.y - 0.5) * 3.14159265359;
+    vec3 d = vec3(cos(lat) * sin(lon), sin(lat), -cos(lat) * cos(lon));
+    vec3 p = d * 1.9;
+
+    vec3 q = vec3(fbm(p), fbm(p + vec3(5.2, 1.3, 2.8)), fbm(p + vec3(1.7, 9.2, 4.1)));
+    float n = fbm(p * 1.3 + q * 2.2);
+    float wisps = fbm(p * 3.4 + q * 1.4);
+
+    // A faint galactic band along a tilted great circle
+    float band = pow(1.0 - abs(dot(d, normalize(vec3(0.3, 1.0, 0.25)))), 5.0);
+
+    float clouds = smoothstep(0.38, 0.85, n);
+    float fine = smoothstep(0.52, 0.9, wisps);
+
+    vec3 col = mix(uDeep, uViolet, clouds);
+    col = mix(col, uIndigo, smoothstep(0.4, 0.8, q.y) * 0.55);
+    col += uEmber * fine * smoothstep(0.45, 0.75, q.x) * 0.5;
+    col += uRose * band * clouds * 0.35;
+
+    float alpha = clamp(clouds * 0.4 + band * 0.2 + fine * 0.1, 0.0, 0.7);
+    gl_FragColor = vec4(col, alpha);
+  }
+`;
+
+const DOME_VERTEX = /* glsl */ `
+  varying vec3 vDir;
+  void main() {
+    vDir = position;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const DOME_FRAGMENT = /* glsl */ `
+  uniform sampler2D uMap;
+  uniform float uOpacity;
+  varying vec3 vDir;
+
+  void main() {
+    vec3 d = normalize(vDir);
+    vec2 uv = vec2(atan(d.x, -d.z) / 6.28318530718 + 0.5, asin(clamp(d.y, -1.0, 1.0)) / 3.14159265359 + 0.5);
+    vec4 tex = texture2D(uMap, uv);
+    float dither = (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
+    gl_FragColor = vec4(tex.rgb + dither, tex.a * uOpacity);
+  }
+`;
+
+function bakeNebula(gl: THREE.WebGLRenderer, width: number) {
+  const target = new THREE.WebGLRenderTarget(width, width / 2, { depthBuffer: false });
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      uDeep: { value: srgb('#1a0836') },
+      uViolet: { value: srgb('#5b21b6') },
+      uIndigo: { value: srgb('#312e81') },
+      uEmber: { value: srgb('#c2410c') },
+      uRose: { value: srgb('#9d174d') },
+    },
+    vertexShader: BAKE_VERTEX,
+    fragmentShader: BAKE_FRAGMENT,
+  });
+  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+  scene.add(quad);
+
+  const previous = gl.getRenderTarget();
+  gl.setRenderTarget(target);
+  gl.render(scene, camera);
+  gl.setRenderTarget(previous);
+
+  quad.geometry.dispose();
+  material.dispose();
+  return target;
 }
 
-// ─── Stars (Points) ──────────────────────────────────────────────
-function Stars({ count = 600 }: { count?: number }) {
-  const ref = useRef<THREE.Points>(null);
+function NebulaDome({ mobile }: { mobile: boolean }) {
+  const gl = useThree((s) => s.gl);
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
+  const fade = useRef(0);
 
-  const starTexture = useMemo(() => createStarTexture(), []);
+  useEffect(() => {
+    const target = bakeNebula(gl, mobile ? 1024 : 2048);
+    setTexture(target.texture);
+    return () => target.dispose();
+  }, [gl, mobile]);
 
-  const [positions, sizes] = useMemo(() => {
-    const pos = new Float32Array(count * 3);
-    const sz = new Float32Array(count);
-    for (let i = 0; i < count; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 50;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 50;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 50;
-      sz[i] = Math.random() * 1.5 + 0.3;
-    }
-    return [pos, sz];
-  }, [count]);
+  const material = useMemo(
+    () =>
+      texture
+        ? new THREE.ShaderMaterial({
+            uniforms: { uMap: { value: texture }, uOpacity: { value: 0 } },
+            vertexShader: DOME_VERTEX,
+            fragmentShader: DOME_FRAGMENT,
+            side: THREE.BackSide,
+            transparent: true,
+            depthWrite: false,
+          })
+        : null,
+    [texture]
+  );
+  useEffect(() => () => material?.dispose(), [material]);
 
-  useFrame(({ clock }) => {
-    if (!ref.current) return;
-    const t = clock.getElapsedTime();
-    ref.current.rotation.y = t * 0.015;
-    ref.current.rotation.x = Math.sin(t * 0.01) * 0.05;
+  useFrame((_, delta) => {
+    if (!material || fade.current >= 1) return;
+    fade.current = Math.min(1, fade.current + Math.min(delta, 0.1) * 0.5);
+    material.uniforms.uOpacity.value = fade.current;
   });
 
+  if (!material) return null;
   return (
-    <points ref={ref}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
-        />
-        <bufferAttribute
-          attach="attributes-size"
-          args={[sizes, 1]}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        map={starTexture}
-        size={0.12}
-        color="#c4b5ff"
-        transparent
-        opacity={0.7}
-        sizeAttenuation
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-      />
-    </points>
+    <mesh material={material} renderOrder={-10} frustumCulled={false}>
+      <sphereGeometry args={[90, 48, 32]} />
+    </mesh>
   );
 }
 
-// ─── Cosmic Dust (larger faint particles) ────────────────────────
-function CosmicDustParticles({ count = 80 }: { count?: number }) {
-  const ref = useRef<THREE.Points>(null);
+/* ─── Field stars ────────────────────────────────────────────── */
 
-  const dustTexture = useMemo(() => createStarTexture(), []);
-
-  const positions = useMemo(() => {
-    const pos = new Float32Array(count * 3);
+function StarField({ count, reduced }: { count: number; reduced: boolean }) {
+  const { geometry, material } = useMemo(() => {
+    const palette = ['#ffffff', '#ece6ff', '#d8ccff', '#c4d4ff', '#ffe9d1', '#f5d0fe'].map(srgb);
+    const bandNormal = new THREE.Vector3(0.3, 1, 0.25).normalize();
+    const stars: StarPoint[] = [];
     for (let i = 0; i < count; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 40;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 40;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 40;
+      const dir = randomDirection();
+      // a third of the stars crowd around the galactic band
+      if (i % 3 === 0) dir.addScaledVector(bandNormal, -dir.dot(bandNormal) * 0.88).normalize();
+      const bright = Math.random() < 0.035;
+      stars.push({
+        position: dir.multiplyScalar(32 + Math.random() * 24),
+        size: bright ? 3.4 + Math.random() * 2.2 : 0.9 + Math.pow(Math.random(), 3) * 2.2,
+        color: palette[Math.floor(Math.random() * palette.length)],
+        phase: Math.random(),
+      });
     }
-    return pos;
+    return {
+      geometry: createStarGeometry(stars),
+      material: createStarMaterial({ size: 2.4, twinkle: 0.55, spikes: 0.8, opacity: 0.95 }),
+    };
   }, [count]);
 
-  useFrame(({ clock }) => {
-    if (!ref.current) return;
-    const t = clock.getElapsedTime();
-    ref.current.rotation.y = -t * 0.008;
-    ref.current.rotation.z = Math.cos(t * 0.005) * 0.03;
+  useEffect(
+    () => () => {
+      geometry.dispose();
+      material.dispose();
+    },
+    [geometry, material]
+  );
+
+  useFrame(({ clock, viewport }) => {
+    if (!reduced) material.uniforms.uTime.value = clock.elapsedTime;
+    material.uniforms.uPixelRatio.value = viewport.dpr;
   });
 
-  return (
-    <points ref={ref}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-      </bufferGeometry>
-      <pointsMaterial
-        map={dustTexture}
-        size={0.18}
-        color="#a855f4"
-        transparent
-        opacity={0.25}
-        sizeAttenuation
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-      />
-    </points>
-  );
+  return <points geometry={geometry} material={material} frustumCulled={false} />;
 }
 
-// ─── Constellation Line Segment (memoized) ──────────────────────
-function ConstellationLineSegment({ start, end }: { start: number[]; end: number[] }) {
-  const lineRef = useRef<THREE.Line>(null);
+/* ─── Constellations that trace themselves when in view ──────── */
 
-  const lineObj = useMemo(() => {
-    const points = [
-      new THREE.Vector3(...start),
-      new THREE.Vector3(...end),
-    ];
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const material = new THREE.LineBasicMaterial({
-      color: '#a855f4',
+function SkyConstellation({
+  layout,
+  reduced,
+  labelFont,
+}: {
+  layout: (typeof SKY_LAYOUT)[number];
+  reduced: boolean;
+  labelFont: string | null;
+}) {
+  const anchor = useRef<THREE.Group>(null);
+  const draw = useRef(reduced ? 1 : 0);
+  const tmp = useMemo(() => ({ dir: new THREE.Vector3(), fwd: new THREE.Vector3() }), []);
+  const shape = CONSTELLATIONS[layout.id];
+
+  const scene = useMemo(() => {
+    const project = sphereProjector(SKY_RADIUS, layout);
+    const positions = shape.stars.map(([x, y]) => project(x, y));
+    const xs = shape.stars.map((s) => s[0]);
+    const ys = shape.stars.map((s) => s[1]);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+    const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const tint = srgb(layout.color).lerp(srgb('#ffffff'), 0.55);
+
+    const stars: StarPoint[] = shape.stars.map(([, , brightness], i) => ({
+      position: positions[i],
+      size: 3.2 * brightness,
+      color: tint,
+      phase: (i * 0.618) % 1,
+    }));
+
+    return {
+      lineGeometry: createLineGeometry(
+        sequentialSegments(shape.lines.map(([a, b]) => [positions[a], positions[b]] as const))
+      ),
+      lineMaterial: createLineMaterial({
+        color: layout.color,
+        width: 2,
+        opacity: 0.6,
+        count: shape.lines.length,
+        draw: 0,
+        shimmer: 0.35,
+      }),
+      starGeometry: createStarGeometry(stars),
+      starMaterial: createStarMaterial({ size: 3.2, twinkle: 0.3, spikes: 1, opacity: 0.4 }),
+      center: project(cx, cy).normalize(),
+      labelPosition: project(cx, Math.min(...ys) - 0.9),
+    };
+  }, [layout, shape]);
+
+  const label = useMemo(() => {
+    if (!labelFont) return null;
+    const result = createLabelTexture(shape.name, labelFont);
+    if (!result) return null;
+    const material = new THREE.SpriteMaterial({
+      map: result.texture,
       transparent: true,
-      opacity: 0.15,
+      opacity: 0,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
     });
-    return new THREE.Line(geometry, material);
-  }, [start, end]);
+    return { material, aspect: result.aspect, texture: result.texture };
+  }, [labelFont, shape.name]);
 
-  return <primitive ref={lineRef} object={lineObj} />;
-}
+  useEffect(
+    () => () => {
+      scene.lineGeometry.dispose();
+      scene.lineMaterial.dispose();
+      scene.starGeometry.dispose();
+      scene.starMaterial.dispose();
+    },
+    [scene]
+  );
 
-// ─── Constellation Lines (3D) ────────────────────────────────────
-function ConstellationLines3D() {
-  const ref = useRef<THREE.Group>(null);
+  useEffect(
+    () => () => {
+      label?.texture.dispose();
+      label?.material.dispose();
+    },
+    [label]
+  );
 
-  const constellations = useMemo(() => {
-    // Multiple small constellations placed in 3D space
-    const groups = [
-      {
-        stars: [
-          [-8, 4, -10], [-6, 5.5, -11], [-4, 4.8, -10.5],
-          [-3, 3, -10], [-5, 2, -11], [-7, 2.5, -10.5],
-        ],
-        connections: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0]],
-      },
-      {
-        stars: [
-          [6, 3, -12], [8, 5, -13], [10, 4, -12],
-          [9, 1, -13], [7, 0, -12],
-        ],
-        connections: [[0,1],[1,2],[2,3],[3,4],[4,0],[1,3]],
-      },
-      {
-        stars: [
-          [-2, -3, -14], [0, -1, -15], [2, -2, -14],
-          [3, -5, -15], [0, -6, -14], [-2, -5, -15],
-        ],
-        connections: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[1,4]],
-      },
-      {
-        stars: [
-          [12, -2, -11], [14, 0, -12], [13, 2, -11],
-          [11, 1, -12],
-        ],
-        connections: [[0,1],[1,2],[2,3],[3,0],[0,2]],
-      },
-      {
-        stars: [
-          [-12, -1, -13], [-10, 1, -14], [-9, -1, -13],
-          [-11, -3, -14],
-        ],
-        connections: [[0,1],[1,2],[2,3],[3,0]],
-      },
-    ];
-    return groups;
-  }, []);
+  useFrame(({ camera, clock, size, viewport }, delta) => {
+    const group = anchor.current;
+    if (!group) return;
 
-  useFrame(({ clock }) => {
-    if (!ref.current) return;
-    ref.current.rotation.y = clock.getElapsedTime() * 0.01;
+    tmp.dir.copy(scene.center).transformDirection(group.matrixWorld);
+    camera.getWorldDirection(tmp.fwd);
+    const target = reduced || tmp.dir.dot(tmp.fwd) > REVEAL_DOT ? 1 : 0;
+    const rate = target > draw.current ? 0.3 : 0.55;
+    draw.current = THREE.MathUtils.clamp(
+      draw.current + Math.sign(target - draw.current) * rate * Math.min(delta, 0.1),
+      0,
+      1
+    );
+    const eased = draw.current * draw.current * (3 - 2 * draw.current);
+
+    const { lineMaterial, starMaterial } = scene;
+    lineMaterial.uniforms.uDraw.value = eased;
+    lineMaterial.uniforms.uResolution.value.set(size.width, size.height);
+    starMaterial.uniforms.uPixelRatio.value = viewport.dpr;
+    starMaterial.uniforms.uOpacity.value = 0.4 + 0.6 * eased;
+    if (!reduced) {
+      lineMaterial.uniforms.uTime.value = clock.elapsedTime;
+      starMaterial.uniforms.uTime.value = clock.elapsedTime;
+    }
+    if (label) label.material.opacity = eased * 0.75;
   });
 
   return (
-    <group ref={ref}>
-      {constellations.map((constellation, ci) => (
-        <group key={ci}>
-          {/* Lines */}
-          {constellation.connections.map(([a, b], li) => {
-            const start = constellation.stars[a];
-            const end = constellation.stars[b];
-            return <ConstellationLineSegment key={li} start={start} end={end} />;
-          })}
-          {/* Star nodes */}
-          {constellation.stars.map((pos, si) => (
-            <mesh key={si} position={pos as [number, number, number]}>
-              <sphereGeometry args={[0.06, 8, 8]} />
-              <meshBasicMaterial
-                color="#c4b5ff"
-                transparent
-                opacity={0.6}
-              />
-            </mesh>
-          ))}
-        </group>
-      ))}
+    <group ref={anchor}>
+      <mesh geometry={scene.lineGeometry} material={scene.lineMaterial} frustumCulled={false} />
+      <points geometry={scene.starGeometry} material={scene.starMaterial} frustumCulled={false} />
+      {label && (
+        <sprite material={label.material} position={scene.labelPosition} scale={[0.7 * label.aspect, 0.7, 1]} />
+      )}
     </group>
   );
 }
 
-// ─── Mouse-reactive camera ───────────────────────────────────────
-function CameraRig() {
-  const { camera } = useThree();
-  const mouse = useRef({ x: 0, y: 0 });
+/* ─── Close dust for depth parallax ──────────────────────────── */
 
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      mouse.current.x = (e.clientX / window.innerWidth - 0.5) * 2;
-      mouse.current.y = (e.clientY / window.innerHeight - 0.5) * 2;
+function NearDust({ count, reduced }: { count: number; reduced: boolean }) {
+  const ref = useRef<THREE.Points>(null);
+
+  const { geometry, material } = useMemo(() => {
+    const palette = ['#c084fc', '#a78bfa', '#f0abfc', '#fdba74', '#ffffff'].map(srgb);
+    const stars: StarPoint[] = [];
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        position: randomDirection().multiplyScalar(5 + Math.random() * 11),
+        size: 0.8 + Math.random() * 1.6,
+        color: palette[i % palette.length],
+        phase: Math.random(),
+      });
+    }
+    return {
+      geometry: createStarGeometry(stars),
+      material: createStarMaterial({ size: 2, twinkle: 0.6, attenuation: 7, opacity: 0.55 }),
     };
-    window.addEventListener('mousemove', onMove);
-    return () => window.removeEventListener('mousemove', onMove);
-  }, []);
+  }, [count]);
 
-  useFrame(() => {
-    camera.position.x += (mouse.current.x * 0.5 - camera.position.x) * 0.02;
-    camera.position.y += (-mouse.current.y * 0.3 - camera.position.y) * 0.02;
-    camera.lookAt(0, 0, -10);
+  useEffect(
+    () => () => {
+      geometry.dispose();
+      material.dispose();
+    },
+    [geometry, material]
+  );
+
+  useFrame(({ clock, viewport }) => {
+    material.uniforms.uPixelRatio.value = viewport.dpr;
+    if (reduced || !ref.current) return;
+    const t = clock.elapsedTime;
+    material.uniforms.uTime.value = t;
+    ref.current.rotation.y = t * 0.012;
+    ref.current.rotation.x = Math.sin(t * 0.05) * 0.05;
   });
 
-  return null;
+  return <points ref={ref} geometry={geometry} material={material} frustumCulled={false} />;
 }
 
-// ─── Main Export ──────────────────────────────────────────────────
-export default function CosmicBackground() {
-  const [hasWebGL, setHasWebGL] = useState(true);
+/* ─── Shooting star ──────────────────────────────────────────── */
+
+function ShootingStar() {
+  const { geometry, material } = useMemo(
+    () => ({
+      geometry: createLineGeometry([{ a: new THREE.Vector3(), b: new THREE.Vector3(0, 0, -1), seq: 0 }]),
+      material: createMeteorMaterial('#f5e8ff'),
+    }),
+    []
+  );
+
+  const meteor = useRef({
+    active: false,
+    start: 0,
+    duration: 1,
+    next: 3 + Math.random() * 4,
+    length: 8,
+    origin: new THREE.Vector3(),
+    dir: new THREE.Vector3(),
+  });
+  const tmp = useMemo(
+    () => ({
+      fwd: new THREE.Vector3(),
+      right: new THREE.Vector3(),
+      up: new THREE.Vector3(),
+      head: new THREE.Vector3(),
+      tail: new THREE.Vector3(),
+    }),
+    []
+  );
+
+  useEffect(
+    () => () => {
+      geometry.dispose();
+      material.dispose();
+    },
+    [geometry, material]
+  );
+
+  useFrame(({ clock, camera, size }) => {
+    const t = clock.elapsedTime;
+    const m = meteor.current;
+    material.uniforms.uResolution.value.set(size.width, size.height);
+
+    if (!m.active) {
+      material.uniforms.uOpacity.value = 0;
+      if (t < m.next) return;
+      camera.getWorldDirection(tmp.fwd);
+      tmp.right.crossVectors(tmp.fwd, camera.up).normalize();
+      tmp.up.crossVectors(tmp.right, tmp.fwd).normalize();
+      m.origin
+        .copy(tmp.fwd)
+        .addScaledVector(tmp.right, (Math.random() - 0.5) * 1.1)
+        .addScaledVector(tmp.up, 0.05 + Math.random() * 0.4)
+        .normalize()
+        .multiplyScalar(20)
+        .add(camera.position);
+      const side = Math.random() < 0.5 ? -1 : 1;
+      const slope = 0.25 + Math.random() * 0.45;
+      m.dir
+        .copy(tmp.right)
+        .multiplyScalar(side * Math.cos(slope))
+        .addScaledVector(tmp.up, -Math.sin(slope))
+        .normalize();
+      m.length = 6 + Math.random() * 6;
+      m.duration = 0.9 + Math.random() * 0.7;
+      m.start = t;
+      m.active = true;
+    }
+
+    const p = (t - m.start) / m.duration;
+    if (p >= 1) {
+      m.active = false;
+      m.next = t + 5 + Math.random() * 8;
+      material.uniforms.uOpacity.value = 0;
+      return;
+    }
+
+    const travel = m.length * (1 - Math.pow(1 - p, 2));
+    tmp.head.copy(m.origin).addScaledVector(m.dir, travel);
+    tmp.tail.copy(tmp.head).addScaledVector(m.dir, -Math.min(travel, 3.2) * (1 - p * 0.5));
+
+    const start = geometry.attributes.position as THREE.BufferAttribute;
+    const end = geometry.attributes.aEnd as THREE.BufferAttribute;
+    for (let i = 0; i < 4; i++) {
+      start.setXYZ(i, tmp.tail.x, tmp.tail.y, tmp.tail.z);
+      end.setXYZ(i, tmp.head.x, tmp.head.y, tmp.head.z);
+    }
+    start.needsUpdate = true;
+    end.needsUpdate = true;
+    material.uniforms.uOpacity.value = Math.sin(Math.PI * p) * 0.9;
+  });
+
+  return <mesh geometry={geometry} material={material} frustumCulled={false} />;
+}
+
+/* ─── Scene root: scroll turns the sky, the mouse tilts the view ─ */
+
+function Sky({ reduced, mobile, labelFont }: { reduced: boolean; mobile: boolean; labelFont: string | null }) {
+  const sky = useRef<THREE.Group>(null);
+  const mouse = useRef({ x: 0, y: 0 });
+  const scroll = useRef(0);
 
   useEffect(() => {
-    try {
-      const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-      if (!gl) setHasWebGL(false);
-    } catch {
-      setHasWebGL(false);
-    }
-  }, []);
+    if (reduced) return;
+    const onMove = (e: PointerEvent) => {
+      mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.current.y = (e.clientY / window.innerHeight) * 2 - 1;
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    return () => window.removeEventListener('pointermove', onMove);
+  }, [reduced]);
 
-  if (!hasWebGL) return null;
+  useFrame(({ camera, clock }, delta) => {
+    const group = sky.current;
+    if (!group) return;
+    const dt = Math.min(delta, 0.1);
+
+    if (!reduced) {
+      scroll.current += (window.scrollY - scroll.current) * Math.min(1, dt * 2.5);
+      group.rotation.y = scroll.current * 0.0006 + clock.elapsedTime * 0.005;
+      group.rotation.x = Math.sin(scroll.current * 0.00035) * 0.12;
+    }
+
+    const { x, y } = mouse.current;
+    camera.position.x += (x * 0.45 - camera.position.x) * Math.min(1, dt * 2);
+    camera.position.y += (-y * 0.3 - camera.position.y) * Math.min(1, dt * 2);
+    camera.lookAt(x * 0.9, -y * 0.6, -12);
+  });
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none" style={{ background: 'transparent' }}>
-      <Canvas
-        camera={{ position: [0, 0, 8], fov: 60, near: 0.1, far: 100 }}
-        dpr={[1, 1.5]}
-        gl={{
-          antialias: false,
-          powerPreference: 'low-power',
-          alpha: true,
-        }}
-        style={{ background: 'transparent' }}
-        frameloop="always"
-      >
-        <CameraRig />
-        <Stars count={500} />
-        <CosmicDustParticles count={60} />
-        <ConstellationLines3D />
-      </Canvas>
+    <>
+      <group ref={sky}>
+        <NebulaDome mobile={mobile} />
+        <StarField count={mobile ? 1100 : 2200} reduced={reduced} />
+        {SKY_LAYOUT.map((layout) => (
+          <SkyConstellation key={layout.id} layout={layout} reduced={reduced} labelFont={labelFont} />
+        ))}
+      </group>
+      <NearDust count={mobile ? 70 : 160} reduced={reduced} />
+      {!reduced && <ShootingStar />}
+    </>
+  );
+}
+
+export default function CosmicBackground() {
+  const reduced = !!useReducedMotion();
+  const [env, setEnv] = useState<{ supported: boolean; mobile: boolean } | null>(null);
+  const [labelFont, setLabelFont] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setEnv({ supported: hasWebGL2(), mobile: window.matchMedia('(max-width: 768px)').matches });
+
+    let cancelled = false;
+    const family = getComputedStyle(document.body).getPropertyValue('--font-cinzel').trim() || 'serif';
+    const done = () => {
+      if (!cancelled) setLabelFont(family);
+    };
+    if (document.fonts?.load) document.fonts.load(`600 40px ${family}`).then(done, done);
+    else done();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!env?.supported) return null;
+
+  return (
+    <div
+      aria-hidden
+      className="fixed inset-0 z-0 pointer-events-none transition-opacity duration-[2000ms] ease-out"
+      style={{ opacity: ready ? 1 : 0 }}
+    >
+      <CanvasErrorBoundary>
+        <Canvas
+          camera={{ position: [0, 0, 0], fov: 60, near: 0.1, far: 200 }}
+          dpr={[1, env.mobile ? 1.25 : 1.5]}
+          gl={{ antialias: false, alpha: true, powerPreference: 'default' }}
+          flat
+          style={{ pointerEvents: 'none' }}
+          onCreated={() => setReady(true)}
+        >
+          <Sky reduced={reduced} mobile={env.mobile} labelFont={labelFont} />
+        </Canvas>
+      </CanvasErrorBoundary>
     </div>
   );
 }

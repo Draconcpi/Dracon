@@ -40,14 +40,17 @@ export default function MagicButton({
         {children}
       </span>
       {!disabled && (
-        <motion.div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-          style={{
-            background: variant === 'fire'
-              ? 'radial-gradient(circle at center, rgba(249,115,22,0.2) 0%, transparent 70%)'
-              : 'radial-gradient(circle at center, rgba(168,85,244,0.2) 0%, transparent 70%)',
-          }}
-        />
+        <>
+          <motion.div
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            style={{
+              background: variant === 'fire'
+                ? 'radial-gradient(circle at center, rgba(249,115,22,0.2) 0%, transparent 70%)'
+                : 'radial-gradient(circle at center, rgba(168,85,244,0.2) 0%, transparent 70%)',
+            }}
+          />
+          <span aria-hidden className="btn-shine" />
+        </>
       )}
     </motion.button>
   );

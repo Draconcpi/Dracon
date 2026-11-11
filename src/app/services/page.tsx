@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
 import AnimatedCard from '@/components/ui/AnimatedCard';
+import ConstellationDivider from '@/components/ui/ConstellationDivider';
+import ConstellationLoader from '@/components/ui/ConstellationLoader';
 import { useI18n } from '@/i18n';
 
 interface Service {
@@ -21,7 +23,7 @@ interface Service {
   active: boolean;
 }
 
-const processIcons = ['💬', '📋', '✏️', '🎨', '🔍', '✨'];
+const processSteps = [0, 1, 2, 3, 4, 5];
 
 export default function ServicesPage() {
   const { t } = useI18n();
@@ -70,12 +72,7 @@ export default function ServicesPage() {
 
       {/* Services Grid */}
       <section className="section-container mb-32">
-        {loading && (
-          <div className="text-center py-20">
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} className="text-4xl inline-block">✦</motion.div>
-            <p className="text-gray-400 mt-4">Carregando...</p>
-          </div>
-        )}
+        {loading && <ConstellationLoader label={t('common.loading')} className="py-20" />}
         {!loading && services.length === 0 && (
           <div className="text-center py-20">
             <p className="text-5xl mb-4">💼</p>
@@ -145,7 +142,8 @@ export default function ServicesPage() {
       </section>
 
       {/* Process Section */}
-      <section className="section-container mb-32">
+      <section className="section-container relative mb-32 pt-16">
+        <ConstellationDivider />
         <div className="text-center mb-16">
           <GlowText as="h2" className="text-3xl md:text-4xl font-bold mb-4">
             {t('services.process.title')}
@@ -156,7 +154,7 @@ export default function ServicesPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {processIcons.map((icon, i) => (
+          {processSteps.map((i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 30 }}
@@ -165,8 +163,9 @@ export default function ServicesPage() {
               transition={{ delay: i * 0.1 }}
               className="card-arcane p-6 text-center"
             >
-              <div className="w-12 h-12 rounded-full bg-dracon-purple-900/50 border border-dracon-purple-600/30 flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl">{icon}</span>
+              <div className="relative mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-dracon-purple-100/30 bg-dracon-dark shadow-arcane">
+                <span aria-hidden className="absolute inset-0 rounded-full border border-dracon-purple-300/30 animate-pulse-ring" style={{ animationDelay: `${i * 0.4}s` }} />
+                <span className="starlight-fill font-display text-lg font-bold">{String(i + 1).padStart(2, '0')}</span>
               </div>
               <div className="text-dracon-orange-400 text-xs font-bold tracking-wider mb-2">
                 {t('services.process.stepLabel')} {i + 1}
@@ -181,7 +180,8 @@ export default function ServicesPage() {
       </section>
 
       {/* Commission Form */}
-      <section className="section-container">
+      <section className="section-container relative pt-16">
+        <ConstellationDivider tone="orange" variant={2} />
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
             <GlowText as="h2" className="text-3xl md:text-4xl font-bold mb-4" color="orange">

@@ -11,7 +11,7 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   return (
     <div className="min-h-screen flex items-center justify-center cosmic-bg relative overflow-hidden">
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-red-600/5 rounded-full blur-3xl" />

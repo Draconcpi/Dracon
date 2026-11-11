@@ -87,13 +87,15 @@ export function resolveImageUrl(url: string | null | undefined): string | null {
   // Extract Google Drive file ID from various URL formats
   let fileId: string | null = null;
 
-  // Format: https://drive.google.com/file/d/FILE_ID/...
-  const fileMatch = trimmed.match(/drive\.google\.com\/file\/d\/([^/?]+)/);
+  // Format: https://drive.google.com/file/d/FILE_ID/... (also docs.google.com and Workspace /a/domain/)
+  const fileMatch = trimmed.match(/(?:drive|docs)\.google\.com\/(?:a\/[^/]+\/)?file\/d\/([^/?#]+)/);
   if (fileMatch) fileId = fileMatch[1];
 
-  // Format: https://drive.google.com/uc?id=FILE_ID or open?id=FILE_ID
+  // Format: .../uc?id=, open?id=, thumbnail?id= or drive.usercontent.google.com/download?id=
   if (!fileId) {
-    const idParam = trimmed.match(/drive\.google\.com\/(?:uc|open|thumbnail)\?.*id=([^&]+)/);
+    const idParam = trimmed.match(
+      /(?:(?:drive|docs)\.google\.com\/(?:uc|open|thumbnail)|drive\.usercontent\.google\.com\/download)\?(?:.*&)?id=([^&#]+)/
+    );
     if (idParam) fileId = idParam[1];
   }
 
@@ -104,7 +106,7 @@ export function resolveImageUrl(url: string | null | undefined): string | null {
 
   if (fileId) {
     // Route through our server-side proxy to avoid CORS/referrer issues
-    return `/api/image-proxy?driveId=${fileId}`;
+    return `/api/image-proxy?driveId=${encodeURIComponent(fileId)}`;
   }
 
   // Not a Google Drive URL → return as-is
