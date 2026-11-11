@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { House, RotateCcw, Zap } from 'lucide-react';
 import MagicButton from '@/components/ui/MagicButton';
 import { useI18n } from '@/i18n';
 
@@ -25,9 +26,9 @@ export default function Error({
           <motion.div
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="text-7xl mb-6"
+            className="mb-6 flex justify-center"
           >
-            ⚡
+            <Zap className="h-16 w-16 text-dracon-orange-400 drop-shadow-[0_0_18px_rgba(249,115,22,0.6)]" strokeWidth={1.25} aria-hidden />
           </motion.div>
 
           <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-4">
@@ -45,10 +46,14 @@ export default function Error({
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <MagicButton onClick={reset} variant="primary">
+              <RotateCcw className="h-4 w-4" aria-hidden />
               {t('error.ctaRetry')}
             </MagicButton>
             <a href="/">
-              <MagicButton variant="secondary">{t('error.ctaHome')}</MagicButton>
+              <MagicButton variant="secondary">
+                <House className="h-4 w-4" aria-hidden />
+                {t('error.ctaHome')}
+              </MagicButton>
             </a>
           </div>
         </motion.div>

@@ -25,7 +25,7 @@
       "tagline": "✦ Illustration & Animation ✦",
       "title": "DRACON",
       "subtitle": "Creating visual universes where magic and imagination meet among stars and constellations. Mystic art, fantasy and arcane worlds.",
-      "ctaPortfolio": "✦ View Portfolio",
+      "ctaPortfolio": "View Portfolio",
       "ctaServices": "Commission Art",
       "scroll": "Scroll to explore"
     },
@@ -33,14 +33,14 @@
       "tag": "✦ Gallery",
       "title": "Latest Works",
       "subtitle": "Browse the latest creations from the Dracon universe.",
-      "cta": "Explore full portfolio →",
+      "cta": "Explore full portfolio",
       "prev": "Previous artwork",
       "next": "Next artwork"
     },
     "featured": {
       "title": "Featured Works",
       "subtitle": "A selection of the most recent and fascinating works from the Dracon universe.",
-      "cta": "View full portfolio →"
+      "cta": "View full portfolio"
     },
     "works": {
       "guardianStars": {
@@ -69,12 +69,12 @@
       "title": "Art Born from the Stars",
       "p1": "Dracon is a digital art studio specializing in fantasy illustration, concept art and animation. Each piece is a journey through arcane worlds where magic flows between constellations and ancestral symbols.",
       "p2": "Inspired by mythology, astrology and the mysteries of the cosmos, each piece carries the essence of fantastic universes waiting to be discovered.",
-      "cta": "Learn the story →"
+      "cta": "Learn the story"
     },
     "cta": {
       "title": "Transform Your Vision into Art",
       "subtitle": "Commission a unique illustration, concept art or animation. Each project is a magical collaboration between your vision and Dracon's art.",
-      "ctaServices": "🔥 View Services",
+      "ctaServices": "View Services",
       "ctaContact": "Get in Touch"
     }
   },
@@ -176,8 +176,8 @@
       "title": "Services",
       "subtitle": "Transform your vision into art. Every project is treated with artisanal dedication and a passion for the fantastic."
     },
-    "toggleMore": "View details →",
-    "toggleLess": "← Less details",
+    "toggleMore": "View details",
+    "toggleLess": "Less details",
     "items": [
       {
         "title": "Custom Illustration",
@@ -239,7 +239,7 @@
       "subjectPlaceholder": "What is your commission about?",
       "description": "Project Description",
       "descriptionPlaceholder": "Describe your vision, references, characters, settings... the more details, the better!",
-      "submit": "🔥 Submit Request",
+      "submit": "Submit Request",
       "alertSent": "Message sent! (In production, this will be sent to the server)"
     }
   },
@@ -265,10 +265,10 @@
       "subjectPlaceholder": "What would you like to talk about?",
       "message": "Message *",
       "messagePlaceholder": "Write your message here... describe your project, ideas, visual references, or any other relevant information.",
-      "success": "✅ Message sent successfully! I'll get back to you soon.",
-      "error": "❌ Error sending message. Please try again.",
-      "submit": "✦ Send Message",
-      "sending": "✦ Sending..."
+      "success": "Message sent successfully! I'll get back to you soon.",
+      "error": "Error sending message. Please try again.",
+      "submit": "Send Message",
+      "sending": "Sending..."
     }
   },
   "dragonEyes": {
@@ -325,13 +325,13 @@
     "title": "404",
     "heading": "Portal Not Found",
     "message": "The path you seek has been lost among the constellations. Perhaps the portal has closed, or it never existed in this plane.",
-    "ctaHome": "✦ Return Home",
+    "ctaHome": "Return Home",
     "ctaPortfolio": "View Portfolio"
   },
   "error": {
     "heading": "Disturbance in the Arcane Flow",
     "message": "An unstable energy interrupted the enchantment. Try again or return to the main portal.",
-    "ctaRetry": "🔄 Try Again",
+    "ctaRetry": "Try Again",
     "ctaHome": "Return Home"
   }
 }

@@ -24,12 +24,3 @@ export const CATEGORIES = [
   'Animação',
   'Arte Digital Mística',
 ] as const;
-
-export const SERVICE_ICONS: Record<string, string> = {
-  illustration: '🎨',
-  concept: '✏️',
-  animation: '🎬',
-  character: '🐉',
-  environment: '🏔️',
-  custom: '⭐',
-};

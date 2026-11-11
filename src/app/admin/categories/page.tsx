@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import MagicButton from '@/components/ui/MagicButton';
 
 interface Category {
@@ -64,7 +65,7 @@ export default function AdminCategoriesPage() {
           <p className="text-gray-400 text-sm mt-1">{categories.length} categoria(s)</p>
         </div>
         <MagicButton onClick={() => { resetForm(); setShowForm(true); }}>
-          ➕ Nova Categoria
+          <Plus className="h-4 w-4" /> Nova Categoria
         </MagicButton>
       </div>
 
@@ -108,12 +109,12 @@ export default function AdminCategoriesPage() {
             <p className="text-gray-500 text-sm mb-4">{cat.description || 'Sem descrição'}</p>
             <div className="flex gap-2">
               <button onClick={() => { setName(cat.name); setDescription(cat.description || ''); setEditingItem(cat); setShowForm(true); }}
-                className="px-3 py-1 text-sm text-dracon-purple-400 hover:text-dracon-purple-300 border border-dracon-purple-800/30 rounded hover:border-dracon-purple-600/50 transition-all">
-                Editar
+                className="inline-flex items-center gap-1.5 px-3 py-1 text-sm text-dracon-purple-400 hover:text-dracon-purple-300 border border-dracon-purple-800/30 rounded hover:border-dracon-purple-600/50 transition-all">
+                <Pencil className="h-3.5 w-3.5" /> Editar
               </button>
               <button onClick={() => handleDelete(cat.id)}
-                className="px-3 py-1 text-sm text-red-400/60 hover:text-red-400 border border-red-800/20 rounded hover:border-red-600/40 transition-all">
-                Deletar
+                className="inline-flex items-center gap-1.5 px-3 py-1 text-sm text-red-400/60 hover:text-red-400 border border-red-800/20 rounded hover:border-red-600/40 transition-all">
+                <Trash2 className="h-3.5 w-3.5" /> Deletar
               </button>
             </div>
           </div>

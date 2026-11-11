@@ -8,6 +8,7 @@ import { NAV_LINKS, SOCIAL_LINKS } from '@/lib/constants';
 import { useI18n } from '@/i18n';
 import ConstellationDivider from '@/components/ui/ConstellationDivider';
 import ConstellationGlyph from '@/components/ui/ConstellationGlyph';
+import SocialIcon from '@/components/ui/SocialIcon';
 
 export default function Footer() {
   const pathname = usePathname();
@@ -98,9 +99,7 @@ export default function Footer() {
                   aria-label={name}
                   className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border border-dracon-purple-100/25 bg-dracon-dark text-gray-300 transition-all duration-300 hover:border-dracon-purple-100/60 hover:text-white hover:shadow-[0_0_20px_rgba(168,85,244,0.5)]"
                 >
-                  <span className="text-[10px] font-bold uppercase tracking-wider">
-                    {name.slice(0, 2)}
-                  </span>
+                  <SocialIcon name={name} className="h-4 w-4" />
                 </a>
               ))}
             </div>

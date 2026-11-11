@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { LoaderCircle, LogIn } from 'lucide-react';
 import MagicButton from '@/components/ui/MagicButton';
 
 export default function AdminLoginPage() {
@@ -99,7 +100,8 @@ export default function AdminLoginPage() {
               className="w-full"
               disabled={loading}
             >
-              {loading ? '✦ Entrando...' : '✦ Entrar'}
+              {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+              {loading ? 'Entrando...' : 'Entrar'}
             </MagicButton>
           </form>
         </div>

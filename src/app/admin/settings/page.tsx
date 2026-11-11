@@ -1,7 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { CircleCheck, LoaderCircle, Save, Type } from 'lucide-react';
 import MagicButton from '@/components/ui/MagicButton';
+
+const settingFields = [
+  { key: 'site_title', label: 'Título do site (aba do navegador e Google)', type: 'text' },
+  { key: 'site_description', label: 'Descrição do site (Google e redes sociais)', type: 'textarea' },
+] as const;
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<Record<string, string>>({});
@@ -26,7 +33,9 @@ export default function AdminSettingsPage() {
       const res = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(
+          Object.fromEntries(settingFields.map(({ key }) => [key, settings[key] ?? '']))
+        ),
       });
       if (res.ok) {
         setSaved(true);
@@ -42,20 +51,20 @@ export default function AdminSettingsPage() {
 
   if (loading) return <div className="text-gray-400">Carregando...</div>;
 
-  const settingFields = [
-    { key: 'site_title', label: 'Título do Site', type: 'text' },
-    { key: 'site_description', label: 'Descrição do Site', type: 'textarea' },
-    { key: 'artist_name', label: 'Nome do Artista', type: 'text' },
-    { key: 'artist_bio', label: 'Bio do Artista', type: 'textarea' },
-    { key: 'contact_email', label: 'Email de Contato', type: 'text' },
-  ];
-
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-display font-bold text-white glow-text">Configurações</h1>
-        <p className="text-gray-400 text-sm mt-1">Configurações gerais do site</p>
+        <p className="text-gray-400 text-sm mt-1">Como o site aparece no Google, nas abas e ao ser compartilhado</p>
       </div>
+
+      <Link
+        href="/admin/content"
+        className="card-arcane mb-6 flex max-w-2xl items-center gap-3 p-4 text-sm text-gray-300 hover:text-white"
+      >
+        <Type className="h-5 w-5 flex-shrink-0 text-dracon-purple-300" />
+        Para editar os textos das páginas (títulos, descrições, botões, rodapé...), use <strong>Textos do Site</strong>.
+      </Link>
 
       <div className="card-arcane p-8 max-w-2xl space-y-6">
         {settingFields.map((field) => (
@@ -80,10 +89,13 @@ export default function AdminSettingsPage() {
 
         <div className="flex items-center gap-4 pt-4">
           <MagicButton onClick={handleSave} disabled={saving}>
-            {saving ? '💾 Salvando...' : '💾 Salvar Configurações'}
+            {saving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {saving ? 'Salvando...' : 'Salvar Configurações'}
           </MagicButton>
           {saved && (
-            <span className="text-green-400 text-sm animate-pulse">✅ Salvo com sucesso!</span>
+            <span className="flex items-center gap-2 text-green-400 text-sm">
+              <CircleCheck className="h-4 w-4" /> Salvo com sucesso!
+            </span>
           )}
         </div>
       </div>

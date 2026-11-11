@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { ArrowRight, ChevronLeft, ChevronRight, Flame, Mail, Palette, Sparkles } from 'lucide-react';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
 import AnimatedCard from '@/components/ui/AnimatedCard';
@@ -158,9 +159,7 @@ function ArtCarousel({ items }: { items: PortfolioItem[] }) {
               aria-label={t('home.carousel.prev')}
               className="glass absolute left-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-dracon-purple-100 transition-colors duration-300 hover:text-white md:left-3 md:h-12 md:w-12"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
+              <ChevronLeft className="h-5 w-5" aria-hidden />
             </button>
             <button
               type="button"
@@ -168,9 +167,7 @@ function ArtCarousel({ items }: { items: PortfolioItem[] }) {
               aria-label={t('home.carousel.next')}
               className="glass absolute right-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-dracon-purple-100 transition-colors duration-300 hover:text-white md:right-3 md:h-12 md:w-12"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                <path d="M9 18l6-6-6-6" />
-              </svg>
+              <ChevronRight className="h-5 w-5" aria-hidden />
             </button>
           </>
         )}
@@ -261,11 +258,13 @@ function Hero() {
         >
           <Link href="/portfolio">
             <MagicButton variant="primary" className="px-8 py-4 text-lg">
+              <Sparkles className="h-5 w-5" aria-hidden />
               {t('home.hero.ctaPortfolio')}
             </MagicButton>
           </Link>
           <Link href="/services">
             <MagicButton variant="secondary" className="px-8 py-4 text-lg">
+              <Palette className="h-5 w-5" aria-hidden />
               {t('home.hero.ctaServices')}
             </MagicButton>
           </Link>
@@ -387,7 +386,10 @@ export default function HomePage() {
             className="text-center mt-12"
           >
             <Link href="/portfolio">
-              <MagicButton variant="secondary">{t('home.carousel.cta')}</MagicButton>
+              <MagicButton variant="secondary">
+                {t('home.carousel.cta')}
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </MagicButton>
             </Link>
           </motion.div>
         </div>
@@ -449,7 +451,10 @@ export default function HomePage() {
             className="text-center mt-12"
           >
             <Link href="/portfolio">
-              <MagicButton variant="secondary">{t('home.featured.cta')}</MagicButton>
+              <MagicButton variant="secondary">
+                {t('home.featured.cta')}
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </MagicButton>
             </Link>
           </motion.div>
         </div>
@@ -479,7 +484,10 @@ export default function HomePage() {
                 {t('home.aboutPreview.p2')}
               </p>
               <Link href="/about">
-                <MagicButton variant="secondary">{t('home.aboutPreview.cta')}</MagicButton>
+                <MagicButton variant="secondary">
+                  {t('home.aboutPreview.cta')}
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </MagicButton>
               </Link>
             </motion.div>
 
@@ -536,11 +544,13 @@ export default function HomePage() {
               <div className="flex flex-col justify-center gap-4 sm:flex-row">
                 <Link href="/services">
                   <MagicButton variant="fire" className="px-8 py-4 text-lg">
+                    <Flame className="h-5 w-5" aria-hidden />
                     {t('home.cta.ctaServices')}
                   </MagicButton>
                 </Link>
                 <Link href="/contact">
                   <MagicButton variant="secondary" className="px-8 py-4 text-lg">
+                    <Mail className="h-5 w-5" aria-hidden />
                     {t('home.cta.ctaContact')}
                   </MagicButton>
                 </Link>

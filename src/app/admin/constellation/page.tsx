@@ -2,8 +2,25 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ArrowRight,
+  Images,
+  Link2,
+  Pencil,
+  Plus,
+  ScrollText,
+  Sparkles,
+  Star,
+  Trash2,
+  TriangleAlert,
+  type LucideIcon,
+} from 'lucide-react';
 import MagicButton from '@/components/ui/MagicButton';
-import { resolveImageUrl } from '@/lib/utils';
+import ArtImage from '@/components/ui/ArtImage';
+import ConstellationGlyph from '@/components/ui/ConstellationGlyph';
+import ImageUrlField from '@/components/admin/ImageUrlField';
+import ConstellationEditor from '@/components/admin/ConstellationEditor';
+import { slugify } from '@/lib/utils';
 
 /* ─── Types ─────────────────────────────────────────────────── */
 interface Character {
@@ -59,10 +76,11 @@ export default function AdminConstellationPage() {
   const [lore, setLore] = useState<Lore[]>([]);
   const [gallery, setGallery] = useState<Gallery[]>([]);
   const [loading, setLoading] = useState(true);
+  const [charForm, setCharForm] = useState<{ character: Character | null; cx?: number; cy?: number } | null>(null);
 
   const fetchAll = useCallback(async () => {
     try {
-      const res = await fetch('/api/constellation');
+      const res = await fetch('/api/constellation?all=1');
       const json = await res.json();
       if (json.success) {
         setCharacters(json.data.characters);
@@ -81,11 +99,39 @@ export default function AdminConstellationPage() {
     fetchAll();
   }, [fetchAll]);
 
-  const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: 'characters', label: 'Personagens', icon: '⭐' },
-    { key: 'lines', label: 'Conexões', icon: '🔗' },
-    { key: 'lore', label: 'Lore', icon: '📜' },
-    { key: 'gallery', label: 'Galeria', icon: '🖼️' },
+  const handleMove = async (id: string, cx: number, cy: number) => {
+    setCharacters((prev) => prev.map((c) => (c.id === id ? { ...c, cx, cy } : c)));
+    const res = await fetch(`/api/constellation/characters/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cx, cy }),
+    });
+    if (!res.ok) {
+      alert('Não foi possível salvar a nova posição.');
+      fetchAll();
+    }
+  };
+
+  const handleConnect = async (fromId: string, toId: string) => {
+    const res = await fetch('/api/constellation/lines', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fromId, toId }),
+    });
+    if (!res.ok) alert((await res.json()).error || 'Erro ao criar conexão');
+    fetchAll();
+  };
+
+  const handleDisconnect = async (lineId: string) => {
+    await fetch(`/api/constellation/lines/${lineId}`, { method: 'DELETE' });
+    fetchAll();
+  };
+
+  const tabs: { key: Tab; label: string; icon: LucideIcon }[] = [
+    { key: 'characters', label: 'Personagens', icon: Star },
+    { key: 'lines', label: 'Conexões', icon: Link2 },
+    { key: 'lore', label: 'Lore', icon: ScrollText },
+    { key: 'gallery', label: 'Galeria', icon: Images },
   ];
 
   if (loading) return <div className="text-gray-400">Carregando...</div>;
@@ -101,6 +147,25 @@ export default function AdminConstellationPage() {
         </p>
       </div>
 
+      {/* Visual editor */}
+      <div className="mb-10 rounded-xl border border-dracon-purple-800/20 bg-dracon-midnight/50 p-6">
+        <h2 className="mb-1 flex items-center gap-2 text-lg font-display font-bold text-white">
+          <Sparkles className="h-5 w-5 text-dracon-purple-300" /> Editor Visual
+        </h2>
+        <p className="mb-4 text-sm text-gray-400">
+          Monte a constelação direto no mapa — posições e conexões são salvas automaticamente.
+        </p>
+        <ConstellationEditor
+          characters={characters}
+          lines={lines}
+          onMove={handleMove}
+          onConnect={handleConnect}
+          onDisconnect={handleDisconnect}
+          onEdit={(id) => setCharForm({ character: characters.find((c) => c.id === id) ?? null })}
+          onCreateAt={(cx, cy) => setCharForm({ character: null, cx, cy })}
+        />
+      </div>
+
       {/* Tabs */}
       <div className="flex gap-2 mb-8 border-b border-dracon-purple-800/20 pb-2">
         {tabs.map((t) => (
@@ -113,14 +178,20 @@ export default function AdminConstellationPage() {
                 : 'text-gray-400 hover:text-gray-300'
             }`}
           >
-            <span>{t.icon}</span> {t.label}
+            <t.icon className="h-4 w-4" /> {t.label}
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
       {tab === 'characters' && (
-        <CharactersTab characters={characters} lines={lines} onRefresh={fetchAll} />
+        <CharactersTab
+          characters={characters}
+          lines={lines}
+          onRefresh={fetchAll}
+          onEdit={(c) => setCharForm({ character: c })}
+          onCreate={() => setCharForm({ character: null })}
+        />
       )}
       {tab === 'lines' && (
         <LinesTab lines={lines} characters={characters} onRefresh={fetchAll} />
@@ -128,13 +199,21 @@ export default function AdminConstellationPage() {
       {tab === 'lore' && <LoreTab lore={lore} onRefresh={fetchAll} />}
       {tab === 'gallery' && <GalleryTab gallery={gallery} onRefresh={fetchAll} />}
 
-      {/* Live Preview */}
-      <div className="mt-12 border border-dracon-purple-800/20 rounded-xl p-6 bg-dracon-midnight/50">
-        <h2 className="text-lg font-display font-bold text-white mb-4">
-          Pré-visualização da Constelação
-        </h2>
-        <ConstellationPreview characters={characters} lines={lines} />
-      </div>
+      <AnimatePresence>
+        {charForm && (
+          <CharacterFormModal
+            key={charForm.character?.id ?? 'new'}
+            character={charForm.character}
+            initialCx={charForm.cx}
+            initialCy={charForm.cy}
+            onClose={() => setCharForm(null)}
+            onSaved={() => {
+              setCharForm(null);
+              fetchAll();
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -146,90 +225,15 @@ function CharactersTab({
   characters,
   lines,
   onRefresh,
+  onEdit,
+  onCreate,
 }: {
   characters: Character[];
   lines: Line[];
   onRefresh: () => void;
+  onEdit: (c: Character) => void;
+  onCreate: () => void;
 }) {
-  const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<Character | null>(null);
-
-  // Form fields
-  const [charId, setCharId] = useState('');
-  const [name, setName] = useState('');
-  const [role, setRole] = useState('');
-  const [description, setDescription] = useState('');
-  const [color, setColor] = useState('#a855f4');
-  const [cx, setCx] = useState(400);
-  const [cy, setCy] = useState(200);
-  const [imageUrl, setImageUrl] = useState('');
-  const [order, setOrder] = useState(0);
-  const [active, setActive] = useState(true);
-
-  const resetForm = () => {
-    setCharId('');
-    setName('');
-    setRole('');
-    setDescription('');
-    setColor('#a855f4');
-    setCx(400);
-    setCy(200);
-    setImageUrl('');
-    setOrder(0);
-    setActive(true);
-    setEditing(null);
-    setShowForm(false);
-  };
-
-  const openEdit = (c: Character) => {
-    setCharId(c.charId);
-    setName(c.name);
-    setRole(c.role);
-    setDescription(c.description);
-    setColor(c.color);
-    setCx(c.cx);
-    setCy(c.cy);
-    setImageUrl(c.imageUrl || '');
-    setOrder(c.order);
-    setActive(c.active);
-    setEditing(c);
-    setShowForm(true);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const body = {
-      charId,
-      name,
-      role,
-      description,
-      color,
-      cx: Number(cx),
-      cy: Number(cy),
-      imageUrl: imageUrl || null,
-      order: Number(order),
-      active,
-    };
-
-    const url = editing
-      ? `/api/constellation/characters/${editing.id}`
-      : '/api/constellation/characters';
-    const method = editing ? 'PUT' : 'POST';
-
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (res.ok) {
-      resetForm();
-      onRefresh();
-    } else {
-      const data = await res.json();
-      alert(data.error || 'Erro');
-    }
-  };
-
   const handleDelete = async (id: string) => {
     if (!confirm('Deletar este personagem? Todas as conexões serão removidas também.')) return;
     await fetch(`/api/constellation/characters/${id}`, { method: 'DELETE' });
@@ -240,13 +244,8 @@ function CharactersTab({
     <div>
       <div className="flex items-center justify-between mb-6">
         <p className="text-gray-400 text-sm">{characters.length} personagem(ns)</p>
-        <MagicButton
-          onClick={() => {
-            resetForm();
-            setShowForm(true);
-          }}
-        >
-          ➕ Novo Personagem
+        <MagicButton onClick={onCreate}>
+          <Plus className="h-4 w-4" /> Novo Personagem
         </MagicButton>
       </div>
 
@@ -263,9 +262,20 @@ function CharactersTab({
           >
             <div className="flex items-center gap-3 mb-3">
               <div
-                className="w-4 h-4 rounded-full flex-shrink-0"
-                style={{ backgroundColor: c.color }}
-              />
+                className="relative flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border"
+                style={{ borderColor: `${c.color}66`, background: `${c.color}22` }}
+              >
+                <ArtImage
+                  src={c.imageUrl}
+                  alt={c.name}
+                  fill
+                  sizes="44px"
+                  className="object-cover"
+                  fallback={
+                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: c.color, boxShadow: `0 0 10px ${c.color}` }} />
+                  }
+                />
+              </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-white font-bold truncate">{c.name}</h3>
                 <p className="text-xs truncate" style={{ color: c.color }}>
@@ -282,203 +292,250 @@ function CharactersTab({
             {(() => {
               const connCount = lines.filter(l => l.fromId === c.id || l.toId === c.id).length;
               return connCount === 0 ? (
-                <p className="text-xs text-amber-400/80 mb-2">⚠️ Sem conexões — vá em &ldquo;Conexões&rdquo; para interligar</p>
+                <p className="mb-2 flex items-center gap-1.5 text-xs text-amber-400/80">
+                  <TriangleAlert className="h-3.5 w-3.5" /> Sem conexões — ligue no Editor Visual
+                </p>
               ) : (
-                <p className="text-xs text-gray-500 mb-2">🔗 {connCount} conexão(ões)</p>
+                <p className="mb-2 flex items-center gap-1.5 text-xs text-gray-500">
+                  <Link2 className="h-3.5 w-3.5" /> {connCount} conexão(ões)
+                </p>
               );
             })()}
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span>
                 Pos: ({c.cx}, {c.cy}) | Ordem: {c.order}
               </span>
-              <div className="flex gap-2">
-                <button onClick={() => openEdit(c)} className="text-dracon-purple-400 hover:text-white transition-colors">
-                  ✏️
+              <div className="flex gap-1">
+                <button onClick={() => onEdit(c)} title="Editar" className="rounded p-1.5 text-dracon-purple-300 hover:bg-white/5 hover:text-white transition-colors">
+                  <Pencil className="h-4 w-4" />
                 </button>
-                <button onClick={() => handleDelete(c.id)} className="text-red-400/60 hover:text-red-400 transition-colors">
-                  🗑️
+                <button onClick={() => handleDelete(c.id)} title="Excluir" className="rounded p-1.5 text-red-400/60 hover:bg-white/5 hover:text-red-400 transition-colors">
+                  <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             </div>
           </div>
         ))}
       </div>
-
-      {/* Form Modal */}
-      <AnimatePresence>
-        {showForm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dracon-void/90 backdrop-blur-sm"
-            onClick={resetForm}
-          >
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              className="bg-dracon-midnight border border-dracon-purple-800/30 rounded-xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 className="text-xl font-display font-bold text-white mb-6">
-                {editing ? 'Editar Personagem' : 'Novo Personagem'}
-              </h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelClass}>ID (slug)</label>
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={charId}
-                      onChange={(e) => setCharId(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
-                      placeholder="ex: lyra"
-                      required
-                      disabled={!!editing}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Nome</label>
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="ex: Lyra"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Cargo / Título</label>
-                  <input
-                    type="text"
-                    className={inputClass}
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    placeholder="ex: A Vidente Estelar"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Descrição</label>
-                  <textarea
-                    className={`${inputClass} min-h-[100px] resize-y`}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className={labelClass}>Cor da Estrela</label>
-                    <div className="flex gap-2 items-center">
-                      <input
-                        type="color"
-                        value={color}
-                        onChange={(e) => setColor(e.target.value)}
-                        className="w-10 h-10 rounded cursor-pointer bg-transparent border-none"
-                      />
-                      <input
-                        type="text"
-                        className={inputClass}
-                        value={color}
-                        onChange={(e) => setColor(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className={labelClass}>Posição X (cx)</label>
-                    <input
-                      type="number"
-                      className={inputClass}
-                      value={cx}
-                      onChange={(e) => setCx(Number(e.target.value))}
-                      min={0}
-                      max={850}
-                    />
-                    <input
-                      type="range"
-                      min={0}
-                      max={850}
-                      value={cx}
-                      onChange={(e) => setCx(Number(e.target.value))}
-                      className="w-full mt-1 accent-purple-500"
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Posição Y (cy)</label>
-                    <input
-                      type="number"
-                      className={inputClass}
-                      value={cy}
-                      onChange={(e) => setCy(Number(e.target.value))}
-                      min={0}
-                      max={420}
-                    />
-                    <input
-                      type="range"
-                      min={0}
-                      max={420}
-                      value={cy}
-                      onChange={(e) => setCy(Number(e.target.value))}
-                      className="w-full mt-1 accent-purple-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className={labelClass}>URL da Imagem</label>
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      placeholder="ID do Google Drive ou URL completa"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Ex: 1ABC...xyz (ID do Drive) ou https://...</p>
-                  </div>
-                  <div>
-                    <label className={labelClass}>Ordem</label>
-                    <input
-                      type="number"
-                      className={inputClass}
-                      value={order}
-                      onChange={(e) => setOrder(Number(e.target.value))}
-                    />
-                  </div>
-                  <div className="flex items-end">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={active}
-                        onChange={(e) => setActive(e.target.checked)}
-                        className="accent-purple-500 w-4 h-4"
-                      />
-                      <span className="text-sm text-gray-300">Ativo</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <MagicButton type="submit" variant="primary">
-                    {editing ? 'Salvar' : 'Criar'}
-                  </MagicButton>
-                  <MagicButton type="button" variant="secondary" onClick={resetForm}>
-                    Cancelar
-                  </MagicButton>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHARACTER FORM (shared by the list and the visual editor)
+   ═══════════════════════════════════════════════════════════════ */
+function CharacterFormModal({
+  character,
+  initialCx,
+  initialCy,
+  onClose,
+  onSaved,
+}: {
+  character: Character | null;
+  initialCx?: number;
+  initialCy?: number;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [charId, setCharId] = useState(character?.charId ?? '');
+  const [slugTouched, setSlugTouched] = useState(!!character);
+  const [name, setName] = useState(character?.name ?? '');
+  const [role, setRole] = useState(character?.role ?? '');
+  const [description, setDescription] = useState(character?.description ?? '');
+  const [color, setColor] = useState(character?.color ?? '#a855f4');
+  const [cx, setCx] = useState(character?.cx ?? initialCx ?? 425);
+  const [cy, setCy] = useState(character?.cy ?? initialCy ?? 210);
+  const [imageUrl, setImageUrl] = useState(character?.imageUrl ?? '');
+  const [order, setOrder] = useState(character?.order ?? 0);
+  const [active, setActive] = useState(character?.active ?? true);
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    const body = {
+      charId,
+      name,
+      role,
+      description,
+      color,
+      cx: Number(cx),
+      cy: Number(cy),
+      imageUrl: imageUrl.trim() || null,
+      order: Number(order),
+      active,
+    };
+
+    const res = await fetch(
+      character ? `/api/constellation/characters/${character.id}` : '/api/constellation/characters',
+      {
+        method: character ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }
+    );
+    setSaving(false);
+    if (res.ok) onSaved();
+    else alert((await res.json()).error || 'Erro ao salvar personagem.');
+  };
+
+  const handleDelete = async () => {
+    if (!character || !confirm('Deletar este personagem? Todas as conexões serão removidas também.')) return;
+    await fetch(`/api/constellation/characters/${character.id}`, { method: 'DELETE' });
+    onSaved();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dracon-void/90 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.95 }}
+        className="bg-dracon-midnight border border-dracon-purple-800/30 rounded-xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-xl font-display font-bold text-white mb-6">
+          {character ? 'Editar Personagem' : 'Novo Personagem'}
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Nome</label>
+              <input
+                type="text"
+                className={inputClass}
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (!slugTouched) setCharId(slugify(e.target.value));
+                }}
+                placeholder="ex: Lyra"
+                required
+              />
+            </div>
+            <div>
+              <label className={labelClass}>ID (gerado a partir do nome)</label>
+              <input
+                type="text"
+                className={inputClass}
+                value={charId}
+                onChange={(e) => {
+                  setSlugTouched(true);
+                  setCharId(slugify(e.target.value));
+                }}
+                placeholder="ex: lyra"
+                required
+                disabled={!!character}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>Cargo / Título</label>
+            <input
+              type="text"
+              className={inputClass}
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              placeholder="ex: A Vidente Estelar"
+              required
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>Descrição</label>
+            <textarea
+              className={`${inputClass} min-h-[100px] resize-y`}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className={labelClass}>Cor da Estrela</label>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="w-10 h-10 rounded cursor-pointer bg-transparent border-none"
+                />
+                <input type="text" className={inputClass} value={color} onChange={(e) => setColor(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>Posição X</label>
+              <input
+                type="range"
+                min={0}
+                max={850}
+                value={cx}
+                onChange={(e) => setCx(Number(e.target.value))}
+                className="w-full mt-3 accent-purple-500"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Posição Y</label>
+              <input
+                type="range"
+                min={0}
+                max={420}
+                value={cy}
+                onChange={(e) => setCy(Number(e.target.value))}
+                className="w-full mt-3 accent-purple-500"
+              />
+            </div>
+          </div>
+          <p className="-mt-2 text-xs text-gray-500">Dica: é mais fácil posicionar arrastando a estrela no Editor Visual.</p>
+
+          <ImageUrlField value={imageUrl} onChange={setImageUrl} label="Imagem do personagem (opcional)" />
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Ordem</label>
+              <input type="number" className={inputClass} value={order} onChange={(e) => setOrder(Number(e.target.value))} />
+            </div>
+            <div className="flex items-end">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={active}
+                  onChange={(e) => setActive(e.target.checked)}
+                  className="accent-purple-500 w-4 h-4"
+                />
+                <span className="text-sm text-gray-300">Visível no site</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3 pt-4">
+            <MagicButton type="submit" variant="primary" disabled={saving}>
+              {character ? 'Salvar' : 'Criar'}
+            </MagicButton>
+            <MagicButton type="button" variant="secondary" onClick={onClose}>
+              Cancelar
+            </MagicButton>
+            {character && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="ml-auto flex items-center gap-2 rounded-lg px-4 py-2 text-sm text-red-400/80 hover:bg-red-500/10 hover:text-red-400"
+              >
+                <Trash2 className="h-4 w-4" /> Excluir
+              </button>
+            )}
+          </div>
+        </form>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -559,7 +616,9 @@ function LinesTab({
             ))}
           </select>
         </div>
-        <MagicButton onClick={handleAdd}>➕ Conectar</MagicButton>
+        <MagicButton onClick={handleAdd}>
+          <Link2 className="h-4 w-4" /> Conectar
+        </MagicButton>
       </div>
 
       {/* Existing lines */}
@@ -575,7 +634,7 @@ function LinesTab({
                 style={{ backgroundColor: l.from?.color || '#a855f4' }}
               />
               <span className="text-white">{l.from?.name || l.fromId}</span>
-              <span className="text-dracon-purple-500">→</span>
+              <ArrowRight className="h-4 w-4 text-dracon-purple-400" />
               <span
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: l.to?.color || '#a855f4' }}
@@ -584,9 +643,10 @@ function LinesTab({
             </div>
             <button
               onClick={() => handleDelete(l.id)}
-              className="text-red-400/60 hover:text-red-400 transition-colors text-sm"
+              title="Remover conexão"
+              className="rounded p-1.5 text-red-400/60 hover:bg-white/5 hover:text-red-400 transition-colors"
             >
-              🗑️
+              <Trash2 className="h-4 w-4" />
             </button>
           </div>
         ))}
@@ -663,7 +723,7 @@ function LoreTab({ lore, onRefresh }: { lore: Lore[]; onRefresh: () => void }) {
             setShowForm(true);
           }}
         >
-          ➕ Nova Seção
+          <Plus className="h-4 w-4" /> Nova Seção
         </MagicButton>
       </div>
 
@@ -680,12 +740,12 @@ function LoreTab({ lore, onRefresh }: { lore: Lore[]; onRefresh: () => void }) {
                 </span>
                 <h3 className="text-white font-bold">{l.title}</h3>
               </div>
-              <div className="flex gap-2">
-                <button onClick={() => openEdit(l)} className="text-dracon-purple-400 hover:text-white">
-                  ✏️
+              <div className="flex gap-1">
+                <button onClick={() => openEdit(l)} title="Editar" className="rounded p-1.5 text-dracon-purple-300 hover:bg-white/5 hover:text-white">
+                  <Pencil className="h-4 w-4" />
                 </button>
-                <button onClick={() => handleDelete(l.id)} className="text-red-400/60 hover:text-red-400">
-                  🗑️
+                <button onClick={() => handleDelete(l.id)} title="Excluir" className="rounded p-1.5 text-red-400/60 hover:bg-white/5 hover:text-red-400">
+                  <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -843,7 +903,7 @@ function GalleryTab({
             setShowForm(true);
           }}
         >
-          ➕ Novo Item
+          <Plus className="h-4 w-4" /> Novo Item
         </MagicButton>
       </div>
 
@@ -857,39 +917,35 @@ function GalleryTab({
               background: `radial-gradient(ellipse at 40% 40%, ${g.accent}15 0%, transparent 70%), linear-gradient(135deg, #0a0015 0%, #1a0030 100%)`,
             }}
           >
-            {resolveImageUrl(g.imageUrl) ? (
-              <img
-                src={resolveImageUrl(g.imageUrl)!}
-                alt={g.title}
-                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center opacity-10">
-                <svg width="80" height="80" viewBox="0 0 100 100">
-                  <polygon
-                    points="50,5 63,35 95,35 70,57 78,90 50,72 22,90 30,57 5,35 37,35"
-                    fill="none"
-                    stroke={g.accent}
-                    strokeWidth="1.5"
-                  />
-                </svg>
-              </div>
-            )}
+            <ArtImage
+              src={g.imageUrl}
+              alt={g.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 33vw"
+              className="object-cover opacity-70 group-hover:opacity-90 transition-opacity"
+              fallback={
+                <div className="absolute inset-[18%] opacity-30">
+                  <ConstellationGlyph id="draco" color={g.accent} animate={false} className="h-full w-full" />
+                </div>
+              }
+            />
             <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
               <p className="text-sm text-gray-300 font-display">{g.title}</p>
             </div>
             <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={() => openEdit(g)}
-                className="bg-dracon-void/80 text-dracon-purple-400 hover:text-white rounded p-1 text-xs"
+                title="Editar"
+                className="rounded bg-dracon-void/80 p-1.5 text-dracon-purple-300 hover:text-white"
               >
-                ✏️
+                <Pencil className="h-4 w-4" />
               </button>
               <button
                 onClick={() => handleDelete(g.id)}
-                className="bg-dracon-void/80 text-red-400/60 hover:text-red-400 rounded p-1 text-xs"
+                title="Excluir"
+                className="rounded bg-dracon-void/80 p-1.5 text-red-400/70 hover:text-red-400"
               >
-                🗑️
+                <Trash2 className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -926,17 +982,7 @@ function GalleryTab({
                     required
                   />
                 </div>
-                <div>
-                  <label className={labelClass}>URL da Imagem</label>
-                  <input
-                    type="text"
-                    className={inputClass}
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="ID do Google Drive ou URL completa"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Ex: 1ABC...xyz (ID do Drive) ou https://...</p>
-                </div>
+                <ImageUrlField value={imageUrl} onChange={setImageUrl} label="Imagem" />
                 <div>
                   <label className={labelClass}>Cor de Destaque</label>
                   <div className="flex gap-2 items-center">
@@ -977,66 +1023,5 @@ function GalleryTab({
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   CONSTELLATION PREVIEW (live SVG)
-   ═══════════════════════════════════════════════════════════════ */
-function ConstellationPreview({
-  characters,
-  lines,
-}: {
-  characters: Character[];
-  lines: Line[];
-}) {
-  const getChar = (id: string) => characters.find((c) => c.id === id);
-
-  return (
-    <svg
-      viewBox="0 0 850 420"
-      className="w-full h-auto rounded-lg"
-      style={{
-        background: 'radial-gradient(ellipse at center, rgba(168,85,244,0.03) 0%, rgba(10,0,21,0.8) 100%)',
-      }}
-    >
-      {/* Lines */}
-      {lines.map((l) => {
-        const from = getChar(l.fromId);
-        const to = getChar(l.toId);
-        if (!from || !to) return null;
-        return (
-          <line
-            key={l.id}
-            x1={from.cx}
-            y1={from.cy}
-            x2={to.cx}
-            y2={to.cy}
-            stroke="rgba(168,85,244,0.25)"
-            strokeWidth={1}
-            strokeDasharray="4 4"
-          />
-        );
-      })}
-
-      {/* Stars */}
-      {characters.map((c) => (
-        <g key={c.id}>
-          <circle cx={c.cx} cy={c.cy} r={12} fill={c.color} opacity={0.1} />
-          <circle cx={c.cx} cy={c.cy} r={5} fill={c.color} opacity={0.8} />
-          <circle cx={c.cx} cy={c.cy} r={2} fill="white" opacity={0.7} />
-          <text
-            x={c.cx}
-            y={c.cy - 18}
-            textAnchor="middle"
-            fill="rgba(200,180,255,0.5)"
-            fontSize={10}
-            fontFamily="var(--font-cinzel)"
-          >
-            {c.name}
-          </text>
-        </g>
-      ))}
-    </svg>
   );
 }

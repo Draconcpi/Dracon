@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import MagicButton from '@/components/ui/MagicButton';
+import ServiceIcon, { SERVICE_ICONS, resolveServiceIconKey } from '@/components/ui/ServiceIcon';
 
 interface Service {
   id: string;
@@ -30,7 +32,7 @@ export default function AdminServicesPage() {
   const [price, setPrice] = useState('');
   const [priceNote, setPriceNote] = useState('');
   const [features, setFeatures] = useState('');
-  const [icon, setIcon] = useState('⭐');
+  const [icon, setIcon] = useState('sparkles');
   const [order, setOrder] = useState(0);
   const [active, setActive] = useState(true);
 
@@ -47,14 +49,14 @@ export default function AdminServicesPage() {
 
   const resetForm = () => {
     setTitle(''); setDescription(''); setShortDescription(''); setPrice('');
-    setPriceNote(''); setFeatures(''); setIcon('⭐'); setOrder(0); setActive(true);
+    setPriceNote(''); setFeatures(''); setIcon('sparkles'); setOrder(0); setActive(true);
     setEditingItem(null); setShowForm(false);
   };
 
   const openEditForm = (s: Service) => {
     setTitle(s.title); setDescription(s.description); setShortDescription(s.shortDescription);
     setPrice(s.price || ''); setPriceNote(s.priceNote || '');
-    setFeatures(s.features.join('\n')); setIcon(s.icon); setOrder(s.order); setActive(s.active);
+    setFeatures(s.features.join('\n')); setIcon(resolveServiceIconKey(s.icon)); setOrder(s.order); setActive(s.active);
     setEditingItem(s); setShowForm(true);
   };
 
@@ -88,7 +90,9 @@ export default function AdminServicesPage() {
           <h1 className="text-3xl font-display font-bold text-white glow-text">Serviços</h1>
           <p className="text-gray-400 text-sm mt-1">{services.length} serviço(s)</p>
         </div>
-        <MagicButton onClick={() => { resetForm(); setShowForm(true); }}>➕ Novo Serviço</MagicButton>
+        <MagicButton onClick={() => { resetForm(); setShowForm(true); }}>
+          <Plus className="h-4 w-4" /> Novo Serviço
+        </MagicButton>
       </div>
 
       <AnimatePresence>
@@ -103,14 +107,30 @@ export default function AdminServicesPage() {
                 {editingItem ? 'Editar Serviço' : 'Novo Serviço'}
               </h2>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-1">Título</label>
-                    <input type="text" className="input-arcane" value={title} onChange={(e) => setTitle(e.target.value)} required />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-1">Ícone</label>
-                    <input type="text" className="input-arcane" value={icon} onChange={(e) => setIcon(e.target.value)} />
+                <div>
+                  <label className="block text-sm text-gray-300 mb-1">Título</label>
+                  <input type="text" className="input-arcane" value={title} onChange={(e) => setTitle(e.target.value)} required />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-300 mb-2">Ícone</label>
+                  <div className="grid grid-cols-7 gap-2 sm:grid-cols-10">
+                    {Object.entries(SERVICE_ICONS).map(([key, { icon: Icon, label }]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        title={label}
+                        aria-label={label}
+                        aria-pressed={icon === key}
+                        onClick={() => setIcon(key)}
+                        className={`flex aspect-square items-center justify-center rounded-lg border transition-all ${
+                          icon === key
+                            ? 'border-dracon-purple-300 bg-dracon-purple-500/25 text-white shadow-arcane'
+                            : 'border-white/10 text-gray-400 hover:border-white/25 hover:text-white'
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </button>
+                    ))}
                   </div>
                 </div>
                 <div>
@@ -159,7 +179,9 @@ export default function AdminServicesPage() {
         {services.map((s) => (
           <div key={s.id} className="card-arcane p-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <span className="text-3xl">{s.icon}</span>
+              <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-dracon-purple-100/20 bg-dracon-purple-500/10 text-dracon-purple-100">
+                <ServiceIcon name={s.icon} className="h-6 w-6" />
+              </span>
               <div>
                 <h3 className="text-white font-medium">{s.title}</h3>
                 <p className="text-gray-500 text-sm">{s.shortDescription}</p>
@@ -170,8 +192,8 @@ export default function AdminServicesPage() {
               <span className={`px-2 py-0.5 rounded text-xs ${s.active ? 'text-green-400 bg-green-900/20' : 'text-red-400 bg-red-900/20'}`}>
                 {s.active ? 'Ativo' : 'Inativo'}
               </span>
-              <button onClick={() => openEditForm(s)} className="px-3 py-1 text-sm text-dracon-purple-400 hover:text-dracon-purple-300 border border-dracon-purple-800/30 rounded hover:border-dracon-purple-600/50 transition-all">Editar</button>
-              <button onClick={() => handleDelete(s.id)} className="px-3 py-1 text-sm text-red-400/60 hover:text-red-400 border border-red-800/20 rounded hover:border-red-600/40 transition-all">Deletar</button>
+              <button onClick={() => openEditForm(s)} className="flex items-center gap-1.5 px-3 py-1 text-sm text-dracon-purple-400 hover:text-dracon-purple-300 border border-dracon-purple-800/30 rounded hover:border-dracon-purple-600/50 transition-all"><Pencil className="h-3.5 w-3.5" /> Editar</button>
+              <button onClick={() => handleDelete(s.id)} className="flex items-center gap-1.5 px-3 py-1 text-sm text-red-400/60 hover:text-red-400 border border-red-800/20 rounded hover:border-red-600/40 transition-all"><Trash2 className="h-3.5 w-3.5" /> Deletar</button>
             </div>
           </div>
         ))}

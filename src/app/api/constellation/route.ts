@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
 
 // Helper: safely query a model that may not exist yet in the generated client
 async function safeQuery<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
@@ -10,14 +11,17 @@ async function safeQuery<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   }
 }
 
-// GET - Return all constellation data (public)
-export async function GET() {
+// GET - Return all constellation data (public). Admins can pass ?all=1 to include inactive characters.
+export async function GET(request: NextRequest) {
   try {
+    const includeInactive =
+      request.nextUrl.searchParams.get('all') === '1' && !!(await getSession());
+
     const [characters, lines, lore, gallery] = await Promise.all([
       safeQuery(
         () =>
           prisma.constellationCharacter.findMany({
-            where: { active: true },
+            where: includeInactive ? undefined : { active: true },
             orderBy: { order: 'asc' },
           }),
         []

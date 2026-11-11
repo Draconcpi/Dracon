@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { I18nProvider } from "@/i18n";
+import { getContentOverrides, getSeoSettings } from "@/lib/content";
 
 // Lazy-load heavy 3D background — no SSR needed
 const CosmicBackground = dynamic(() => import("@/components/ui/CosmicBackground"), {
@@ -28,56 +29,66 @@ const cinzelDecorative = Cinzel_Decorative({
   weight: ["400", "700", "900"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Dracon — Ilustração & Animação Mística",
-    template: "%s | Dracon",
-  },
-  description:
-    "Portfólio de ilustração e animação — arte mística, fantasia e mundos arcanos. Criando universos visuais onde magia e imaginação se encontram.",
-  keywords: [
-    "ilustração",
-    "animação",
-    "concept art",
-    "arte digital",
-    "fantasia",
-    "magia",
-    "portfólio",
-    "dracon",
-    "arte mística",
-  ],
-  authors: [{ name: "Dracon" }],
-  openGraph: {
-    title: "Dracon — Ilustração & Animação Mística",
-    description:
-      "Portfólio de ilustração e animação — arte mística, fantasia e mundos arcanos.",
-    url: "https://dracon.art",
-    siteName: "Dracon",
-    locale: "pt_BR",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Dracon — Ilustração & Animação Mística",
-    description: "Arte mística, fantasia e mundos arcanos.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+const DEFAULT_TITLE = "Dracon — Ilustração & Animação Mística";
+const DEFAULT_DESCRIPTION =
+  "Portfólio de ilustração e animação — arte mística, fantasia e mundos arcanos. Criando universos visuais onde magia e imaginação se encontram.";
 
-export default function RootLayout({
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getSeoSettings();
+  const title = seo.title || DEFAULT_TITLE;
+  const description = seo.description || DEFAULT_DESCRIPTION;
+
+  return {
+    title: {
+      default: title,
+      template: "%s | Dracon",
+    },
+    description,
+    keywords: [
+      "ilustração",
+      "animação",
+      "concept art",
+      "arte digital",
+      "fantasia",
+      "magia",
+      "portfólio",
+      "dracon",
+      "arte mística",
+    ],
+    authors: [{ name: "Dracon" }],
+    openGraph: {
+      title,
+      description,
+      url: "https://dracon.art",
+      siteName: "Dracon",
+      locale: "pt_BR",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const overrides = await getContentOverrides();
+
   return (
     <html lang="pt-BR" className="scroll-smooth overflow-x-hidden">
       <body
         className={`${inter.variable} ${cinzel.variable} ${cinzelDecorative.variable} antialiased cosmic-bg min-h-screen overflow-x-hidden`}
       >
-        <I18nProvider>
+        <I18nProvider overrides={overrides}>
           <CosmicBackground />
           <Navbar />
           <main className="relative z-10">

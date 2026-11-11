@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         price: price || null,
         priceNote: priceNote || null,
         features: features || [],
-        icon: icon || '⭐',
+        icon: icon || 'sparkles',
         order: order || 0,
         active: active ?? true,
       },

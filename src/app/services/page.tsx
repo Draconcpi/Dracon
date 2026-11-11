@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Briefcase, ChevronDown, Flame, Sparkle } from 'lucide-react';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
 import AnimatedCard from '@/components/ui/AnimatedCard';
+import ServiceIcon from '@/components/ui/ServiceIcon';
 import ConstellationDivider from '@/components/ui/ConstellationDivider';
 import ConstellationLoader from '@/components/ui/ConstellationLoader';
 import { useI18n } from '@/i18n';
@@ -75,7 +77,7 @@ export default function ServicesPage() {
         {loading && <ConstellationLoader label={t('common.loading')} className="py-20" />}
         {!loading && services.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-5xl mb-4">💼</p>
+            <Briefcase className="mx-auto mb-4 h-12 w-12 text-dracon-purple-400/60" strokeWidth={1.25} />
             <p className="text-gray-400 text-lg">Nenhum serviço disponível no momento.</p>
           </div>
         )}
@@ -89,11 +91,11 @@ export default function ServicesPage() {
               <div className="p-8">
                 <div className="flex items-start justify-between mb-4">
                   <motion.span
-                    className="text-4xl"
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, delay: i * 0.5 }}
+                    className="flex h-14 w-14 items-center justify-center rounded-2xl border border-dracon-purple-300/25 bg-gradient-to-br from-dracon-purple-500/20 to-dracon-orange-500/10 text-dracon-purple-100 shadow-arcane"
+                    animate={{ rotate: [0, 6, -6, 0] }}
+                    transition={{ duration: 5, repeat: Infinity, delay: i * 0.5 }}
                   >
-                    {service.icon}
+                    <ServiceIcon name={service.icon} className="h-7 w-7" />
                   </motion.span>
                   {service.price && (
                     <span className="text-dracon-orange-400 font-bold text-lg">
@@ -124,7 +126,7 @@ export default function ServicesPage() {
                     <ul className="space-y-2">
                       {service.features.map((feature, fi) => (
                         <li key={fi} className="flex items-center gap-2 text-sm text-gray-300">
-                          <span className="text-dracon-purple-400">✦</span>
+                          <Sparkle className="h-3.5 w-3.5 flex-shrink-0 text-dracon-purple-400" aria-hidden />
                           {feature}
                         </li>
                       ))}
@@ -132,8 +134,12 @@ export default function ServicesPage() {
                   </div>
                 </motion.div>
 
-                <button className="mt-4 text-dracon-purple-400 text-sm hover:text-dracon-purple-300 transition-colors">
+                <button className="mt-4 inline-flex items-center gap-1.5 text-dracon-purple-400 text-sm hover:text-dracon-purple-300 transition-colors">
                   {expandedService === service.id ? t('services.toggleLess') : t('services.toggleMore')}
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform duration-300 ${expandedService === service.id ? 'rotate-180' : ''}`}
+                    aria-hidden
+                  />
                 </button>
               </div>
             </AnimatedCard>
@@ -239,6 +245,7 @@ export default function ServicesPage() {
             </div>
 
             <MagicButton type="submit" variant="fire" className="w-full text-lg py-4">
+              <Flame className="h-5 w-5" aria-hidden />
               {t('services.form.submit')}
             </MagicButton>
           </motion.form>

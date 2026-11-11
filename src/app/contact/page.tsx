@@ -1,19 +1,19 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { CircleAlert, CircleCheck, Clock, Globe, LoaderCircle, Mail, Send, type LucideIcon } from 'lucide-react';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
 import Astrolabe from '@/components/ui/Astrolabe';
+import SocialIcon from '@/components/ui/SocialIcon';
 import { SOCIAL_LINKS } from '@/lib/constants';
 import { useI18n } from '@/i18n';
 
-function IconBadge({ children }: { children: ReactNode }) {
+function IconBadge({ icon: Icon }: { icon: LucideIcon }) {
   return (
     <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full border border-dracon-purple-100/25 bg-dracon-purple-500/10 text-dracon-purple-100 shadow-[0_0_20px_rgba(168,85,244,0.25)]">
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        {children}
-      </svg>
+      <Icon className="h-5 w-5" strokeWidth={1.6} aria-hidden />
     </div>
   );
 }
@@ -90,31 +90,21 @@ export default function ContactPage() {
           >
             {/* Email */}
             <div className="card-arcane p-6">
-              <IconBadge>
-                <rect x="3.5" y="5.5" width="17" height="13" rx="2" />
-                <path d="m4 7 8 6 8-6" />
-              </IconBadge>
+              <IconBadge icon={Mail} />
               <h3 className="font-display font-bold text-white mb-1">{t('contact.info.email')}</h3>
               <p className="text-dracon-purple-300 text-sm">{t('contact.info.emailAddress')}</p>
             </div>
 
             {/* Response time */}
             <div className="card-arcane p-6">
-              <IconBadge>
-                <circle cx="12" cy="12" r="8.5" />
-                <path d="M12 7.5V12l3 2" />
-              </IconBadge>
+              <IconBadge icon={Clock} />
               <h3 className="font-display font-bold text-white mb-1">{t('contact.info.response')}</h3>
               <p className="text-gray-400 text-sm">{t('contact.info.responseText')}</p>
             </div>
 
             {/* Social Links */}
             <div className="card-arcane p-6">
-              <IconBadge>
-                <circle cx="12" cy="12" r="8.5" />
-                <path d="M3.5 12h17" />
-                <path d="M12 3.5a13 13 0 0 1 0 17a13 13 0 0 1 0-17" />
-              </IconBadge>
+              <IconBadge icon={Globe} />
               <h3 className="font-display font-bold text-white mb-3">{t('contact.info.social')}</h3>
               <div className="space-y-2">
                 {Object.entries(SOCIAL_LINKS).map(([name, url]) => (
@@ -125,8 +115,8 @@ export default function ContactPage() {
                     rel="noopener noreferrer"
                     className="flex items-center gap-3 text-gray-400 hover:text-dracon-purple-300 transition-colors py-1"
                   >
-                    <span className="w-8 h-8 rounded bg-dracon-purple-900/30 border border-dracon-purple-800/30 flex items-center justify-center text-xs font-bold uppercase">
-                      {name.slice(0, 2)}
+                    <span className="w-8 h-8 rounded bg-dracon-purple-900/30 border border-dracon-purple-800/30 flex items-center justify-center">
+                      <SocialIcon name={name} className="h-4 w-4" />
                     </span>
                     <span className="text-sm capitalize">{name}</span>
                   </a>
@@ -208,8 +198,9 @@ export default function ContactPage() {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-4 rounded-lg bg-green-900/30 border border-green-600/30 text-green-300 text-sm"
+                  className="flex items-center gap-2 p-4 rounded-lg bg-green-900/30 border border-green-600/30 text-green-300 text-sm"
                 >
+                  <CircleCheck className="h-4 w-4 flex-shrink-0" aria-hidden />
                   {t('contact.form.success')}
                 </motion.div>
               )}
@@ -218,8 +209,9 @@ export default function ContactPage() {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-4 rounded-lg bg-red-900/30 border border-red-600/30 text-red-300 text-sm"
+                  className="flex items-center gap-2 p-4 rounded-lg bg-red-900/30 border border-red-600/30 text-red-300 text-sm"
                 >
+                  <CircleAlert className="h-4 w-4 flex-shrink-0" aria-hidden />
                   {t('contact.form.error')}
                 </motion.div>
               )}
@@ -230,6 +222,11 @@ export default function ContactPage() {
                 className="w-full text-lg py-4"
                 disabled={formStatus === 'sending'}
               >
+                {formStatus === 'sending' ? (
+                  <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden />
+                ) : (
+                  <Send className="h-5 w-5" aria-hidden />
+                )}
                 {formStatus === 'sending' ? t('contact.form.sending') : t('contact.form.submit')}
               </MagicButton>
             </form>

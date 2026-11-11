@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Inbox, MessageSquare, Reply, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
 interface Message {
@@ -89,7 +90,7 @@ export default function AdminMessagesPage() {
 
           {messages.length === 0 && (
             <div className="text-center py-12 text-gray-500">
-              <p className="text-4xl mb-4">📭</p>
+              <Inbox className="mx-auto mb-4 h-10 w-10" strokeWidth={1.25} />
               <p>Nenhuma mensagem recebida.</p>
             </div>
           )}
@@ -117,9 +118,9 @@ export default function AdminMessagesPage() {
                 </div>
                 <button
                   onClick={() => handleDelete(selectedMessage.id)}
-                  className="px-3 py-1 text-sm text-red-400/60 hover:text-red-400 border border-red-800/20 rounded hover:border-red-600/40 transition-all"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-sm text-red-400/60 hover:text-red-400 border border-red-800/20 rounded hover:border-red-600/40 transition-all"
                 >
-                  Deletar
+                  <Trash2 className="h-3.5 w-3.5" /> Deletar
                 </button>
               </div>
               <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
@@ -127,16 +128,16 @@ export default function AdminMessagesPage() {
               </div>
               <div className="mt-6 pt-6 border-t border-dracon-purple-800/20">
                 <a
-                  href={`mailto:${selectedMessage.email}?subject=Re: ${selectedMessage.subject}`}
-                  className="btn-primary inline-block text-sm"
+                  href={`mailto:${selectedMessage.email}?subject=${encodeURIComponent(`Re: ${selectedMessage.subject}`)}`}
+                  className="btn-primary inline-flex items-center gap-2 text-sm"
                 >
-                  📧 Responder por Email
+                  <Reply className="h-4 w-4" /> Responder por Email
                 </a>
               </div>
             </motion.div>
           ) : (
             <div className="card-arcane p-12 text-center text-gray-500">
-              <p className="text-4xl mb-4">💬</p>
+              <MessageSquare className="mx-auto mb-4 h-10 w-10" strokeWidth={1.25} />
               <p>Selecione uma mensagem para visualizar.</p>
             </div>
           )}

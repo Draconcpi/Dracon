@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { CONTENT_TAG } from '@/lib/content';
 
 // GET - Get all settings (public for some, admin for all)
 export async function GET() {
@@ -38,6 +40,9 @@ export async function PUT(request: NextRequest) {
         create: { key, value: String(value) },
       });
     }
+
+    revalidateTag(CONTENT_TAG);
+    revalidatePath('/', 'layout');
 
     return NextResponse.json({ success: true, message: 'Configurações atualizadas.' });
   } catch (error) {

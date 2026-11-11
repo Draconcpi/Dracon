@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { House, Images } from 'lucide-react';
 import MagicButton from '@/components/ui/MagicButton';
 import Astrolabe from '@/components/ui/Astrolabe';
 import { useI18n } from '@/i18n';
@@ -48,10 +49,16 @@ export default function NotFound() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/">
-              <MagicButton variant="primary">{t('notFound.ctaHome')}</MagicButton>
+              <MagicButton variant="primary">
+                <House className="h-4 w-4" aria-hidden />
+                {t('notFound.ctaHome')}
+              </MagicButton>
             </Link>
             <Link href="/portfolio">
-              <MagicButton variant="secondary">{t('notFound.ctaPortfolio')}</MagicButton>
+              <MagicButton variant="secondary">
+                <Images className="h-4 w-4" aria-hidden />
+                {t('notFound.ctaPortfolio')}
+              </MagicButton>
             </Link>
           </div>
         </motion.div>

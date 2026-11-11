@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ImageOff, Pencil, Plus, Star, Trash2 } from 'lucide-react';
 import MagicButton from '@/components/ui/MagicButton';
 import ArtImage from '@/components/ui/ArtImage';
+import ImageUrlField from '@/components/admin/ImageUrlField';
 
 interface PortfolioItem {
   id: string;
@@ -128,7 +130,7 @@ export default function AdminPortfolioPage() {
           <p className="text-gray-400 text-sm mt-1">{items.length} obra(s) cadastrada(s)</p>
         </div>
         <MagicButton onClick={() => { resetForm(); setShowForm(true); }}>
-          ➕ Nova Obra
+          <Plus className="h-4 w-4" /> Nova Obra
         </MagicButton>
       </div>
 
@@ -162,26 +164,7 @@ export default function AdminPortfolioPage() {
                   <label className="block text-sm text-gray-300 mb-1">Descrição</label>
                   <textarea className="input-arcane min-h-[100px]" value={description} onChange={(e) => setDescription(e.target.value)} required />
                 </div>
-                <div>
-                  <label className="block text-sm text-gray-300 mb-1">URL da Imagem</label>
-                  <input type="text" className="input-arcane" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} required placeholder="Link do Google Drive (ou /uploads/arquivo.jpg)" />
-                  {imageUrl.trim() && (
-                    <div className="relative mt-3 h-40 overflow-hidden rounded-lg border border-white/10 bg-dracon-void/60">
-                      <ArtImage
-                        src={imageUrl}
-                        alt="Pré-visualização"
-                        fill
-                        sizes="640px"
-                        className="object-contain"
-                        fallback={
-                          <p className="flex h-full items-center justify-center p-4 text-center text-xs text-amber-300/90">
-                            ⚠️ Não foi possível carregar a imagem. No Google Drive, compartilhe o arquivo como &ldquo;Qualquer pessoa com o link&rdquo;.
-                          </p>
-                        }
-                      />
-                    </div>
-                  )}
-                </div>
+                <ImageUrlField value={imageUrl} onChange={setImageUrl} label="Imagem da obra" required />
                 <div>
                   <label className="block text-sm text-gray-300 mb-1">Categoria</label>
                   <select className="input-arcane" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
@@ -223,23 +206,32 @@ export default function AdminPortfolioPage() {
         {items.map((item) => (
           <div key={item.id} className="card-arcane p-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-lg bg-dracon-purple-900/30 flex items-center justify-center text-2xl">
-                🖼️
+              <div className="relative flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-dracon-purple-900/30 text-gray-500">
+                <ArtImage
+                  src={item.imageUrl}
+                  alt={item.title}
+                  fill
+                  sizes="64px"
+                  className="object-cover"
+                  fallback={<ImageOff className="h-6 w-6" />}
+                />
               </div>
               <div>
                 <h3 className="text-white font-medium">{item.title}</h3>
                 <p className="text-gray-500 text-sm">{item.category?.name} • Ordem: {item.order}</p>
                 {item.featured && (
-                  <span className="text-dracon-orange-400 text-xs">⭐ Destaque</span>
+                  <span className="flex items-center gap-1 text-dracon-orange-400 text-xs">
+                    <Star className="h-3 w-3 fill-current" /> Destaque
+                  </span>
                 )}
               </div>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => openEditForm(item)} className="px-3 py-1 text-sm text-dracon-purple-400 hover:text-dracon-purple-300 border border-dracon-purple-800/30 rounded hover:border-dracon-purple-600/50 transition-all">
-                Editar
+              <button onClick={() => openEditForm(item)} className="flex items-center gap-1.5 px-3 py-1 text-sm text-dracon-purple-400 hover:text-dracon-purple-300 border border-dracon-purple-800/30 rounded hover:border-dracon-purple-600/50 transition-all">
+                <Pencil className="h-3.5 w-3.5" /> Editar
               </button>
-              <button onClick={() => handleDelete(item.id)} className="px-3 py-1 text-sm text-red-400/60 hover:text-red-400 border border-red-800/20 rounded hover:border-red-600/40 transition-all">
-                Deletar
+              <button onClick={() => handleDelete(item.id)} className="flex items-center gap-1.5 px-3 py-1 text-sm text-red-400/60 hover:text-red-400 border border-red-800/20 rounded hover:border-red-600/40 transition-all">
+                <Trash2 className="h-3.5 w-3.5" /> Deletar
               </button>
             </div>
           </div>
@@ -247,7 +239,7 @@ export default function AdminPortfolioPage() {
 
         {items.length === 0 && (
           <div className="text-center py-12 text-gray-500">
-            <p className="text-4xl mb-4">🖼️</p>
+            <ImageOff className="mx-auto mb-4 h-10 w-10" />
             <p>Nenhuma obra cadastrada ainda.</p>
           </div>
         )}

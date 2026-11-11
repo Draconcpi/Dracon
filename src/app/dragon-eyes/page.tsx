@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Images, Telescope } from 'lucide-react';
 import GlowText from '@/components/ui/GlowText';
 import MagicButton from '@/components/ui/MagicButton';
 import AnimatedCard from '@/components/ui/AnimatedCard';
@@ -175,21 +176,21 @@ function InteractiveConstellation({
   characters: Character[];
   lines: Line[];
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [hoveredChar, setHoveredChar] = useState<string | null>(null);
   const [selectedChar, setSelectedChar] = useState<string | null>(null);
 
   const activeCharId = selectedChar ?? hoveredChar;
   const activeChar = characters.find((c) => c.id === activeCharId);
 
-  // Try i18n key, fall back to DB value
+  // Portuguese comes from the admin (DB); English uses the built-in translation when one exists
   const getName = useCallback(
     (char: Character) => {
       const key = `dragonEyes.characters.${char.charId}.name`;
       const value = t(key);
-      return value !== key ? value : char.name;
+      return locale === 'en' && value !== key ? value : char.name;
     },
-    [t]
+    [t, locale]
   );
 
   const toggle = useCallback((id: string) => {
@@ -283,15 +284,16 @@ function InteractiveConstellation({
 
 /* ─── Character Detail (reused in constellation) ──────────── */
 function CharacterDetail({ char: c }: { char: Character }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
-  // Try i18n key, fall back to DB value
-  const nameKey = `dragonEyes.characters.${c.charId}.name`;
-  const roleKey = `dragonEyes.characters.${c.charId}.role`;
-  const descKey = `dragonEyes.characters.${c.charId}.description`;
-  const charName = t(nameKey) !== nameKey ? t(nameKey) : c.name;
-  const charRole = t(roleKey) !== roleKey ? t(roleKey) : c.role;
-  const charDesc = t(descKey) !== descKey ? t(descKey) : c.description;
+  // Portuguese comes from the admin (DB); English uses the built-in translation when one exists
+  const localized = (field: 'name' | 'role' | 'description') => {
+    const key = `dragonEyes.characters.${c.charId}.${field}`;
+    return locale === 'en' && t(key) !== key ? t(key) : c[field];
+  };
+  const charName = localized('name');
+  const charRole = localized('role');
+  const charDesc = localized('description');
 
   return (
     <div
@@ -561,10 +563,16 @@ export default function DragonEyesPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="/portfolio">
-                <MagicButton variant="primary">{t('dragonEyes.cta.ctaPortfolio')}</MagicButton>
+                <MagicButton variant="primary">
+                  <Images className="h-4 w-4" aria-hidden />
+                  {t('dragonEyes.cta.ctaPortfolio')}
+                </MagicButton>
               </a>
               <a href="/contact">
-                <MagicButton variant="secondary">{t('dragonEyes.cta.ctaFollow')}</MagicButton>
+                <MagicButton variant="secondary">
+                  <Telescope className="h-4 w-4" aria-hidden />
+                  {t('dragonEyes.cta.ctaFollow')}
+                </MagicButton>
               </a>
             </div>
           </motion.div>

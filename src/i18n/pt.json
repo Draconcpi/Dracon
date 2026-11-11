@@ -25,7 +25,7 @@
       "tagline": "✦ Ilustração & Animação ✦",
       "title": "DRACON",
       "subtitle": "Criando universos visuais onde magia e imaginação se encontram entre estrelas e constelações. Arte mística, fantasia e mundos arcanos.",
-      "ctaPortfolio": "✦ Ver Portfólio",
+      "ctaPortfolio": "Ver Portfólio",
       "ctaServices": "Encomendar Arte",
       "scroll": "Role para explorar"
     },
@@ -33,14 +33,14 @@
       "tag": "✦ Galeria",
       "title": "Últimas Artes",
       "subtitle": "Navegue pelas criações mais recentes do universo Dracon.",
-      "cta": "Explorar portfólio completo →",
+      "cta": "Explorar portfólio completo",
       "prev": "Arte anterior",
       "next": "Próxima arte"
     },
     "featured": {
       "title": "Obras em Destaque",
       "subtitle": "Uma seleção das obras mais recentes e fascinantes do universo Dracon.",
-      "cta": "Ver todo o portfólio →"
+      "cta": "Ver todo o portfólio"
     },
     "works": {
       "guardianStars": {
@@ -69,12 +69,12 @@
       "title": "Arte Nascida das Estrelas",
       "p1": "Dracon é um estúdio de arte digital especializado em ilustração de fantasia, concept art e animação. Cada obra é uma jornada por mundos arcanos onde a magia flui entre constelações e símbolos ancestrais.",
       "p2": "Inspirado pela mitologia, astrologia e mistérios do cosmos, cada peça carrega a essência de universos fantásticos esperando para ser descobertos.",
-      "cta": "Conheça a história →"
+      "cta": "Conheça a história"
     },
     "cta": {
       "title": "Transforme sua Visão em Arte",
       "subtitle": "Encomende uma ilustração, concept art ou animação única. Cada projeto é uma colaboração mágica entre sua visão e a arte Dracon.",
-      "ctaServices": "🔥 Ver Serviços",
+      "ctaServices": "Ver Serviços",
       "ctaContact": "Entrar em Contato"
     }
   },
@@ -176,8 +176,8 @@
       "title": "Serviços",
       "subtitle": "Transforme sua visão em arte. Cada projeto é tratado com dedicação artesanal e paixão pelo fantástico."
     },
-    "toggleMore": "Ver detalhes →",
-    "toggleLess": "← Menos detalhes",
+    "toggleMore": "Ver detalhes",
+    "toggleLess": "Menos detalhes",
     "items": [
       {
         "title": "Ilustração Personalizada",
@@ -239,7 +239,7 @@
       "subjectPlaceholder": "Sobre o que é sua encomenda?",
       "description": "Descrição do Projeto",
       "descriptionPlaceholder": "Descreva sua visão, referências, personagens, cenários... quanto mais detalhes, melhor!",
-      "submit": "🔥 Enviar Solicitação",
+      "submit": "Enviar Solicitação",
       "alertSent": "Mensagem enviada! (Em produção, isto será enviado ao servidor)"
     }
   },
@@ -265,10 +265,10 @@
       "subjectPlaceholder": "Sobre o que gostaria de conversar?",
       "message": "Mensagem *",
       "messagePlaceholder": "Escreva sua mensagem aqui... descreva seu projeto, suas ideias, referências visuais, ou qualquer outra informação relevante.",
-      "success": "✅ Mensagem enviada com sucesso! Retornarei em breve.",
-      "error": "❌ Erro ao enviar mensagem. Por favor, tente novamente.",
-      "submit": "✦ Enviar Mensagem",
-      "sending": "✦ Enviando..."
+      "success": "Mensagem enviada com sucesso! Retornarei em breve.",
+      "error": "Erro ao enviar mensagem. Por favor, tente novamente.",
+      "submit": "Enviar Mensagem",
+      "sending": "Enviando..."
     }
   },
   "dragonEyes": {
@@ -325,13 +325,13 @@
     "title": "404",
     "heading": "Portal Não Encontrado",
     "message": "O caminho que você busca se perdeu entre as constelações. Talvez o portal tenha se fechado, ou nunca tenha existido neste plano.",
-    "ctaHome": "✦ Voltar ao Início",
+    "ctaHome": "Voltar ao Início",
     "ctaPortfolio": "Ver Portfólio"
   },
   "error": {
     "heading": "Perturbação no Fluxo Arcano",
     "message": "Uma energia instável interrompeu o encantamento. Tente novamente ou retorne ao portal principal.",
-    "ctaRetry": "🔄 Tentar Novamente",
+    "ctaRetry": "Tentar Novamente",
     "ctaHome": "Voltar ao Início"
   }
 }

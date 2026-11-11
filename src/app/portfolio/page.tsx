@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Palette, X } from 'lucide-react';
 import GlowText from '@/components/ui/GlowText';
 import AnimatedCard from '@/components/ui/AnimatedCard';
 import ArtImage from '@/components/ui/ArtImage';
@@ -137,7 +138,7 @@ export default function PortfolioPage() {
       {/* Empty state */}
       {!loading && items.length === 0 && (
         <div className="section-container text-center py-20">
-          <p className="text-5xl mb-4">🎨</p>
+          <Palette className="mx-auto mb-4 h-12 w-12 text-dracon-purple-400/60" strokeWidth={1.25} />
           <p className="text-gray-400 text-lg">Nenhuma obra encontrada.</p>
         </div>
       )}
@@ -242,7 +243,7 @@ export default function PortfolioPage() {
                   onClick={() => setSelectedItem(null)}
                   className="glass absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-gray-200 hover:text-white transition-colors"
                 >
-                  ✕
+                  <X className="h-5 w-5" aria-hidden />
                 </button>
               </div>
 

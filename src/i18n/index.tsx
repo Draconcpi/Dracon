@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import pt from './pt.json';
 import en from './en.json';
+import type { ContentOverrides } from './editable';
 
 export type Locale = 'pt' | 'en';
 
@@ -28,7 +29,14 @@ function getNestedValue(obj: Record<string, unknown>, path: string): string {
   return typeof current === 'string' ? current : path;
 }
 
-export function I18nProvider({ children }: { children: ReactNode }) {
+export function I18nProvider({
+  children,
+  overrides,
+}: {
+  children: ReactNode;
+  /** Texts edited in the admin, applied over the JSON defaults. */
+  overrides?: ContentOverrides;
+}) {
   const [locale, setLocaleState] = useState<Locale>('pt');
 
   useEffect(() => {
@@ -46,7 +54,9 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   const t = useCallback(
     (key: string, params?: Record<string, string | number>): string => {
-      let value = getNestedValue(translations[locale] as Record<string, unknown>, key);
+      let value =
+        overrides?.[locale]?.[key] ??
+        getNestedValue(translations[locale] as Record<string, unknown>, key);
       if (params) {
         Object.entries(params).forEach(([k, v]) => {
           value = value.replace(`{${k}}`, String(v));
@@ -54,7 +64,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       }
       return value;
     },
-    [locale]
+    [locale, overrides]
   );
 
   return (

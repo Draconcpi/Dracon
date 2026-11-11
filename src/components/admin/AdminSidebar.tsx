@@ -3,15 +3,28 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import {
+  Briefcase,
+  ExternalLink,
+  FolderOpen,
+  Images,
+  LayoutDashboard,
+  LogOut,
+  MessageSquare,
+  Settings,
+  Sparkles,
+  Type,
+} from 'lucide-react';
 
 const sidebarLinks = [
-  { href: '/admin', label: 'Dashboard', icon: '📊' },
-  { href: '/admin/portfolio', label: 'Portfólio', icon: '🖼️' },
-  { href: '/admin/categories', label: 'Categorias', icon: '📁' },
-  { href: '/admin/services', label: 'Serviços', icon: '💼' },
-  { href: '/admin/constellation', label: 'Constelação', icon: '⭐' },
-  { href: '/admin/messages', label: 'Mensagens', icon: '💬' },
-  { href: '/admin/settings', label: 'Configurações', icon: '⚙️' },
+  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/content', label: 'Textos do Site', icon: Type },
+  { href: '/admin/portfolio', label: 'Portfólio', icon: Images },
+  { href: '/admin/categories', label: 'Categorias', icon: FolderOpen },
+  { href: '/admin/services', label: 'Serviços', icon: Briefcase },
+  { href: '/admin/constellation', label: 'Constelação', icon: Sparkles },
+  { href: '/admin/messages', label: 'Mensagens', icon: MessageSquare },
+  { href: '/admin/settings', label: 'Configurações', icon: Settings },
 ];
 
 export default function AdminSidebar() {
@@ -50,7 +63,7 @@ export default function AdminSidebar() {
                   : 'text-gray-400 hover:bg-dracon-purple-900/20 hover:text-gray-300'
               }`}
             >
-              <span className="text-lg">{link.icon}</span>
+              <link.icon className="h-[18px] w-[18px]" />
               {link.label}
               {isActive && (
                 <motion.div
@@ -69,14 +82,14 @@ export default function AdminSidebar() {
           href="/"
           className="flex items-center gap-3 px-4 py-2 text-sm text-gray-500 hover:text-gray-400 transition-colors"
         >
-          <span>🌐</span>
+          <ExternalLink className="h-4 w-4" />
           Ver Site
         </Link>
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 px-4 py-2 text-sm text-red-400/60 hover:text-red-400 transition-colors w-full"
         >
-          <span>🚪</span>
+          <LogOut className="h-4 w-4" />
           Sair
         </button>
       </div>
