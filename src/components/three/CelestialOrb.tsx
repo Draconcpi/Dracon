@@ -57,7 +57,7 @@ const RINGS: RingConfig[] = [
   { radius: 2.6, rotation: [0.75, 0.3, 0.9], speed: 0.1, color: '#a78bfa', bead: '#93c5fd', width: 1.1, opacity: 0.4, ticks: true },
 ];
 
-/* ─── Core: a slowly boiling star ────────────────────────────── */
+/* ─── Core: a swirling sphere of arcane energy ───────────────── */
 
 const CORE_VERTEX = /* glsl */ `
   varying vec3 vNormal;
@@ -74,6 +74,7 @@ const CORE_VERTEX = /* glsl */ `
 
 const CORE_FRAGMENT = /* glsl */ `
   uniform float uTime;
+  uniform vec3 uDeep;
   uniform vec3 uHot;
   uniform vec3 uMid;
   uniform vec3 uRim;
@@ -85,11 +86,18 @@ const CORE_FRAGMENT = /* glsl */ `
   void main() {
     float facing = max(dot(normalize(vNormal), normalize(vView)), 0.0);
     float fres = pow(1.0 - facing, 1.8);
-    vec3 p = vPos * 4.0 + vec3(0.0, uTime * 0.35, uTime * 0.18);
-    float n = fbm(p + fbm(p * 1.7 - uTime * 0.1));
-    vec3 col = mix(uHot, uMid, smoothstep(0.3, 0.75, n));
+    // twist the noise field around the vertical axis so the energy swirls
+    float twist = vPos.y * 3.0 + uTime * 0.6;
+    vec3 q = vec3(vPos.x * cos(twist) - vPos.z * sin(twist), vPos.y, vPos.x * sin(twist) + vPos.z * cos(twist));
+    vec3 p = q * 4.0 + vec3(0.0, uTime * 0.35, uTime * 0.18);
+    float n = fbm(p + fbm(p * 1.7 - uTime * 0.12));
+    vec3 col = mix(uDeep, uMid, smoothstep(0.15, 0.5, n));
+    col = mix(col, uHot, smoothstep(0.55, 0.85, n));
+    // thin bright filaments along a noise contour read as arcane energy veins
+    float vein = 1.0 - smoothstep(0.0, 0.035, abs(n - 0.5));
+    col += mix(uRim, uHot, 0.5) * vein * 0.9;
     col = mix(col, uRim, fres);
-    col *= 0.85 + 0.5 * pow(facing, 3.0);
+    col *= 0.95 + 0.6 * pow(facing, 3.0);
     gl_FragColor = vec4(col, 1.0);
   }
 `;
@@ -102,9 +110,10 @@ function OrbCore({ reduced, glow }: { reduced: boolean; glow: THREE.Texture }) {
       new THREE.ShaderMaterial({
         uniforms: {
           uTime: { value: 0 },
-          uHot: { value: srgb('#fff1dc') },
-          uMid: { value: srgb('#f97316') },
-          uRim: { value: srgb('#a855f4') },
+          uDeep: { value: srgb('#4c1d95') },
+          uHot: { value: srgb('#f5e8ff') },
+          uMid: { value: srgb('#a855f4') },
+          uRim: { value: srgb('#e879f9') },
         },
         vertexShader: CORE_VERTEX,
         fragmentShader: CORE_FRAGMENT,
@@ -128,10 +137,10 @@ function OrbCore({ reduced, glow }: { reduced: boolean; glow: THREE.Texture }) {
         <sphereGeometry args={[0.42, 48, 48]} />
       </mesh>
       <sprite ref={inner} scale={2.1}>
-        <spriteMaterial map={glow} color="#fdba74" transparent opacity={0.6} depthWrite={false} blending={THREE.AdditiveBlending} />
+        <spriteMaterial map={glow} color="#c084fc" transparent opacity={0.8} depthWrite={false} blending={THREE.AdditiveBlending} />
       </sprite>
       <sprite ref={outer} scale={6.2}>
-        <spriteMaterial map={glow} color="#a855f4" transparent opacity={0.35} depthWrite={false} blending={THREE.AdditiveBlending} />
+        <spriteMaterial map={glow} color="#7c3aed" transparent opacity={0.35} depthWrite={false} blending={THREE.AdditiveBlending} />
       </sprite>
     </group>
   );
