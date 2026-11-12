@@ -10,6 +10,10 @@ const config: Config = {
     extend: {
       colors: {
         dracon: {
+          // Text tones tuned for contrast on the cosmic ground
+          starlight: '#f1ebfb',
+          mist: '#c4b8d8',
+          dust: '#9a8db1',
           purple: {
             50: '#f3e8ff',
             100: '#e0cffc',
@@ -43,7 +47,7 @@ const config: Config = {
       },
       fontFamily: {
         display: ['var(--font-cinzel)', 'serif'],
-        body: ['var(--font-inter)', 'sans-serif'],
+        body: ['var(--font-jost)', 'system-ui', 'sans-serif'],
         arcane: ['var(--font-cinzel-decorative)', 'serif'],
       },
       backgroundImage: {

@@ -1,19 +1,19 @@
 'use client';
 
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { ArrowRight, ChevronLeft, ChevronRight, Flame, Mail, Palette, Sparkles } from 'lucide-react';
-import GlowText from '@/components/ui/GlowText';
+import { ArrowRight, ArrowUpRight, Flame, Mail, Palette, Sparkles } from 'lucide-react';
 import MagicButton from '@/components/ui/MagicButton';
-import AnimatedCard from '@/components/ui/AnimatedCard';
 import ArtImage from '@/components/ui/ArtImage';
 import Astrolabe from '@/components/ui/Astrolabe';
 import ConstellationDivider from '@/components/ui/ConstellationDivider';
 import ConstellationGlyph from '@/components/ui/ConstellationGlyph';
 import ConstellationLoader from '@/components/ui/ConstellationLoader';
+import SectionHeading from '@/components/ui/SectionHeading';
+import { useReveal } from '@/components/motion/useReveal';
 import { constellationAt } from '@/lib/constellations';
+import { gsap, ScrollTrigger, useGSAP, MOTION_OK, EASE } from '@/lib/gsap';
 import { useI18n } from '@/i18n';
 
 // WebGL hero centrepiece (client-only)
@@ -39,282 +39,456 @@ function ArtPlaceholder({ index }: { index: number }) {
   const accent = defaultAccents[index % defaultAccents.length];
   return (
     <div
+      data-reveal-media
       className="absolute inset-0"
       style={{
         background: `radial-gradient(ellipse at 30% 40%, ${accent}33 0%, transparent 65%), radial-gradient(ellipse at 75% 70%, ${accent}1f 0%, transparent 60%), linear-gradient(135deg, #0a0015 0%, #1a0030 50%, #0a0015 100%)`,
       }}
     >
-      <div className="absolute inset-[14%] opacity-70">
-        <ConstellationGlyph id={constellationAt(index)} color={accent} className="h-full w-full" />
+      <div className="absolute inset-[16%] opacity-70">
+        <ConstellationGlyph id={constellationAt(index)} color={accent} animate={false} className="h-full w-full" />
       </div>
     </div>
   );
 }
 
-const CAROUSEL_FADE = 'linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)';
+/* ═══ Hero ═══════════════════════════════════════════════════════════ */
 
-/** 3D coverflow carousel: drag/swipe, arrows, dots and autoplay (paused on hover). */
-function ArtCarousel({ items }: { items: PortfolioItem[] }) {
-  const { t } = useI18n();
-  const [current, setCurrent] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const panned = useRef(false);
-  const total = items.length;
-
-  const go = useCallback((index: number) => setCurrent(((index % total) + total) % total), [total]);
-
-  useEffect(() => {
-    if (total <= 1 || paused) return;
-    const timer = setInterval(() => setCurrent((c) => (c + 1) % total), 5000);
-    return () => clearInterval(timer);
-  }, [total, paused]);
-
-  if (total === 0) return null;
-
-  return (
-    <div
-      className="relative mx-auto w-full max-w-6xl"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      <div className="relative">
-        <motion.div
-          className="relative h-[230px] overflow-hidden sm:h-[330px] md:h-[430px] lg:h-[470px]"
-          style={{ touchAction: 'pan-y', WebkitMaskImage: CAROUSEL_FADE, maskImage: CAROUSEL_FADE }}
-          onPanStart={() => {
-            panned.current = true;
-          }}
-          onPanEnd={(_, info) => {
-            if (info.offset.x < -50) go(current + 1);
-            else if (info.offset.x > 50) go(current - 1);
-            setTimeout(() => {
-              panned.current = false;
-            }, 0);
-          }}
-        >
-          <div className="absolute inset-0 flex items-center justify-center [perspective:1600px]">
-            {items.map((art, i) => {
-              let offset = i - current;
-              if (offset > total / 2) offset -= total;
-              if (offset < -total / 2) offset += total;
-              const distance = Math.abs(offset);
-              const visible = distance <= 2;
-              const isActive = offset === 0;
-
-              return (
-                <motion.button
-                  key={art.id}
-                  type="button"
-                  aria-label={art.title}
-                  aria-current={isActive}
-                  tabIndex={isActive ? 0 : -1}
-                  onClick={() => {
-                    if (!panned.current && !isActive) go(i);
-                  }}
-                  initial={false}
-                  animate={{
-                    x: `${offset * 62}%`,
-                    z: -distance * 240,
-                    rotateY: offset * -28,
-                    scale: 1 - distance * 0.04,
-                    opacity: visible ? [1, 0.6, 0.25][distance] : 0,
-                  }}
-                  transition={{ type: 'spring', stiffness: 110, damping: 20, mass: 0.9 }}
-                  style={{ zIndex: 10 - distance, pointerEvents: visible ? 'auto' : 'none' }}
-                  className="absolute h-[88%] w-[80%] overflow-hidden rounded-2xl border border-white/10 bg-dracon-dark text-left shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)] sm:w-[64%] md:w-[58%]"
-                >
-                  <ArtImage
-                    src={art.imageUrl}
-                    alt={art.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 80vw, 700px"
-                    fallback={<ArtPlaceholder index={i} />}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-dracon-void/95 via-dracon-void/20 to-transparent" />
-                  <div
-                    className={`absolute inset-x-0 bottom-0 p-5 transition-opacity duration-500 md:p-8 ${
-                      isActive ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  >
-                    <span className="text-[11px] font-medium uppercase tracking-[0.25em] text-dracon-orange-300 md:text-xs">
-                      ✦ {art.category.name}
-                    </span>
-                    <h3 className="mt-2 font-display text-xl font-bold text-white md:text-3xl">{art.title}</h3>
-                  </div>
-                  {isActive && (
-                    <span aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-dracon-purple-100/30" />
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
-        </motion.div>
-
-        {total > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={() => go(current - 1)}
-              aria-label={t('home.carousel.prev')}
-              className="glass absolute left-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-dracon-purple-100 transition-colors duration-300 hover:text-white md:left-3 md:h-12 md:w-12"
-            >
-              <ChevronLeft className="h-5 w-5" aria-hidden />
-            </button>
-            <button
-              type="button"
-              onClick={() => go(current + 1)}
-              aria-label={t('home.carousel.next')}
-              className="glass absolute right-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-dracon-purple-100 transition-colors duration-300 hover:text-white md:right-3 md:h-12 md:w-12"
-            >
-              <ChevronRight className="h-5 w-5" aria-hidden />
-            </button>
-          </>
-        )}
-      </div>
-
-      {total > 1 && (
-        <div className="mt-8 flex justify-center gap-2">
-          {items.map((item, i) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => go(i)}
-              aria-label={item.title}
-              className={`h-1.5 rounded-full transition-all duration-500 ${
-                i === current
-                  ? 'w-10 bg-gradient-to-r from-dracon-purple-300 to-dracon-orange-400 shadow-[0_0_10px_rgba(168,85,244,0.6)]'
-                  : 'w-2 bg-dracon-purple-100/25 hover:bg-dracon-purple-100/50'
-              }`}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Full-screen hero with the 3D celestial orb and a letter-by-letter title reveal. */
 function Hero() {
   const { t } = useI18n();
-  const { scrollY } = useScroll();
-  const contentY = useTransform(scrollY, [0, 800], [0, 110]);
-  const contentOpacity = useTransform(scrollY, [0, 520], [1, 0]);
-  const hintOpacity = useTransform(scrollY, [0, 140], [1, 0]);
+  const root = useRef<HTMLElement>(null);
   const title = t('home.hero.title');
+  const tagline = t('home.hero.tagline').replace(/✦/g, '').trim();
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        // One orchestrated arrival: the planet surfaces, the name condenses out of starlight, then the offer.
+        gsap
+          .timeline({ defaults: { ease: EASE } })
+          .from('[data-orb]', { scale: 0.82, opacity: 0, duration: 2.4 })
+          .from('[data-hero-line]', { scaleX: 0, duration: 1.4, ease: 'power3.inOut' }, 0.3)
+          .from('[data-hero-tag]', { opacity: 0, y: 12, duration: 1.1 }, 0.45)
+          .from(
+            '[data-hero-char]',
+            { yPercent: 70, rotateX: -85, opacity: 0, filter: 'blur(14px)', duration: 1.6, stagger: 0.07 },
+            0.5
+          )
+          .from('[data-hero-sub]', { opacity: 0, y: 22, duration: 1.2 }, 1.1)
+          .from('[data-hero-cta] > *', { opacity: 0, y: 22, duration: 1.1, stagger: 0.1 }, 1.25)
+          .from('[data-hero-meta]', { opacity: 0, duration: 1.6 }, 1.6);
+
+        // Scrolling away dives toward the planet while the type drifts up into the dark.
+        gsap
+          .timeline({
+            scrollTrigger: { trigger: root.current, start: 'top top', end: 'bottom top', scrub: 0.6 },
+          })
+          .to('[data-orb]', { scale: 1.35, yPercent: 8, ease: 'none' }, 0)
+          .to('[data-hero-copy]', { yPercent: -18, opacity: 0, ease: 'none' }, 0)
+          .to('[data-hero-title]', { letterSpacing: '0.24em', ease: 'none' }, 0)
+          .to('[data-hero-meta]', { opacity: 0, ease: 'none' }, 0);
+      });
+    },
+    { scope: root }
+  );
 
   return (
-    <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
-      <CelestialOrb className="absolute inset-0" />
+    <section ref={root} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
+      <div data-orb className="absolute inset-0 will-change-transform">
+        <CelestialOrb className="absolute inset-0" />
+      </div>
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_40%_at_50%_62%,rgba(5,0,16,0.75),transparent_75%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_42%_at_50%_60%,rgba(5,0,16,0.72),transparent_75%)]"
       />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-dracon-void" />
 
-      <motion.div style={{ y: contentY, opacity: contentOpacity }} className="section-container relative z-10 pb-24 pt-28 text-center">
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.8 }}
-          className="mb-6 inline-flex items-center gap-3 text-xs font-medium uppercase tracking-[0.35em] text-dracon-orange-300 sm:text-sm"
-        >
-          <span aria-hidden className="h-px w-8 bg-gradient-to-r from-transparent to-dracon-orange-400/80 sm:w-14" />
-          {t('home.hero.tagline')}
-          <span aria-hidden className="h-px w-8 bg-gradient-to-l from-transparent to-dracon-orange-400/80 sm:w-14" />
-        </motion.p>
+      <div data-hero-copy className="section-container relative z-10 pb-24 pt-28 text-center">
+        <p className="mb-7 flex items-center justify-center gap-4 text-sm font-medium tracking-[0.18em] text-dracon-orange-200 sm:text-base">
+          <span data-hero-line aria-hidden className="h-px w-10 origin-right bg-gradient-to-r from-transparent to-dracon-orange-300/80 sm:w-16" />
+          <span data-hero-tag>{tagline}</span>
+          <span data-hero-line aria-hidden className="h-px w-10 origin-left bg-gradient-to-l from-transparent to-dracon-orange-300/80 sm:w-16" />
+        </p>
 
         <h1
+          data-hero-title
           aria-label={title}
-          className="hero-title mb-8 pl-[0.12em] font-display text-[clamp(3.25rem,13vw,10rem)] font-bold leading-none tracking-[0.12em] [perspective:800px]"
+          className="hero-title mb-9 pl-[0.12em] font-display text-[clamp(3.5rem,14vw,10.5rem)] font-bold leading-none tracking-[0.12em] [perspective:900px]"
         >
           {Array.from(title).map((char, i) => (
-            <motion.span
-              key={`${char}-${i}`}
-              aria-hidden
-              className="starlight-fill inline-block"
-              initial={{ opacity: 0, y: 50, rotateX: -80, filter: 'blur(12px)' }}
-              animate={{ opacity: 1, y: 0, rotateX: 0, filter: 'blur(0px)' }}
-              transition={{ delay: 0.35 + i * 0.08, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-            >
+            <span key={`${char}-${i}`} data-hero-char aria-hidden className="starlight-fill inline-block will-change-transform">
               {char === ' ' ? '\u00A0' : char}
-            </motion.span>
+            </span>
           ))}
         </h1>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.8 }}
-          className="text-balance mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-gray-300/90 md:text-xl"
-        >
+        <p data-hero-sub className="text-pretty mx-auto mb-11 max-w-[38rem] text-lg font-light leading-relaxed text-dracon-starlight/85 md:text-xl">
           {t('home.hero.subtitle')}
-        </motion.p>
+        </p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.15, duration: 0.8 }}
-          className="flex flex-col justify-center gap-4 sm:flex-row"
-        >
-          <Link href="/portfolio">
-            <MagicButton variant="primary" className="px-8 py-4 text-lg">
-              <Sparkles className="h-5 w-5" aria-hidden />
-              {t('home.hero.ctaPortfolio')}
-            </MagicButton>
-          </Link>
-          <Link href="/services">
-            <MagicButton variant="secondary" className="px-8 py-4 text-lg">
-              <Palette className="h-5 w-5" aria-hidden />
-              {t('home.hero.ctaServices')}
-            </MagicButton>
-          </Link>
-        </motion.div>
-      </motion.div>
+        <div data-hero-cta className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <MagicButton href="/portfolio" variant="primary" className="px-8 py-4 text-lg">
+            <Sparkles className="h-5 w-5" aria-hidden />
+            {t('home.hero.ctaPortfolio')}
+          </MagicButton>
+          <MagicButton href="/services" variant="secondary" className="px-8 py-4 text-lg">
+            <Palette className="h-5 w-5" aria-hidden />
+            {t('home.hero.ctaServices')}
+          </MagicButton>
+        </div>
+      </div>
 
       {/* Star-chart annotations */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute bottom-8 left-8 hidden font-display text-[10px] uppercase tracking-[0.35em] text-dracon-purple-100/40 lg:block"
-      >
-        γ Draconis · RA 17h 56m · Dec +51° 29′
+      <div data-hero-meta aria-hidden className="pointer-events-none absolute inset-x-8 bottom-8 hidden items-end justify-between lg:flex">
+        <span className="font-display text-[11px] tracking-[0.3em] text-dracon-mist/60">γ Draconis · RA 17h 56m · Dec +51° 29′</span>
+        <span className="flex flex-col items-center gap-3 text-xs tracking-[0.2em] text-dracon-dust">
+          {t('home.hero.scroll')}
+          <span className="relative h-12 w-px overflow-hidden bg-dracon-purple-100/15">
+            <span className="absolute inset-x-0 top-0 h-1/2 animate-[scroll-hint_2.4s_cubic-bezier(0.65,0,0.35,1)_infinite] bg-gradient-to-b from-transparent to-dracon-orange-200" />
+          </span>
+        </span>
+        <span className="font-display text-[11px] tracking-[0.3em] text-dracon-mist/60">Draco · 1083 deg²</span>
       </div>
-      <div
-        aria-hidden
-        className="pointer-events-none absolute bottom-8 right-8 hidden font-display text-[10px] uppercase tracking-[0.35em] text-dracon-purple-100/40 lg:block"
-      >
-        Draco · 1083 deg²
+    </section>
+  );
+}
+
+/* ═══ Latest works: a pinned orbit the visitor travels with the scroll ═══ */
+
+function LatestOrbit({ items, loading }: { items: PortfolioItem[]; loading: boolean }) {
+  const { t } = useI18n();
+  const section = useRef<HTMLElement>(null);
+  const viewport = useRef<HTMLDivElement>(null);
+  const track = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      if (!items.length || !track.current || !viewport.current) return;
+      const mm = gsap.matchMedia();
+      mm.add(`(min-width: 1024px) and ${MOTION_OK}`, () => {
+        const el = track.current!;
+        const distance = () => Math.max(0, el.scrollWidth - viewport.current!.clientWidth);
+        gsap.set(viewport.current, { overflow: 'visible' });
+
+        const travel = gsap.to(el, {
+          x: () => -distance(),
+          ease: 'none',
+          scrollTrigger: {
+            trigger: section.current,
+            start: 'top top',
+            end: () => `+=${distance()}`,
+            scrub: 0.8,
+            pin: true,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+          },
+        });
+
+        gsap.fromTo(
+          '[data-orbit-progress]',
+          { scaleX: 0 },
+          {
+            scaleX: 1,
+            ease: 'none',
+            scrollTrigger: { trigger: section.current, start: 'top top', end: () => `+=${distance()}`, scrub: true, invalidateOnRefresh: true },
+          }
+        );
+
+        // Each plate drifts against the travel, so the art seems to sit deeper than its frame.
+        gsap.utils.toArray<HTMLElement>('[data-orbit-card]').forEach((card) => {
+          const media = card.querySelector('[data-orbit-media]');
+          if (!media) return;
+          gsap.fromTo(
+            media,
+            { xPercent: -7 },
+            {
+              xPercent: 7,
+              ease: 'none',
+              scrollTrigger: { trigger: card, containerAnimation: travel, start: 'left right', end: 'right left', scrub: true },
+            }
+          );
+        });
+      });
+    },
+    { scope: section, dependencies: [items.length], revertOnUpdate: true }
+  );
+
+  return (
+    <section ref={section} aria-labelledby="ultimas-artes" className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden py-24">
+      <ConstellationDivider />
+      <div className="section-container mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h2 id="ultimas-artes" data-reveal="rise" className="display text-[clamp(2.25rem,4.6vw,3.75rem)]">
+            {t('home.carousel.title')}
+          </h2>
+          <p data-reveal="rise" className="text-pretty mt-4 max-w-[44ch] text-lg text-dracon-mist">
+            {t('home.carousel.subtitle')}
+          </p>
+        </div>
+        <Link
+          data-reveal="rise"
+          href="/portfolio"
+          className="link-underline inline-flex items-center gap-2 self-start pb-1 text-base font-medium text-dracon-starlight md:self-auto"
+        >
+          {t('home.carousel.cta')}
+          <ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
       </div>
 
-      <motion.div
-        style={{ opacity: hintOpacity }}
-        className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 sm:block"
-      >
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2 }}
-          className="flex flex-col items-center gap-3"
-        >
-          <span className="text-[10px] uppercase tracking-[0.35em] text-gray-500">{t('home.hero.scroll')}</span>
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="flex h-10 w-6 justify-center rounded-full border-2 border-dracon-purple-200/40"
-          >
-            <motion.div
-              animate={{ y: [0, 12, 0], opacity: [1, 0.3, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="mt-2 h-3 w-1.5 rounded-full bg-dracon-purple-100/70"
-            />
-          </motion.div>
-        </motion.div>
-      </motion.div>
+      {loading ? (
+        <ConstellationLoader label={t('common.aligningStars')} className="py-24" />
+      ) : (
+        <div ref={viewport} className="no-scrollbar overflow-x-auto overscroll-x-contain">
+          <div ref={track} className="flex w-max snap-x snap-mandatory gap-5 px-4 sm:px-6 lg:snap-none lg:gap-8 lg:px-[max(2rem,calc((100vw-80rem)/2+2rem))]">
+            {items.map((art, i) => (
+              <Link
+                key={art.id}
+                href="/portfolio"
+                data-orbit-card
+                className="group w-[78vw] shrink-0 snap-start sm:w-[46vw] lg:w-auto"
+              >
+                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/10 bg-dracon-dark shadow-[0_40px_80px_-40px_rgba(0,0,0,0.9)] lg:aspect-auto lg:h-[58vh] lg:w-[calc(58vh*0.8)]">
+                  <div data-orbit-media className="absolute -inset-x-[8%] inset-y-0">
+                    <ArtImage
+                      src={art.thumbnailUrl || art.imageUrl}
+                      alt={art.title}
+                      fill
+                      sizes="(max-width: 640px) 78vw, (max-width: 1024px) 46vw, 40vh"
+                      className="object-cover transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
+                      fallback={<ArtPlaceholder index={i} />}
+                    />
+                  </div>
+                  <span aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10 transition duration-500 group-hover:ring-dracon-orange-300/50" />
+                </div>
+                <div className="mt-4 flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h3 className="truncate font-display text-xl font-semibold text-dracon-starlight">{art.title}</h3>
+                    <p className="meta mt-1">{art.category.name}</p>
+                  </div>
+                  <ArrowUpRight
+                    className="mt-1 h-5 w-5 shrink-0 text-dracon-dust transition-all duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-dracon-orange-300"
+                    aria-hidden
+                  />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!loading && items.length > 1 && (
+        <div className="section-container mt-12 hidden lg:block">
+          <div aria-hidden className="relative h-px bg-dracon-purple-100/15">
+            <span data-orbit-progress className="absolute inset-0 origin-left bg-gradient-to-r from-dracon-purple-300 to-dracon-orange-300" />
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ═══ Featured works: an editorial spread instead of a uniform grid ═══ */
+
+const FEATURE_LAYOUT = [
+  { box: 'md:col-span-7', frame: 'aspect-[4/5]' },
+  { box: 'md:col-span-5 md:mt-40', frame: 'aspect-[4/5]' },
+  { box: 'md:col-span-10 md:col-start-2', frame: 'aspect-[16/9]' },
+  { box: 'md:col-span-5 md:col-start-2', frame: 'aspect-[4/5]' },
+  { box: 'md:col-span-6 md:mt-32', frame: 'aspect-[4/5]' },
+];
+
+function FeaturedWorks({ items }: { items: PortfolioItem[] }) {
+  const { t } = useI18n();
+  const root = useRef<HTMLElement>(null);
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add(`(min-width: 768px) and ${MOTION_OK}`, () => {
+        gsap.utils.toArray<HTMLElement>('[data-parallax]').forEach((el) => {
+          gsap.fromTo(
+            el,
+            { yPercent: -6 },
+            { yPercent: 6, ease: 'none', scrollTrigger: { trigger: el.parentElement, start: 'top bottom', end: 'bottom top', scrub: true } }
+          );
+        });
+      });
+    },
+    { scope: root, dependencies: [items.length], revertOnUpdate: true }
+  );
+
+  if (items.length === 0) return null;
+
+  return (
+    <section ref={root} aria-labelledby="destaques" className="relative py-28 md:py-36">
+      <ConstellationDivider variant={1} />
+      <div className="section-container">
+        <SectionHeading id="destaques" title={t('home.featured.title')} subtitle={t('home.featured.subtitle')} />
+
+        <div className="mt-16 grid grid-cols-1 gap-x-10 gap-y-16 md:mt-24 md:grid-cols-12 md:gap-y-28">
+          {items.map((work, i) => {
+            const layout = FEATURE_LAYOUT[i % FEATURE_LAYOUT.length];
+            return (
+              <article key={work.id} className={layout.box}>
+                <Link href="/portfolio" className="group block" aria-label={work.title}>
+                  <div data-reveal="mask" className={`relative overflow-hidden rounded-2xl bg-dracon-dark ${layout.frame}`}>
+                    <div data-parallax className="absolute -inset-y-[8%] inset-x-0">
+                      <ArtImage
+                        src={work.imageUrl}
+                        alt={work.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 60vw"
+                        className="object-cover transition-transform duration-[1.4s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
+                        fallback={<ArtPlaceholder index={i + 2} />}
+                      />
+                    </div>
+                    <span aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
+                  </div>
+                  <div data-reveal="rise" className="mt-6 grid gap-x-8 gap-y-2 sm:grid-cols-[1fr_auto] sm:items-baseline">
+                    <h3 className="font-display text-[clamp(1.6rem,2.6vw,2.25rem)] font-semibold leading-tight text-dracon-starlight transition-colors duration-500 group-hover:text-white">
+                      {work.title}
+                    </h3>
+                    <p className="meta sm:text-right">{work.category.name}</p>
+                    <p className="text-pretty max-w-[52ch] text-dracon-mist sm:col-span-2 line-clamp-2">{work.description}</p>
+                  </div>
+                </Link>
+              </article>
+            );
+          })}
+        </div>
+
+        <div data-reveal="rise" className="mt-20 flex justify-center">
+          <MagicButton href="/portfolio" variant="secondary">
+            {t('home.featured.cta')}
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </MagicButton>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══ About preview ═══ */
+
+function AboutPreview() {
+  const { t } = useI18n();
+  const root = useRef<HTMLElement>(null);
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        gsap.fromTo(
+          '[data-astrolabe]',
+          { rotate: -18, yPercent: 10 },
+          { rotate: 12, yPercent: -10, ease: 'none', scrollTrigger: { trigger: root.current, start: 'top bottom', end: 'bottom top', scrub: true } }
+        );
+      });
+    },
+    { scope: root }
+  );
+
+  return (
+    <section ref={root} aria-labelledby="sobre-artista" className="relative py-28 md:py-36">
+      <ConstellationDivider tone="orange" variant={2} />
+      <div className="section-container">
+        <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-12">
+          <div className="lg:col-span-6">
+            <h2 id="sobre-artista" data-reveal="rise" className="display text-[clamp(2.25rem,4.6vw,3.75rem)]">
+              {t('home.aboutPreview.title')}
+            </h2>
+            <p data-reveal="rise" className="text-pretty mt-8 max-w-[58ch] text-lg leading-relaxed text-dracon-starlight/90">
+              {t('home.aboutPreview.p1')}
+            </p>
+            <p data-reveal="rise" className="text-pretty mt-5 max-w-[58ch] text-lg leading-relaxed text-dracon-mist">
+              {t('home.aboutPreview.p2')}
+            </p>
+            <div data-reveal="rise" className="mt-10">
+              <MagicButton href="/about" variant="secondary">
+                {t('home.aboutPreview.cta')}
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </MagicButton>
+            </div>
+          </div>
+
+          <div className="relative mx-auto w-full max-w-md lg:col-span-5 lg:col-start-8">
+            <div data-astrolabe>
+              <Astrolabe className="w-full">
+                <div className="relative w-[46%]">
+                  <div
+                    aria-hidden
+                    className="absolute -inset-[20%] rounded-full bg-[radial-gradient(circle,rgba(249,115,22,0.18),transparent_70%)]"
+                  />
+                  <ConstellationGlyph id="draco" color="#fdba74" className="relative h-auto w-full" />
+                </div>
+              </Astrolabe>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══ Closing call: a planet's limb rises behind the offer ═══ */
+
+function CommissionCall() {
+  const { t } = useI18n();
+  const root = useRef<HTMLElement>(null);
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        gsap.fromTo(
+          '[data-horizon]',
+          { yPercent: 18 },
+          { yPercent: 0, ease: 'none', scrollTrigger: { trigger: root.current, start: 'top bottom', end: 'center center', scrub: true } }
+        );
+      });
+    },
+    { scope: root }
+  );
+
+  return (
+    <section ref={root} aria-labelledby="encomenda" className="relative pb-28 pt-16 md:pb-36">
+      <div className="section-container relative z-10">
+        <div className="border-celestial relative overflow-hidden rounded-[2rem] bg-dracon-void/70 px-6 pb-48 pt-20 text-center md:px-16 md:pb-64 md:pt-28">
+          <div aria-hidden className="pointer-events-none absolute -right-10 -top-8 w-[44%] opacity-25">
+            <ConstellationGlyph id="draco" color="#fdba74" className="h-auto w-full" />
+          </div>
+          <div aria-hidden className="pointer-events-none absolute -left-6 top-10 w-[30%] opacity-20">
+            <ConstellationGlyph id="cassiopeia" className="h-auto w-full" delay={0.6} />
+          </div>
+          <div aria-hidden data-horizon className="planet-horizon top-[70%] md:top-[66%]" />
+
+          <div className="relative">
+            <h2 id="encomenda" data-reveal="rise" className="display mx-auto max-w-[16ch] text-[clamp(2.5rem,6vw,4.75rem)]">
+              {t('home.cta.title')}
+            </h2>
+            <p data-reveal="rise" className="text-pretty mx-auto mt-6 max-w-[52ch] text-lg text-dracon-mist">
+              {t('home.cta.subtitle')}
+            </p>
+            <div data-reveal="rise" className="mt-11 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <MagicButton href="/services" variant="fire" className="px-8 py-4 text-lg">
+                <Flame className="h-5 w-5" aria-hidden />
+                {t('home.cta.ctaServices')}
+              </MagicButton>
+              <MagicButton href="/contact" variant="secondary" className="px-8 py-4 text-lg">
+                <Mail className="h-5 w-5" aria-hidden />
+                {t('home.cta.ctaContact')}
+              </MagicButton>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
 
 export default function HomePage() {
-  const { t } = useI18n();
+  const page = useRef<HTMLDivElement>(null);
   const [allItems, setAllItems] = useState<PortfolioItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -333,232 +507,25 @@ export default function HomePage() {
     fetchPortfolio();
   }, []);
 
-  const featuredItems = allItems.filter((item) => item.featured);
-  const carouselItems = allItems.slice(0, 6); // up to 6 items for carousel
+  const latest = allItems.slice(0, 6);
+  const featured = allItems.filter((item) => item.featured);
+
+  useReveal(page, [loading]);
+
+  // Pin spacing and trigger positions depend on the art that just arrived
+  useEffect(() => {
+    if (loading) return;
+    const id = requestAnimationFrame(() => ScrollTrigger.refresh());
+    return () => cancelAnimationFrame(id);
+  }, [loading]);
 
   return (
-    <>
+    <div ref={page}>
       <Hero />
-
-      {/* LATEST ARTS CAROUSEL */}
-      <section className="relative py-24">
-        <ConstellationDivider />
-        <div className="section-container">
-          <div className="text-center mb-12">
-            <motion.span
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="text-dracon-orange-400 text-sm tracking-[0.2em] uppercase font-medium"
-            >
-              {t('home.carousel.tag')}
-            </motion.span>
-            <GlowText as="h2" className="text-4xl md:text-5xl font-bold mt-3 mb-4">
-              {t('home.carousel.title')}
-            </GlowText>
-            <motion.p
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="text-gray-400 max-w-lg mx-auto"
-            >
-              {t('home.carousel.subtitle')}
-            </motion.p>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
-            {loading ? (
-              <ConstellationLoader label={t('common.aligningStars')} className="py-24" />
-            ) : (
-              <ArtCarousel items={carouselItems} />
-            )}
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mt-12"
-          >
-            <Link href="/portfolio">
-              <MagicButton variant="secondary">
-                {t('home.carousel.cta')}
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </MagicButton>
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* FEATURED WORKS */}
-      <section className="relative py-28">
-        <ConstellationDivider variant={1} />
-        <div className="section-container">
-          <div className="text-center mb-16">
-            <GlowText as="h2" className="text-4xl md:text-5xl font-bold mb-4">
-              {t('home.featured.title')}
-            </GlowText>
-            <motion.p
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="text-gray-400 max-w-lg mx-auto"
-            >
-              {t('home.featured.subtitle')}
-            </motion.p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {featuredItems.length > 0 ? featuredItems.map((work, i) => (
-              <AnimatedCard key={work.id} delay={i * 0.15}>
-                <div className="group relative flex h-80 flex-col justify-end overflow-hidden rounded-xl p-8">
-                  <ArtImage
-                    src={work.imageUrl}
-                    alt={work.title}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    fallback={<ArtPlaceholder index={i + 2} />}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-dracon-void via-dracon-void/50 to-transparent" />
-                  <div className="relative z-10">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-dracon-orange-400/30 bg-dracon-orange-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em] text-dracon-orange-300">
-                      ✦ {work.category.name}
-                    </span>
-                    <h3 className="mt-3 mb-2 font-display text-2xl font-bold text-white">
-                      {work.title}
-                    </h3>
-                    <p className="line-clamp-2 text-sm text-gray-300">{work.description}</p>
-                  </div>
-                </div>
-              </AnimatedCard>
-            )) : !loading && (
-              <div className="col-span-2 text-center py-12">
-                <p className="text-gray-500">✦</p>
-              </div>
-            )}
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mt-12"
-          >
-            <Link href="/portfolio">
-              <MagicButton variant="secondary">
-                {t('home.featured.cta')}
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </MagicButton>
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ABOUT PREVIEW */}
-      <section className="relative py-28">
-        <ConstellationDivider tone="orange" variant={2} />
-        <div className="section-container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              <span className="text-dracon-orange-400 text-sm tracking-[0.2em] uppercase font-medium">
-                {t('home.aboutPreview.tag')}
-              </span>
-              <GlowText as="h2" className="text-4xl md:text-5xl font-bold mt-3 mb-6" animate={false}>
-                {t('home.aboutPreview.title')}
-              </GlowText>
-              <p className="text-gray-400 leading-relaxed mb-4">
-                {t('home.aboutPreview.p1')}
-              </p>
-              <p className="text-gray-400 leading-relaxed mb-8">
-                {t('home.aboutPreview.p2')}
-              </p>
-              <Link href="/about">
-                <MagicButton variant="secondary">
-                  {t('home.aboutPreview.cta')}
-                  <ArrowRight className="h-4 w-4" aria-hidden />
-                </MagicButton>
-              </Link>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1, ease: 'easeOut' }}
-              className="relative mx-auto w-full max-w-md"
-            >
-              <Astrolabe className="w-full">
-                <div className="relative w-[46%]">
-                  <div
-                    aria-hidden
-                    className="absolute -inset-[20%] rounded-full bg-[radial-gradient(circle,rgba(249,115,22,0.18),transparent_70%)]"
-                  />
-                  <ConstellationGlyph id="draco" color="#fdba74" className="relative h-auto w-full" />
-                </div>
-              </Astrolabe>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA SECTION */}
-      <section className="relative py-28">
-        <ConstellationDivider />
-        <div className="section-container relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="border-celestial relative overflow-hidden rounded-3xl bg-dracon-dark/60 px-6 py-16 text-center backdrop-blur-md md:px-16 md:py-20"
-          >
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(249,115,22,0.14),transparent_60%)]"
-            />
-            <div aria-hidden className="pointer-events-none absolute -right-8 -top-6 w-[48%] opacity-25">
-              <ConstellationGlyph id="draco" color="#fdba74" className="h-auto w-full" />
-            </div>
-            <div aria-hidden className="pointer-events-none absolute -bottom-10 -left-6 w-[34%] opacity-20">
-              <ConstellationGlyph id="cassiopeia" className="h-auto w-full" delay={0.6} />
-            </div>
-
-            <div className="relative">
-              <GlowText as="h2" className="mb-6 text-4xl font-bold md:text-5xl" color="orange" animate={false}>
-                {t('home.cta.title')}
-              </GlowText>
-              <p className="mx-auto mb-10 max-w-2xl text-lg text-gray-300/90">
-                {t('home.cta.subtitle')}
-              </p>
-              <div className="flex flex-col justify-center gap-4 sm:flex-row">
-                <Link href="/services">
-                  <MagicButton variant="fire" className="px-8 py-4 text-lg">
-                    <Flame className="h-5 w-5" aria-hidden />
-                    {t('home.cta.ctaServices')}
-                  </MagicButton>
-                </Link>
-                <Link href="/contact">
-                  <MagicButton variant="secondary" className="px-8 py-4 text-lg">
-                    <Mail className="h-5 w-5" aria-hidden />
-                    {t('home.cta.ctaContact')}
-                  </MagicButton>
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-    </>
+      <LatestOrbit items={latest} loading={loading} />
+      <FeaturedWorks items={featured} />
+      <AboutPreview />
+      <CommissionCall />
+    </div>
   );
 }

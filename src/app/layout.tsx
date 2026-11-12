@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Cinzel, Cinzel_Decorative } from "next/font/google";
+import { Jost, Cinzel, Cinzel_Decorative } from "next/font/google";
 import "./globals.css";
 import dynamic from "next/dynamic";
 import Navbar from "@/components/layout/Navbar";
@@ -12,9 +12,11 @@ const CosmicBackground = dynamic(() => import("@/components/ui/CosmicBackground"
   ssr: false,
 });
 
-const inter = Inter({
+const jost = Jost({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-jost",
+  weight: ["300", "400", "500", "600"],
+  display: "swap",
 });
 
 const cinzel = Cinzel({
@@ -86,12 +88,12 @@ export default async function RootLayout({
   return (
     <html lang="pt-BR" className="scroll-smooth overflow-x-hidden">
       <body
-        className={`${inter.variable} ${cinzel.variable} ${cinzelDecorative.variable} antialiased cosmic-bg min-h-screen overflow-x-hidden`}
+        className={`${jost.variable} ${cinzel.variable} ${cinzelDecorative.variable} antialiased cosmic-bg min-h-screen overflow-x-hidden`}
       >
         <I18nProvider overrides={overrides}>
           <CosmicBackground />
           <Navbar />
-          <main className="relative z-10">
+          <main id="conteudo" className="relative z-10">
             {children}
           </main>
           <Footer />

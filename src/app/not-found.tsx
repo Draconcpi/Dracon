@@ -1,67 +1,59 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import Link from 'next/link';
+import { useRef } from 'react';
 import { House, Images } from 'lucide-react';
 import MagicButton from '@/components/ui/MagicButton';
 import Astrolabe from '@/components/ui/Astrolabe';
+import { gsap, useGSAP, MOTION_OK, EASE } from '@/lib/gsap';
 import { useI18n } from '@/i18n';
 
 export default function NotFound() {
   const { t } = useI18n();
+  const root = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        gsap
+          .timeline({ defaults: { ease: EASE } })
+          .from('[data-nf-digit]', { yPercent: 60, opacity: 0, filter: 'blur(14px)', duration: 1.6, stagger: 0.12 })
+          .from('[data-nf-copy] > *', { y: 18, opacity: 0, duration: 1.1, stagger: 0.1 }, 0.6);
+        // The lost astrolabe keeps drifting
+        gsap.to('[data-nf-orb]', { y: -14, rotate: 8, duration: 4, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+      });
+    },
+    { scope: root }
+  );
+
   return (
-    <div className="min-h-screen flex items-center justify-center cosmic-bg relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-dracon-purple-600/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 right-1/3 w-64 h-64 bg-dracon-orange-500/5 rounded-full blur-3xl" />
+    <div ref={root} className="relative flex min-h-screen items-center justify-center overflow-hidden">
+      <div className="section-container relative z-10 py-32 text-center">
+        <h1 aria-label="404" className="hero-title font-display text-[clamp(8rem,26vw,15rem)] font-bold leading-none">
+          {['4', '0', '4'].map((d, i) => (
+            <span key={i} aria-hidden data-nf-digit className="starlight-fill inline-block">
+              {d}
+            </span>
+          ))}
+        </h1>
 
-      <div className="text-center relative z-10 section-container">
-        {/* Animated 404 */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, type: 'spring' }}
-        >
-          <h1 className="hero-title text-[10rem] md:text-[14rem] font-display font-bold leading-none">
-            <span className="starlight-fill">404</span>
-          </h1>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          {/* Decorative line */}
-          <div className="w-24 h-px bg-gradient-to-r from-transparent via-dracon-purple-500 to-transparent mx-auto mb-6" />
-
-          <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-4">
-            {t('notFound.heading')}
-          </h2>
-          <p className="text-gray-400 max-w-md mx-auto mb-8 leading-relaxed">
-            {t('notFound.message')}
-          </p>
-
-          {/* A lost little astrolabe */}
-          <div className="mb-8 flex justify-center">
+        <div data-nf-copy>
+          <h2 className="display mt-4 text-[clamp(1.75rem,3.5vw,2.5rem)]">{t('notFound.heading')}</h2>
+          <p className="text-pretty mx-auto mt-5 max-w-[46ch] text-lg leading-relaxed text-dracon-mist">{t('notFound.message')}</p>
+          <div data-nf-orb className="my-10 flex justify-center">
             <Astrolabe className="w-32" />
           </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/">
-              <MagicButton variant="primary">
-                <House className="h-4 w-4" aria-hidden />
-                {t('notFound.ctaHome')}
-              </MagicButton>
-            </Link>
-            <Link href="/portfolio">
-              <MagicButton variant="secondary">
-                <Images className="h-4 w-4" aria-hidden />
-                {t('notFound.ctaPortfolio')}
-              </MagicButton>
-            </Link>
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
+            <MagicButton href="/" variant="primary">
+              <House className="h-4 w-4" aria-hidden />
+              {t('notFound.ctaHome')}
+            </MagicButton>
+            <MagicButton href="/portfolio" variant="secondary">
+              <Images className="h-4 w-4" aria-hidden />
+              {t('notFound.ctaPortfolio')}
+            </MagicButton>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

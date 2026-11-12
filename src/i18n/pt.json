@@ -2,7 +2,9 @@
   "common": {
     "loading": "Carregando",
     "aligningStars": "Alinhando as estrelas",
-    "close": "Fechar"
+    "close": "Fechar",
+    "skip": "Pular para o conteúdo",
+    "menu": "Abrir menu"
   },
   "nav": {
     "home": "Home",
@@ -22,7 +24,7 @@
   },
   "home": {
     "hero": {
-      "tagline": "✦ Ilustração & Animação ✦",
+      "tagline": "Ilustração & Animação",
       "title": "DRACON",
       "subtitle": "Criando universos visuais onde magia e imaginação se encontram entre estrelas e constelações. Arte mística, fantasia e mundos arcanos.",
       "ctaPortfolio": "Ver Portfólio",
@@ -30,12 +32,9 @@
       "scroll": "Role para explorar"
     },
     "carousel": {
-      "tag": "✦ Galeria",
       "title": "Últimas Artes",
       "subtitle": "Navegue pelas criações mais recentes do universo Dracon.",
-      "cta": "Explorar portfólio completo",
-      "prev": "Arte anterior",
-      "next": "Próxima arte"
+      "cta": "Explorar portfólio completo"
     },
     "featured": {
       "title": "Obras em Destaque",
@@ -65,7 +64,6 @@
       }
     },
     "aboutPreview": {
-      "tag": "Sobre o Artista",
       "title": "Arte Nascida das Estrelas",
       "p1": "Dracon é um estúdio de arte digital especializado em ilustração de fantasia, concept art e animação. Cada obra é uma jornada por mundos arcanos onde a magia flui entre constelações e símbolos ancestrais.",
       "p2": "Inspirado pela mitologia, astrologia e mistérios do cosmos, cada peça carrega a essência de universos fantásticos esperando para ser descobertos.",
@@ -80,7 +78,6 @@
   },
   "about": {
     "header": {
-      "tag": "✦ A História ✦",
       "title": "Sobre Dracon",
       "subtitle": "Uma jornada entre estrelas, runas e mundos fantásticos — onde cada traço carrega a magia do invisível e a beleza do arcano."
     },
@@ -111,13 +108,16 @@
   },
   "portfolio": {
     "header": {
-      "tag": "✦ Galeria de Obras ✦",
       "title": "Portfólio",
       "subtitle": "Explore o universo visual de Dracon — ilustrações, concept art, animações e arte digital mística nascidas entre estrelas e constelações."
     },
     "filters": {
       "all": "Todos"
     },
+    "empty": "Nenhuma obra publicada ainda. Volte em breve.",
+    "emptyCategory": "Nenhuma obra nesta categoria ainda.",
+    "prev": "Obra anterior",
+    "next": "Próxima obra",
     "categories": ["Ilustração", "Concept Art", "Animação", "Arte Digital Mística"],
     "items": [
       {
@@ -172,12 +172,11 @@
   },
   "services": {
     "header": {
-      "tag": "✦ Comissões & Serviços ✦",
       "title": "Serviços",
       "subtitle": "Transforme sua visão em arte. Cada projeto é tratado com dedicação artesanal e paixão pelo fantástico."
     },
-    "toggleMore": "Ver detalhes",
-    "toggleLess": "Menos detalhes",
+    "empty": "Nenhum serviço disponível no momento. Escreva pelo formulário abaixo.",
+    "requestQuote": "Pedir orçamento",
     "items": [
       {
         "title": "Ilustração Personalizada",
@@ -215,7 +214,6 @@
     "process": {
       "title": "Como Funciona",
       "subtitle": "O processo de encomenda em 6 passos simples — do conceito à arte final.",
-      "stepLabel": "PASSO",
       "steps": [
         { "title": "Contato Inicial", "description": "Descreva sua visão, referências e detalhes do projeto." },
         { "title": "Orçamento", "description": "Receba um orçamento detalhado e prazo de entrega." },
@@ -240,12 +238,13 @@
       "description": "Descrição do Projeto",
       "descriptionPlaceholder": "Descreva sua visão, referências, personagens, cenários... quanto mais detalhes, melhor!",
       "submit": "Enviar Solicitação",
-      "alertSent": "Mensagem enviada! (Em produção, isto será enviado ao servidor)"
+      "sending": "Enviando...",
+      "success": "Pedido enviado. Você recebe uma resposta em até 48 horas.",
+      "error": "Não foi possível enviar o pedido. Confira sua conexão e tente de novo."
     }
   },
   "contact": {
     "header": {
-      "tag": "✦ Fale Comigo ✦",
       "title": "Contato",
       "subtitle": "Tem um projeto em mente? Uma dúvida? Ou simplesmente quer conversar sobre arte? Envie uma mensagem e retornarei o mais breve possível."
     },
@@ -273,14 +272,13 @@
   },
   "dragonEyes": {
     "hero": {
-      "tag": "✦ Projeto Pessoal ✦",
       "title": "DRAGON EYES",
       "subtitle": "Sete estrelas. Sete guardiões. Uma constelação que guarda os segredos do poder mais antigo do cosmos."
     },
     "constellation": {
       "title": "A Constelação do Dragão",
       "subtitle": "Cada estrela representa um guardião cósmico. Explore seus segredos.",
-      "hint": "✦ Passe o mouse sobre uma estrela para conhecer o personagem ✦"
+      "hint": "Passe o mouse ou toque numa estrela para conhecer o guardião."
     },
     "characters": {
       "lyra": { "name": "Lyra", "role": "A Vidente Estelar", "description": "Nascida sob a chuva de meteoros de Aldebaran, Lyra enxerga os fios do destino entrelaçados nas estrelas. Seus olhos refletem constelações que outros não podem ver." },
@@ -291,8 +289,8 @@
       "elara": { "name": "Elara", "role": "A Curandeira das Raízes", "description": "Conectada ao coração da terra, Elara canaliza a energia vital das raízes antigas. Onde ela pisa, flores nascem — onde ela chora, florestas inteiras despertam." },
       "zephyr": { "name": "Zephyr", "role": "O Mensageiro dos Ventos", "description": "Rápido como o pensamento, Zephyr percorre os céus carregando mensagens entre os reinos. Dizem que ele sussurra profecias ao ouvido de quem está prestes a mudar o mundo." }
     },
+    "empty": "O universo Dragon Eyes ainda está sendo escrito. Volte em breve.",
     "lore": {
-      "tag": "✦ Lore",
       "title": "A História",
       "chapterLabel": "Capítulo",
       "chapters": [

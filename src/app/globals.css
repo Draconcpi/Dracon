@@ -244,7 +244,8 @@
   .animate-twinkle,
   .animate-float,
   .animate-glow-pulse,
-  .animate-pulse-ring {
+  .animate-pulse-ring,
+  [class*='scroll-hint'] {
     animation: none !important;
   }
 }
@@ -256,11 +257,19 @@
 
   body {
     @apply bg-dracon-void text-gray-200 antialiased;
-    font-family: var(--font-inter), sans-serif;
+    font-family: var(--font-jost), system-ui, sans-serif;
+    font-feature-settings: 'kern', 'liga';
+    caret-color: #fb923c;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-cinzel), serif;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid #fb923c;
+    outline-offset: 3px;
   }
 }
 
@@ -359,8 +368,95 @@
     text-wrap: balance;
   }
 
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
   .mask-fade-x {
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
     mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
   }
+
+  .num {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+}
+
+/* ── Editorial pieces for the public pages ───────────────────── */
+
+/* Display headings: Cinzel's Roman capitals, solid starlight, no gradient */
+.display {
+  font-family: var(--font-cinzel), serif;
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.005em;
+  color: #f1ebfb;
+}
+
+/* A hairline orbit ending in a star — the shared section rule */
+.rule-orbit {
+  position: relative;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(196, 184, 216, 0.55), rgba(196, 184, 216, 0.12) 70%, transparent);
+}
+.rule-orbit::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+  background: #fdba74;
+  box-shadow: 0 0 10px 2px rgba(251, 146, 60, 0.65);
+}
+
+/* The limb of a planet rising at the bottom of a panel, with its atmosphere */
+.planet-horizon {
+  position: absolute;
+  left: 50%;
+  width: 180%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(253, 186, 116, 0.22), transparent 18%),
+    radial-gradient(circle at 50% 50%, #12062a 62%, #2a0a52 68%, #12062a 71%);
+  box-shadow:
+    0 -2px 0 0 rgba(253, 186, 116, 0.55),
+    0 -18px 60px -6px rgba(249, 115, 22, 0.35),
+    0 -60px 140px -20px rgba(168, 85, 244, 0.45);
+}
+
+/* Small interface labels, sentence case */
+.meta {
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #9a8db1;
+}
+
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.5s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
+}
+.link-underline:hover,
+.link-underline:focus-visible {
+  background-size: 100% 1px;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes scroll-hint {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(220%); }
 }

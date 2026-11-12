@@ -1,26 +1,29 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { CircleAlert, CircleCheck, Clock, Globe, LoaderCircle, Mail, Send, type LucideIcon } from 'lucide-react';
-import GlowText from '@/components/ui/GlowText';
+import { useRef, useState } from 'react';
+import { ArrowUpRight, CircleAlert, CircleCheck, LoaderCircle, Send } from 'lucide-react';
 import MagicButton from '@/components/ui/MagicButton';
 import Astrolabe from '@/components/ui/Astrolabe';
 import SocialIcon from '@/components/ui/SocialIcon';
+import PageHeader from '@/components/ui/PageHeader';
+import { useReveal } from '@/components/motion/useReveal';
 import { SOCIAL_LINKS } from '@/lib/constants';
 import { useI18n } from '@/i18n';
 
-function IconBadge({ icon: Icon }: { icon: LucideIcon }) {
-  return (
-    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full border border-dracon-purple-100/25 bg-dracon-purple-500/10 text-dracon-purple-100 shadow-[0_0_20px_rgba(168,85,244,0.25)]">
-      <Icon className="h-5 w-5" strokeWidth={1.6} aria-hidden />
-    </div>
-  );
-}
+const SOCIAL_NAMES: Record<string, string> = {
+  instagram: 'Instagram',
+  twitter: 'X',
+  artstation: 'ArtStation',
+  behance: 'Behance',
+};
 
 export default function ContactPage() {
   const { t } = useI18n();
+  const page = useRef<HTMLDivElement>(null);
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  useReveal(page);
+
+  const email = t('contact.info.emailAddress');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -44,193 +47,125 @@ export default function ContactPage() {
       if (res.ok) {
         setFormStatus('sent');
         form.reset();
-        setTimeout(() => setFormStatus('idle'), 5000);
       } else {
         setFormStatus('error');
-        setTimeout(() => setFormStatus('idle'), 5000);
       }
     } catch {
       setFormStatus('error');
-      setTimeout(() => setFormStatus('idle'), 5000);
     }
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20">
-      {/* Header */}
-      <section className="section-container text-center mb-20">
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-dracon-orange-400 text-sm tracking-[0.3em] uppercase font-medium mb-4"
-        >
-          {t('contact.header.tag')}
-        </motion.p>
-        <GlowText as="h1" className="text-5xl md:text-6xl font-bold mb-4">
-          {t('contact.header.title')}
-        </GlowText>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="text-gray-400 max-w-2xl mx-auto text-lg"
-        >
-          {t('contact.header.subtitle')}
-        </motion.p>
-      </section>
+    <div ref={page} className="min-h-screen pb-24">
+      <PageHeader title={t('contact.header.title')} subtitle={t('contact.header.subtitle')} glyph="cassiopeia" glyphColor="#fdba74" />
 
       <div className="section-container">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Contact Info */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="space-y-8"
-          >
-            {/* Email */}
-            <div className="card-arcane p-6">
-              <IconBadge icon={Mail} />
-              <h3 className="font-display font-bold text-white mb-1">{t('contact.info.email')}</h3>
-              <p className="text-dracon-purple-300 text-sm">{t('contact.info.emailAddress')}</p>
-            </div>
-
-            {/* Response time */}
-            <div className="card-arcane p-6">
-              <IconBadge icon={Clock} />
-              <h3 className="font-display font-bold text-white mb-1">{t('contact.info.response')}</h3>
-              <p className="text-gray-400 text-sm">{t('contact.info.responseText')}</p>
-            </div>
-
-            {/* Social Links */}
-            <div className="card-arcane p-6">
-              <IconBadge icon={Globe} />
-              <h3 className="font-display font-bold text-white mb-3">{t('contact.info.social')}</h3>
-              <div className="space-y-2">
-                {Object.entries(SOCIAL_LINKS).map(([name, url]) => (
+        <div className="grid grid-cols-1 gap-16 lg:grid-cols-12">
+          {/* Contact details */}
+          <aside className="lg:col-span-4">
+            <dl className="space-y-10">
+              <div data-reveal="rise">
+                <dt className="meta">{t('contact.info.email')}</dt>
+                <dd className="mt-2">
                   <a
-                    key={name}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 text-gray-400 hover:text-dracon-purple-300 transition-colors py-1"
+                    href={`mailto:${email}`}
+                    className="link-underline inline-flex items-center gap-2 pb-1 text-xl font-medium text-dracon-starlight hover:text-white"
                   >
-                    <span className="w-8 h-8 rounded bg-dracon-purple-900/30 border border-dracon-purple-800/30 flex items-center justify-center">
-                      <SocialIcon name={name} className="h-4 w-4" />
-                    </span>
-                    <span className="text-sm capitalize">{name}</span>
+                    {email}
+                    <ArrowUpRight className="h-5 w-5 text-dracon-orange-300" aria-hidden />
                   </a>
-                ))}
+                </dd>
               </div>
-            </div>
+              <div data-reveal="rise">
+                <dt className="meta">{t('contact.info.response')}</dt>
+                <dd className="mt-2 text-lg text-dracon-starlight">{t('contact.info.responseText')}</dd>
+              </div>
+              <div data-reveal="rise">
+                <dt className="meta">{t('contact.info.social')}</dt>
+                <dd className="mt-4">
+                  <ul className="space-y-3">
+                    {Object.entries(SOCIAL_LINKS).map(([name, url]) => (
+                      <li key={name}>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group inline-flex items-center gap-3 text-dracon-mist transition-colors duration-300 hover:text-white"
+                        >
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-dracon-purple-100/20 transition-colors duration-300 group-hover:border-dracon-orange-300/60 group-hover:text-dracon-orange-200">
+                            <SocialIcon name={name} className="h-4 w-4" />
+                          </span>
+                          {SOCIAL_NAMES[name] ?? name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            </dl>
 
-            {/* Cosmic decoration */}
-            <div className="hidden lg:flex justify-center opacity-80">
+            <div data-reveal="rise" className="mt-14 hidden justify-start opacity-80 lg:flex">
               <Astrolabe className="w-56" />
             </div>
-          </motion.div>
+          </aside>
 
-          {/* Contact Form */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="lg:col-span-2"
-          >
-            <form onSubmit={handleSubmit} className="card-arcane p-8 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm text-gray-300 mb-2 font-medium">
-                    {t('contact.form.name')}
-                  </label>
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    className="input-arcane"
-                    placeholder={t('contact.form.namePlaceholder')}
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm text-gray-300 mb-2 font-medium">
-                    {t('contact.form.email')}
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    className="input-arcane"
-                    placeholder={t('contact.form.emailPlaceholder')}
-                    required
-                  />
-                </div>
-              </div>
-
+          {/* Contact form */}
+          <form data-reveal="rise" onSubmit={handleSubmit} className="card-arcane space-y-6 p-6 sm:p-10 lg:col-span-8">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label htmlFor="subject" className="block text-sm text-gray-300 mb-2 font-medium">
-                  {t('contact.form.subject')}
+                <label htmlFor="name" className="mb-2 block text-sm font-medium text-dracon-starlight">
+                  {t('contact.form.name')}
                 </label>
-                <input
-                  id="subject"
-                  name="subject"
-                  type="text"
-                  className="input-arcane"
-                  placeholder={t('contact.form.subjectPlaceholder')}
-                  required
-                />
+                <input id="name" name="name" type="text" autoComplete="name" className="input-arcane" placeholder={t('contact.form.namePlaceholder')} required />
               </div>
-
               <div>
-                <label htmlFor="message" className="block text-sm text-gray-300 mb-2 font-medium">
-                  {t('contact.form.message')}
+                <label htmlFor="email" className="mb-2 block text-sm font-medium text-dracon-starlight">
+                  {t('contact.form.email')}
                 </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  className="input-arcane min-h-[200px] resize-y"
-                  placeholder={t('contact.form.messagePlaceholder')}
-                  required
-                />
+                <input id="email" name="email" type="email" autoComplete="email" className="input-arcane" placeholder={t('contact.form.emailPlaceholder')} required />
               </div>
+            </div>
 
+            <div>
+              <label htmlFor="subject" className="mb-2 block text-sm font-medium text-dracon-starlight">
+                {t('contact.form.subject')}
+              </label>
+              <input id="subject" name="subject" type="text" className="input-arcane" placeholder={t('contact.form.subjectPlaceholder')} required />
+            </div>
+
+            <div>
+              <label htmlFor="message" className="mb-2 block text-sm font-medium text-dracon-starlight">
+                {t('contact.form.message')}
+              </label>
+              <textarea
+                id="message"
+                name="message"
+                className="input-arcane min-h-[200px] resize-y"
+                placeholder={t('contact.form.messagePlaceholder')}
+                required
+              />
+            </div>
+
+            <div aria-live="polite">
               {formStatus === 'sent' && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-2 p-4 rounded-lg bg-green-900/30 border border-green-600/30 text-green-300 text-sm"
-                >
-                  <CircleCheck className="h-4 w-4 flex-shrink-0" aria-hidden />
+                <p className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-900/25 p-4 text-sm text-emerald-200">
+                  <CircleCheck className="h-4 w-4 shrink-0" aria-hidden />
                   {t('contact.form.success')}
-                </motion.div>
+                </p>
               )}
-
               {formStatus === 'error' && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-2 p-4 rounded-lg bg-red-900/30 border border-red-600/30 text-red-300 text-sm"
-                >
-                  <CircleAlert className="h-4 w-4 flex-shrink-0" aria-hidden />
+                <p className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-900/25 p-4 text-sm text-red-200">
+                  <CircleAlert className="h-4 w-4 shrink-0" aria-hidden />
                   {t('contact.form.error')}
-                </motion.div>
+                </p>
               )}
+            </div>
 
-              <MagicButton
-                type="submit"
-                variant="primary"
-                className="w-full text-lg py-4"
-                disabled={formStatus === 'sending'}
-              >
-                {formStatus === 'sending' ? (
-                  <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden />
-                ) : (
-                  <Send className="h-5 w-5" aria-hidden />
-                )}
-                {formStatus === 'sending' ? t('contact.form.sending') : t('contact.form.submit')}
-              </MagicButton>
-            </form>
-          </motion.div>
+            <MagicButton type="submit" variant="primary" className="w-full py-4 text-lg" disabled={formStatus === 'sending'}>
+              {formStatus === 'sending' ? <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden /> : <Send className="h-5 w-5" aria-hidden />}
+              {formStatus === 'sending' ? t('contact.form.sending') : t('contact.form.submit')}
+            </MagicButton>
+          </form>
         </div>
       </div>
     </div>

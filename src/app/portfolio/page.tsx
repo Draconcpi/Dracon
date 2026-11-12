@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Palette, X } from 'lucide-react';
-import GlowText from '@/components/ui/GlowText';
-import AnimatedCard from '@/components/ui/AnimatedCard';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { ArrowLeft, ArrowRight, Palette, X } from 'lucide-react';
 import ArtImage from '@/components/ui/ArtImage';
 import ConstellationGlyph from '@/components/ui/ConstellationGlyph';
 import ConstellationLoader from '@/components/ui/ConstellationLoader';
+import PageHeader from '@/components/ui/PageHeader';
+import { useReveal } from '@/components/motion/useReveal';
 import { constellationAt } from '@/lib/constellations';
+import { gsap, Flip, ScrollTrigger, useGSAP, MOTION_OK, EASE } from '@/lib/gsap';
 import { useI18n } from '@/i18n';
 
 interface Category {
@@ -42,21 +43,179 @@ const gradients = [
   'from-green-900/30 to-dracon-purple-900/40',
 ];
 
+// Varied proportions give the wall the rhythm of a real gallery hang
+const ASPECTS = ['aspect-[4/5]', 'aspect-square', 'aspect-[3/4]', 'aspect-[4/5]', 'aspect-[5/4]', 'aspect-[3/4]'];
+
+function Fallback({ index }: { index: number }) {
+  return (
+    <div className={`absolute inset-0 bg-gradient-to-br ${gradients[index % gradients.length]}`}>
+      <div className="absolute inset-[18%] opacity-60">
+        <ConstellationGlyph id={constellationAt(index)} animate={false} className="h-full w-full" />
+      </div>
+    </div>
+  );
+}
+
+/* ─── Full-screen viewer ─────────────────────────────────────────── */
+
+function Lightbox({
+  items,
+  index,
+  onClose,
+  onMove,
+}: {
+  items: PortfolioItem[];
+  index: number;
+  onClose: () => void;
+  onMove: (dir: 1 | -1) => void;
+}) {
+  const { t } = useI18n();
+  const root = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const item = items[index];
+
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      else if (e.key === 'ArrowRight') onMove(1);
+      else if (e.key === 'ArrowLeft') onMove(-1);
+      else if (e.key === 'Tab' && root.current) {
+        // Keep focus inside the dialog
+        const focusables = root.current.querySelectorAll<HTMLElement>('button, a[href]');
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+      opener?.focus?.();
+    };
+  }, [onClose, onMove]);
+
+  // Copy fades in each time the artwork changes
+  useGSAP(
+    () => {
+      if (!window.matchMedia(MOTION_OK).matches) return;
+      gsap.from('[data-lb-copy] > *', { y: 16, opacity: 0, duration: 0.8, ease: EASE, stagger: 0.06 });
+    },
+    { scope: root, dependencies: [index], revertOnUpdate: true }
+  );
+
+  if (!item) return null;
+
+  return createPortal(
+    <div
+      ref={root}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="lightbox-title"
+      className="fixed inset-0 z-[100] flex flex-col bg-dracon-void/95 backdrop-blur-md lg:flex-row"
+      onClick={onClose}
+    >
+      <div className="relative min-h-0 flex-1 p-4 pt-20 sm:p-8 sm:pt-20 lg:p-12" onClick={(e) => e.stopPropagation()}>
+        <div data-flip-id={`art-${item.id}`} data-lightbox-media className="relative h-full w-full">
+          <ArtImage
+            src={item.imageUrl}
+            alt={item.title}
+            fill
+            sizes="(max-width: 1024px) 100vw, 70vw"
+            className="object-contain"
+            fallback={<Fallback index={items.indexOf(item)} />}
+          />
+        </div>
+      </div>
+
+      <aside
+        className="relative flex w-full flex-col border-t border-white/10 bg-dracon-midnight/80 p-6 sm:p-8 lg:w-[420px] lg:border-l lg:border-t-0 lg:p-10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div data-lb-copy className="flex-1 overflow-y-auto">
+          <p className="meta">{item.category.name}</p>
+          <h2 id="lightbox-title" className="display mt-3 text-[clamp(1.75rem,3vw,2.5rem)]">
+            {item.title}
+          </h2>
+          <p className="text-pretty mt-5 leading-relaxed text-dracon-mist">{item.description}</p>
+          {item.tags.length > 0 && (
+            <ul className="mt-6 flex flex-wrap gap-2">
+              {item.tags.map((tag) => (
+                <li key={tag} className="rounded-full border border-dracon-purple-100/20 px-3 py-1 text-sm text-dracon-mist">
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="mt-8 flex items-center justify-between gap-4">
+          <p className="num text-sm text-dracon-dust">
+            {index + 1} / {items.length}
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => onMove(-1)}
+              aria-label={t('portfolio.prev')}
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-dracon-purple-100/25 text-dracon-starlight transition-colors hover:border-dracon-orange-300/60 hover:text-white"
+            >
+              <ArrowLeft className="h-5 w-5" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={() => onMove(1)}
+              aria-label={t('portfolio.next')}
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-dracon-purple-100/25 text-dracon-starlight transition-colors hover:border-dracon-orange-300/60 hover:text-white"
+            >
+              <ArrowRight className="h-5 w-5" aria-hidden />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <button
+        ref={closeRef}
+        type="button"
+        aria-label={t('common.close')}
+        onClick={onClose}
+        className="glass absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full text-dracon-starlight transition-colors hover:text-white sm:right-6 sm:top-6"
+      >
+        <X className="h-5 w-5" aria-hidden />
+      </button>
+    </div>,
+    document.body
+  );
+}
+
+/* ─── Page ───────────────────────────────────────────────────────── */
+
 export default function PortfolioPage() {
   const { t } = useI18n();
+  const page = useRef<HTMLDivElement>(null);
+  const grid = useRef<HTMLDivElement>(null);
+  const flipState = useRef<Flip.FlipState | null>(null);
+  const openState = useRef<Flip.FlipState | null>(null);
   const [items, setItems] = useState<PortfolioItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [selectedItem, setSelectedItem] = useState<PortfolioItem | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [portfolioRes, catRes] = await Promise.all([
-          fetch('/api/portfolio'),
-          fetch('/api/categories'),
-        ]);
+        const [portfolioRes, catRes] = await Promise.all([fetch('/api/portfolio'), fetch('/api/categories')]);
         const portfolioData = await portfolioRes.json();
         const catData = await catRes.json();
         if (portfolioData.success) setItems(portfolioData.data);
@@ -70,209 +229,162 @@ export default function PortfolioPage() {
     fetchData();
   }, []);
 
-  const filteredItems = activeCategory === 'all'
-    ? items
-    : items.filter((item) => item.category.slug === activeCategory);
+  const visible = activeCategory === 'all' ? items : items.filter((item) => item.category.slug === activeCategory);
+
+  useReveal(page, [loading]);
+
+  const chooseCategory = (slug: string) => {
+    if (slug === activeCategory) return;
+    if (grid.current) flipState.current = Flip.getState(grid.current.querySelectorAll('[data-flip-item]'));
+    setActiveCategory(slug);
+  };
+
+  // The wall re-hangs itself: kept works glide to their new places, newcomers fade in
+  useGSAP(
+    () => {
+      const state = flipState.current;
+      if (!state) return;
+      flipState.current = null;
+      if (!window.matchMedia(MOTION_OK).matches) return;
+      Flip.from(state, {
+        duration: 0.9,
+        ease: 'expo.inOut',
+        stagger: 0.02,
+        absolute: true,
+        onEnter: (els) => gsap.fromTo(els, { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.8, ease: EASE, delay: 0.25 }),
+        onComplete: () => ScrollTrigger.refresh(),
+      });
+    },
+    { scope: grid, dependencies: [activeCategory] }
+  );
+
+  const open = (i: number, el: HTMLElement | null) => {
+    if (el && window.matchMedia(MOTION_OK).matches) openState.current = Flip.getState(el);
+    setOpenIndex(i);
+  };
+
+  // The thumbnail flies into the viewer
+  useGSAP(
+    () => {
+      const state = openState.current;
+      if (openIndex === null || !state) return;
+      openState.current = null;
+      const target = document.querySelector('[data-lightbox-media]');
+      if (!target) return;
+      Flip.from(state, { targets: target, duration: 0.9, ease: 'expo.inOut', scale: true, absolute: false });
+      gsap.from('[role="dialog"]', { backgroundColor: 'rgba(5,0,16,0)', duration: 0.6, ease: 'power2.out' });
+    },
+    { dependencies: [openIndex] }
+  );
+
+  const close = useCallback(() => setOpenIndex(null), []);
+  const move = useCallback(
+    (dir: 1 | -1) => setOpenIndex((i) => (i === null || visible.length === 0 ? i : (i + dir + visible.length) % visible.length)),
+    [visible.length]
+  );
+
+  const filters = [{ id: '__all', slug: 'all', name: t('portfolio.filters.all') }, ...categories];
 
   return (
-    <div className="min-h-screen pt-24 pb-20">
-      {/* Header */}
-      <section className="section-container text-center mb-16">
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-dracon-orange-400 text-sm tracking-[0.3em] uppercase font-medium mb-4"
-        >
-          {t('portfolio.header.tag')}
-        </motion.p>
-        <GlowText as="h1" className="text-5xl md:text-6xl font-bold mb-4">
-          {t('portfolio.header.title')}
-        </GlowText>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="text-gray-400 max-w-2xl mx-auto text-lg"
-        >
-          {t('portfolio.header.subtitle')}
-        </motion.p>
-      </section>
+    <div ref={page} className="min-h-screen pb-24">
+      <PageHeader title={t('portfolio.header.title')} subtitle={t('portfolio.header.subtitle')} glyph="cygnus" />
 
-      {/* Category Filters */}
-      <section className="section-container mb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center"
-        >
-          <div className="glass inline-flex max-w-full flex-wrap justify-center gap-1 rounded-2xl p-1.5 sm:rounded-full">
-            {[{ id: '__all', slug: 'all', name: t('portfolio.filters.all') }, ...categories].map((cat) => {
+      {/* Category filters */}
+      {!loading && items.length > 0 && (
+        <section className="section-container mb-14">
+          <div data-reveal="rise" role="group" aria-label={t('portfolio.header.title')} className="flex flex-wrap gap-2">
+            {filters.map((cat) => {
               const active = activeCategory === cat.slug;
+              const count = cat.slug === 'all' ? items.length : items.filter((i) => i.category.slug === cat.slug).length;
               return (
                 <button
                   key={cat.id}
                   type="button"
-                  onClick={() => setActiveCategory(cat.slug)}
-                  className={`relative rounded-full px-5 py-2 text-sm font-medium transition-colors duration-300 ${
-                    active ? 'text-white' : 'text-gray-400 hover:text-dracon-purple-100'
+                  aria-pressed={active}
+                  onClick={() => chooseCategory(cat.slug)}
+                  className={`group inline-flex items-center gap-2.5 rounded-full border px-5 py-2.5 text-[0.95rem] font-medium transition-all duration-300 ${
+                    active
+                      ? 'border-dracon-orange-300/70 bg-dracon-orange-500/10 text-white shadow-[0_0_24px_-6px_rgba(249,115,22,0.6)]'
+                      : 'border-dracon-purple-100/15 text-dracon-mist hover:border-dracon-purple-100/40 hover:text-white'
                   }`}
                 >
-                  {active && (
-                    <motion.span
-                      layoutId="portfolio-filter"
-                      className="absolute inset-0 rounded-full bg-gradient-to-r from-dracon-purple-500/80 to-dracon-purple-600/80 shadow-[0_0_20px_rgba(168,85,244,0.45)]"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                  <span className="relative z-10">{cat.name}</span>
+                  {cat.name}
+                  <span className={`num text-xs ${active ? 'text-dracon-orange-200' : 'text-dracon-dust'}`}>{count}</span>
                 </button>
               );
             })}
           </div>
-        </motion.div>
-      </section>
+        </section>
+      )}
 
-      {/* Loading state */}
       {loading && <ConstellationLoader label={t('common.loading')} className="section-container py-20" />}
 
-      {/* Empty state */}
       {!loading && items.length === 0 && (
-        <div className="section-container text-center py-20">
-          <Palette className="mx-auto mb-4 h-12 w-12 text-dracon-purple-400/60" strokeWidth={1.25} />
-          <p className="text-gray-400 text-lg">Nenhuma obra encontrada.</p>
+        <div className="section-container py-20 text-center">
+          <Palette className="mx-auto mb-4 h-12 w-12 text-dracon-purple-300/60" strokeWidth={1.25} aria-hidden />
+          <p className="text-lg text-dracon-mist">{t('portfolio.empty')}</p>
         </div>
       )}
 
-      {/* Portfolio Grid */}
       {!loading && items.length > 0 && (
-      <section className="section-container">
-        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {filteredItems.map((item, i) => (
-              <motion.div
-                key={item.id}
-                layout
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.4, delay: i * 0.05 }}
-              >
-                <AnimatedCard onClick={() => setSelectedItem(item)}>
-                  <div className="relative h-72 rounded-xl overflow-hidden group">
-                    {/* Image or decorative fallback */}
-                    <ArtImage
-                      src={item.imageUrl}
-                      alt={item.title}
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-110"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      fallback={
-                        <div className={`absolute inset-0 bg-gradient-to-br ${gradients[i % gradients.length]}`}>
-                          <div className="absolute inset-[18%] opacity-50 transition-opacity duration-500 group-hover:opacity-80">
-                            <ConstellationGlyph id={constellationAt(i)} className="h-full w-full" />
-                          </div>
-                        </div>
-                      }
-                    />
-
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-dracon-void via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
-
-                    {/* Content */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <span className="text-dracon-orange-400 text-xs tracking-wider uppercase font-medium">
-                        {item.category.name}
-                      </span>
-                      <h3 className="text-xl font-display font-bold text-white mt-1 mb-2 group-hover:text-dracon-purple-200 transition-colors">
+        <section className="section-container">
+          <div ref={grid} className="columns-1 gap-6 sm:columns-2 lg:columns-3 [&>*]:mb-6">
+            {items.map((item, i) => {
+              const shown = activeCategory === 'all' || item.category.slug === activeCategory;
+              const visibleIndex = visible.indexOf(item);
+              return (
+                <article
+                  key={item.id}
+                  data-flip-item
+                  data-flip-id={`card-${item.id}`}
+                  className={`break-inside-avoid ${shown ? '' : 'hidden'}`}
+                >
+                  <button
+                    type="button"
+                    onClick={(e) => open(visibleIndex, e.currentTarget.querySelector('[data-flip-id^="art-"]'))}
+                    className="group block w-full text-left"
+                    aria-label={item.title}
+                  >
+                    <div
+                      data-flip-id={`art-${item.id}`}
+                      className={`relative overflow-hidden rounded-2xl bg-dracon-dark ${ASPECTS[i % ASPECTS.length]}`}
+                    >
+                      <ArtImage
+                        src={item.thumbnailUrl || item.imageUrl}
+                        alt=""
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]"
+                        fallback={<Fallback index={i} />}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-dracon-void/80 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                      {item.tags.length > 0 && (
+                        <ul className="absolute inset-x-4 bottom-4 flex translate-y-2 flex-wrap gap-1.5 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+                          {item.tags.slice(0, 3).map((tag) => (
+                            <li key={tag} className="rounded-full bg-dracon-void/70 px-2.5 py-0.5 text-xs text-dracon-starlight backdrop-blur-sm">
+                              {tag}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <span aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10 transition duration-500 group-hover:ring-dracon-orange-300/50" />
+                    </div>
+                    <div className="mt-4 flex items-baseline justify-between gap-4">
+                      <h3 className="font-display text-xl font-semibold text-dracon-starlight transition-colors duration-300 group-hover:text-white">
                         {item.title}
                       </h3>
-                      <div className="flex gap-2">
-                        {item.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="text-xs text-gray-400 bg-dracon-purple-900/40 px-2 py-0.5 rounded">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+                      <span className="meta shrink-0">{item.category.name}</span>
                     </div>
-                  </div>
-                </AnimatedCard>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
-      </section>
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+          {visible.length === 0 && <p className="py-16 text-center text-dracon-mist">{t('portfolio.emptyCategory')}</p>}
+        </section>
       )}
 
-      {/* Modal */}
-      <AnimatePresence>
-        {selectedItem && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-dracon-void/90 backdrop-blur-sm"
-            onClick={() => setSelectedItem(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ type: 'spring', damping: 25 }}
-              className="border-celestial bg-dracon-midnight/95 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-arcane-lg"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Image area */}
-              <div className="aspect-[16/9] rounded-t-2xl relative overflow-hidden">
-                <ArtImage
-                  src={selectedItem.imageUrl}
-                  alt={selectedItem.title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 672px) 100vw, 672px"
-                  fallback={
-                    <div className={`h-full bg-gradient-to-br ${gradients[0]}`}>
-                      <div className="absolute inset-[15%]">
-                        <ConstellationGlyph id={constellationAt(items.indexOf(selectedItem))} className="h-full w-full" />
-                      </div>
-                    </div>
-                  }
-                />
-                <button
-                  type="button"
-                  aria-label={t('common.close')}
-                  onClick={() => setSelectedItem(null)}
-                  className="glass absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-gray-200 hover:text-white transition-colors"
-                >
-                  <X className="h-5 w-5" aria-hidden />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="p-8">
-                <span className="text-dracon-orange-400 text-xs tracking-wider uppercase font-medium">
-                  {selectedItem.category.name}
-                </span>
-                <h2 className="text-3xl font-display font-bold mt-2 mb-4">
-                  <span className="starlight-fill">{selectedItem.title}</span>
-                </h2>
-                <p className="text-gray-300 leading-relaxed mb-6">
-                  {selectedItem.description}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedItem.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-sm text-dracon-purple-300 bg-dracon-purple-900/30 px-3 py-1 rounded-full border border-dracon-purple-800/20"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {openIndex !== null && <Lightbox items={visible} index={openIndex} onClose={close} onMove={move} />}
     </div>
   );
 }

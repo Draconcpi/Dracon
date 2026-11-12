@@ -31,10 +31,10 @@ export default function Error({
             <Zap className="h-16 w-16 text-dracon-orange-400 drop-shadow-[0_0_18px_rgba(249,115,22,0.6)]" strokeWidth={1.25} aria-hidden />
           </motion.div>
 
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-4">
+          <h1 className="display mb-4 text-4xl md:text-5xl">
             {t('error.heading')}
           </h1>
-          <p className="text-gray-400 max-w-md mx-auto mb-8">
+          <p className="text-dracon-mist max-w-md mx-auto mb-8">
             {t('error.message')}
           </p>
 
@@ -49,12 +49,10 @@ export default function Error({
               <RotateCcw className="h-4 w-4" aria-hidden />
               {t('error.ctaRetry')}
             </MagicButton>
-            <a href="/">
-              <MagicButton variant="secondary">
-                <House className="h-4 w-4" aria-hidden />
-                {t('error.ctaHome')}
-              </MagicButton>
-            </a>
+            <MagicButton href="/" variant="secondary">
+              <House className="h-4 w-4" aria-hidden />
+              {t('error.ctaHome')}
+            </MagicButton>
           </div>
         </motion.div>
       </div>

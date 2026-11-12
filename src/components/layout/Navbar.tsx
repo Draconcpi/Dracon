@@ -45,6 +45,12 @@ export default function Navbar() {
       transition={{ duration: 0.6, ease: 'easeOut' }}
       className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4"
     >
+      <a
+        href="#conteudo"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-dracon-orange-500 focus:px-4 focus:py-2 focus:font-medium focus:text-dracon-purple-950"
+      >
+        {t('common.skip')}
+      </a>
       <nav className="relative mx-auto flex h-16 max-w-6xl items-center justify-between rounded-2xl px-4 sm:px-6">
         <div
           aria-hidden
@@ -55,10 +61,10 @@ export default function Navbar() {
         <Link href="/" className="relative flex items-center">
           <Image
             src="/images/logo.png"
-            alt="Dracon Logo"
-            width={140}
-            height={44}
-            className="h-auto w-[120px] rounded-sm sm:w-[140px]"
+            alt="Dracon"
+            width={2665}
+            height={816}
+            className="h-auto w-[120px] sm:w-[140px]"
             priority
           />
         </Link>
@@ -96,7 +102,7 @@ export default function Navbar() {
         {/* Mobile Menu Button */}
         <button
           type="button"
-          aria-label="Menu"
+          aria-label={isMobileOpen ? t('common.close') : t('common.menu')}
           aria-expanded={isMobileOpen}
           onClick={() => setIsMobileOpen(!isMobileOpen)}
           className="relative flex h-8 w-8 flex-col items-center justify-center gap-1.5 md:hidden"
